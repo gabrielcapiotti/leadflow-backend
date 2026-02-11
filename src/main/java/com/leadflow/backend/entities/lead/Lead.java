@@ -180,4 +180,9 @@ public class Lead {
                ", status=" + status +
                '}';
     }
+
+    public void setId(long l) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setId'");
+    }
 }

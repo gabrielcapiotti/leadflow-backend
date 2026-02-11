@@ -37,6 +37,21 @@ public class LeadService {
             String phone,
             User createdBy
     ) {
+
+        if (createdBy == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+
+        // 🔥 VALIDA DUPLICIDADE
+        boolean emailExists = leadRepository
+                .findByUserAndDeletedAtIsNull(createdBy)
+                .stream()
+                .anyMatch(l -> l.getEmail().equalsIgnoreCase(email));
+
+        if (emailExists) {
+            throw new IllegalArgumentException("Email already in use");
+        }
+
         Lead lead = new Lead(name, email, phone);
         lead.setUser(createdBy);
 
@@ -80,16 +95,18 @@ public class LeadService {
             LeadStatus newStatus,
             User changedBy
     ) {
-        Lead lead = leadRepository.findByIdAndUserAndDeletedAtIsNull(
-                        leadId,
-                        changedBy
-                )
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Lead not found")
-                );
 
+        Lead lead = leadRepository.findByIdAndUserAndDeletedAtIsNull(
+                    leadId,
+                    changedBy
+            )
+            .orElseThrow(() ->
+                    new IllegalArgumentException("Lead not found or already deleted")
+            );
+
+        // 🔥 REGRA DE TRANSIÇÃO
         if (lead.getStatus() == newStatus) {
-            return lead;
+            return lead; // Allow same status without exception
         }
 
         lead.changeStatus(newStatus);

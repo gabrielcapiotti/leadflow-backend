@@ -138,4 +138,9 @@ public class LeadStatusHistory {
                ", changedAt=" + changedAt +
                '}';
     }
+
+    public void setLead(Lead created) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setLead'");
+    }
 }
