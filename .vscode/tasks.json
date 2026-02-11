@@ -1,0 +1,65 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run LeadController Tests",
+			"type": "shell",
+			"command": "mvn",
+			"args": [
+				"test",
+				"-Dtest=LeadControllerTest"
+			],
+			"problemMatcher": [
+				"$junit5"
+			]
+		},
+		{
+			"label": "Run LeadController Tests with Logs",
+			"type": "shell",
+			"command": "mvn",
+			"args": [
+				"test",
+				"-Dtest=LeadControllerTest"
+			],
+			"problemMatcher": [
+				"$junit5"
+			]
+		},
+		{
+			"label": "Run LeadControllerTest with Logs",
+			"type": "shell",
+			"command": "mvn",
+			"args": [
+				"test",
+				"-Dtest=LeadControllerTest"
+			],
+			"problemMatcher": [
+				"$junit5"
+			]
+		},
+		{
+			"label": "Run LeadControllerTest with Simplified Logs",
+			"type": "shell",
+			"command": "mvn",
+			"args": [
+				"test",
+				"-Dtest=LeadControllerTest"
+			],
+			"problemMatcher": [
+				"$junit5"
+			]
+		},
+		{
+			"label": "Run LeadControllerTest After Fixing Print",
+			"type": "shell",
+			"command": "mvn",
+			"args": [
+				"test",
+				"-Dtest=LeadControllerTest"
+			],
+			"problemMatcher": [
+				"$junit5"
+			]
+		}
+	]
+}

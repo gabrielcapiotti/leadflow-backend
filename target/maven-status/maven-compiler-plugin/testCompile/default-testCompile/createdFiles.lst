@@ -1,0 +1,7 @@
+com\leadflow\backend\controller\lead\LeadControllerTest.class
+com\leadflow\backend\security\TokenServiceTest.class
+com\leadflow\backend\service\auth\AuthServiceTest.class
+com\leadflow\backend\controller\auth\AuthControllerTest.class
+com\leadflow\backend\repository\user\UserRepositoryTest.class
+com\leadflow\backend\config\TestSecurityConfig.class
+com\leadflow\backend\service\lead\LeadServiceTest.class
