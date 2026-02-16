@@ -1,0 +1,16 @@
+-------------------------------------------------------------------------------
+Test set: com.leadflow.backend.controller.auth.AuthControllerTest
+-------------------------------------------------------------------------------
+Tests run: 8, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.147 s <<< FAILURE! -- in com.leadflow.backend.controller.auth.AuthControllerTest
+com.leadflow.backend.controller.auth.AuthControllerTest.shouldMapIllegalArgumentException -- Time elapsed: 0.013 s <<< FAILURE!
+java.lang.AssertionError: JSON path "$.error" expected:<Business Error> but was:<Validation Error>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.util.JsonPathExpectationsHelper.assertValue(JsonPathExpectationsHelper.java:172)
+	at org.springframework.test.web.servlet.result.JsonPathResultMatchers.lambda$value$2(JsonPathResultMatchers.java:112)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.leadflow.backend.controller.auth.AuthControllerTest.shouldMapIllegalArgumentException(AuthControllerTest.java:215)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+

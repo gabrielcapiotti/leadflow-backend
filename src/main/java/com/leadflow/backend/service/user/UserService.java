@@ -111,4 +111,9 @@ public class UserService {
 
         user.setDeletedAt(null);
     }
+
+    public Object getAuthenticatedUser() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getAuthenticatedUser'");
+    }
 }

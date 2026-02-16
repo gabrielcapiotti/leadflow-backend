@@ -3,66 +3,117 @@ package com.leadflow.backend.repository.user;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 
 @DataJpaTest
 @ActiveProfiles("test")
 class UserRepositoryTest {
 
     @Autowired
-    private TestEntityManager entityManager;
-
-    @Autowired
     private UserRepository userRepository;
 
-    private User user;
+    @Autowired
+    private RoleRepository roleRepository;
+
     private Role role;
 
     @BeforeEach
     void setUp() {
-        role = new Role("USER");
-        entityManager.persist(role);
+        role = roleRepository.save(new Role("USER"));
 
-        user = new User("Test User", "test@example.com", "encoded-password", role);
-        entityManager.persist(user);
-        entityManager.flush();
+        userRepository.save(
+                new User(
+                        "Test User",
+                        "test@example.com",
+                        "encoded-password",
+                        role
+                )
+        );
+    }
+
+    /* ==========================
+       FIND BY EMAIL
+       ========================== */
+
+    @Test
+    @DisplayName("Should return user when email exists")
+    void findByEmail_ShouldReturnUser() {
+
+        Optional<User> found =
+                userRepository.findByEmail("test@example.com");
+
+        assertThat(found).isPresent();
+        assertThat(found.get().getName()).isEqualTo("Test User");
     }
 
     @Test
-    void findByEmail_ShouldReturnUser_WhenUserExists() {
-        Optional<User> found = userRepository.findByEmail("test@example.com");
+    @DisplayName("Should return empty when email does not exist")
+    void findByEmail_ShouldReturnEmpty() {
 
-        assertTrue(found.isPresent());
-        assertEquals("Test User", found.get().getName());
-        assertEquals("test@example.com", found.get().getEmail());
+        Optional<User> found =
+                userRepository.findByEmail("nonexistent@example.com");
+
+        assertThat(found).isEmpty();
+    }
+
+    /* ==========================
+       EXISTS ACTIVE EMAIL
+       ========================== */
+
+    @Test
+    @DisplayName("Should return true for active user")
+    void existsByEmailAndDeletedAtIsNull_ShouldReturnTrue() {
+
+        boolean exists =
+                userRepository.existsByEmailAndDeletedAtIsNull("test@example.com");
+
+        assertThat(exists).isTrue();
     }
 
     @Test
-    void findByEmail_ShouldReturnEmpty_WhenEmailDoesNotExist() {
-        Optional<User> found = userRepository.findByEmail("nonexistent@example.com");
+    @DisplayName("Should return false when user is soft deleted")
+    void shouldNotReturnDeletedUser() {
 
-        assertFalse(found.isPresent());
+        User user =
+                userRepository.findByEmail("test@example.com").get();
+
+        user.setDeletedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        boolean exists =
+                userRepository.existsByEmailAndDeletedAtIsNull("test@example.com");
+
+        assertThat(exists).isFalse();
     }
 
-    @Test
-    void existsByEmailAndDeletedAtIsNull_ShouldReturnTrue_WhenEmailExists() {
-        boolean exists = userRepository.existsByEmailAndDeletedAtIsNull("test@example.com");
-
-        assertTrue(exists);
-    }
+    /* ==========================
+       UNIQUE CONSTRAINT
+       ========================== */
 
     @Test
-    void existsByEmailAndDeletedAtIsNull_ShouldReturnFalse_WhenEmailDoesNotExist() {
-        boolean exists = userRepository.existsByEmailAndDeletedAtIsNull("nonexistent@example.com");
+    @DisplayName("Should not allow duplicate email")
+    void shouldNotAllowDuplicateEmail() {
 
-        assertFalse(exists);
+        User duplicate =
+                new User(
+                        "Another User",
+                        "test@example.com",
+                        "password",
+                        role
+                );
+
+        assertThatThrownBy(() ->
+                userRepository.saveAndFlush(duplicate)
+        ).isInstanceOf(DataIntegrityViolationException.class);
     }
 }

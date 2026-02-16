@@ -38,7 +38,8 @@ class TokenServiceTest {
 
     @Test
     void generateToken_ShouldReturnValidToken() {
-        String token = tokenService.generateToken(user);
+        String tenant = "test_tenant";
+        String token = tokenService.generateToken(user, tenant);
 
         assertNotNull(token);
         assertFalse(token.isEmpty());
@@ -47,7 +48,8 @@ class TokenServiceTest {
 
     @Test
     void isValid_ShouldReturnTrue_ForValidToken() {
-        String token = tokenService.generateToken(user);
+        String tenant = "test_tenant";
+        String token = tokenService.generateToken(user, tenant);
 
         boolean isValid = tokenService.isValid(token);
 
@@ -65,7 +67,8 @@ class TokenServiceTest {
 
     @Test
     void getEmail_ShouldReturnCorrectEmail() {
-        String token = tokenService.generateToken(user);
+        String tenant = "test_tenant";
+        String token = tokenService.generateToken(user, tenant);
 
         String email = tokenService.getEmail(token);
 
@@ -74,7 +77,8 @@ class TokenServiceTest {
 
     @Test
     void getUserId_ShouldReturnCorrectUserId() {
-        String token = tokenService.generateToken(user);
+        String tenant = "test_tenant";
+        String token = tokenService.generateToken(user, tenant);
 
         Long userId = tokenService.getUserId(token);
 
@@ -83,7 +87,8 @@ class TokenServiceTest {
 
     @Test
     void getRole_ShouldReturnCorrectRole() {
-        String token = tokenService.generateToken(user);
+        String tenant = "test_tenant";
+        String token = tokenService.generateToken(user, tenant);
 
         String role = tokenService.getRole(token);
 

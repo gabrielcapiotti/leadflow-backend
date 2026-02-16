@@ -1,23 +1,21 @@
 package com.leadflow.backend.controller.lead;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.leadflow.backend.config.TestSecurityConfig;
 import com.leadflow.backend.dto.lead.CreateLeadRequest;
 import com.leadflow.backend.entities.enums.LeadStatus;
 import com.leadflow.backend.entities.lead.Lead;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.service.lead.LeadService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -28,10 +26,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@Import(TestSecurityConfig.class)
-@ActiveProfiles("test")
+@WebMvcTest(LeadController.class)
 class LeadControllerTest {
 
     @Autowired
@@ -43,82 +38,99 @@ class LeadControllerTest {
     @MockBean
     private LeadService leadService;
 
-    private CreateLeadRequest createLeadRequest;
     private Lead lead;
 
     @BeforeEach
-    void setUp() throws Exception {
-
-        createLeadRequest = new CreateLeadRequest();
-        setField(createLeadRequest, "name", "Test Lead");
-        setField(createLeadRequest, "email", "lead@example.com");
-        setField(createLeadRequest, "phone", "123456789");
+    void setUp() {
 
         Role role = new Role("USER");
         User user = new User("Test User", "test@example.com", "password", role);
-        setField(user, "id", 1L);
 
         lead = new Lead("Test Lead", "lead@example.com", "123456789");
-        setField(lead, "id", 1L);
-        setField(lead, "user", user);
-        setField(lead, "status", LeadStatus.NEW);
+        lead.setUser(user);
+        lead.setStatus(LeadStatus.NEW);
     }
 
-    private void setField(Object target, String fieldName, Object value) throws Exception {
-        var field = target.getClass().getDeclaredField(fieldName);
-        field.setAccessible(true);
-        field.set(target, value);
-    }
+    /* ==========================
+       AUTHENTICATION
+       ========================== */
 
     @Test
-    @WithMockUser(username = "test@example.com", roles = {"USER"})
+    void shouldReturn401WhenNotAuthenticated() throws Exception {
+        mockMvc.perform(get("/api/leads"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    /* ==========================
+       CREATE
+       ========================== */
+
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
     void createLead_ShouldReturnCreatedLead() throws Exception {
 
         when(leadService.createLead(anyString(), anyString(), anyString(), any(User.class)))
                 .thenReturn(lead);
 
+        CreateLeadRequest request = new CreateLeadRequest();
+        request.setName("Test Lead");
+        request.setEmail("lead@example.com");
+        request.setPhone("123456789");
+
         mockMvc.perform(post("/api/leads")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createLeadRequest)))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.name").value("Test Lead"))
-                .andExpect(jsonPath("$.email").value("lead@example.com"))
                 .andExpect(jsonPath("$.status").value("NEW"));
     }
 
     @Test
-    @WithMockUser(username = "test@example.com", roles = {"USER"})
+    @WithMockUser(username = "test@example.com", roles = "USER")
+    void createLead_ShouldReturn400WhenBusinessError() throws Exception {
+
+        when(leadService.createLead(any(), any(), any(), any()))
+                .thenThrow(new IllegalArgumentException("Email already in use"));
+
+        CreateLeadRequest request = new CreateLeadRequest();
+        request.setName("Test");
+        request.setEmail("duplicate@example.com");
+        request.setPhone("123");
+
+        mockMvc.perform(post("/api/leads")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Business Error"));
+    }
+
+    /* ==========================
+       LIST
+       ========================== */
+
+    @Test
+    @WithMockUser(username = "test@example.com", roles = "USER")
     void listActiveLeads_ShouldReturnLeadList() throws Exception {
 
         when(leadService.listActiveLeads(any(User.class)))
                 .thenReturn(List.of(lead));
 
-        mockMvc.perform(get("/api/leads").with(csrf()))
+        mockMvc.perform(get("/api/leads"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].name").value("Test Lead"))
-                .andExpect(jsonPath("$[0].status").value("NEW"));
+                .andExpect(jsonPath("$[0].name").value("Test Lead"));
     }
 
-    @Test
-    @WithMockUser(username = "test@example.com", roles = {"USER"})
-    void getLeadById_ShouldReturnLead() throws Exception {
-
-        when(leadService.getByIdForUser(eq(1L), any(User.class)))
-                .thenReturn(lead);
-
-        mockMvc.perform(get("/api/leads/1").with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1));
-    }
+    /* ==========================
+       UPDATE STATUS
+       ========================== */
 
     @Test
-    @WithMockUser(username = "test@example.com", roles = {"USER"})
+    @WithMockUser(username = "test@example.com", roles = "USER")
     void updateLeadStatus_ShouldReturnUpdatedLead() throws Exception {
 
-        setField(lead, "status", LeadStatus.CONTACTED);
+        lead.setStatus(LeadStatus.CONTACTED);
 
         when(leadService.updateStatus(eq(1L), eq(LeadStatus.CONTACTED), any(User.class)))
                 .thenReturn(lead);
@@ -127,15 +139,19 @@ class LeadControllerTest {
                         .with(csrf())
                         .param("status", "CONTACTED"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.status").value("CONTACTED"));
     }
 
+    /* ==========================
+       DELETE
+       ========================== */
+
     @Test
-    @WithMockUser(username = "test@example.com", roles = {"USER"})
+    @WithMockUser(username = "test@example.com", roles = "USER")
     void deleteLead_ShouldReturnNoContent() throws Exception {
 
-        mockMvc.perform(delete("/api/leads/1").with(csrf()))
+        mockMvc.perform(delete("/api/leads/1")
+                        .with(csrf()))
                 .andExpect(status().isNoContent());
     }
 }

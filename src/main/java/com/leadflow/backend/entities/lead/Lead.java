@@ -38,10 +38,10 @@ public class Lead {
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 100, unique = true)
     private String email;
 
-    @Column(length = 15)
+    @Column(nullable = false, length = 15)
     private String phone;
 
     @Enumerated(EnumType.STRING)
@@ -63,7 +63,7 @@ public class Lead {
        CONSTRUTORES
        ========================== */
 
-    protected Lead() {
+    public Lead() {
         // JPA only
     }
 
@@ -147,6 +147,22 @@ public class Lead {
     }
 
     public void changeStatus(LeadStatus newStatus) {
+
+        if (newStatus == null) {
+            throw new IllegalArgumentException("Status cannot be null");
+        }
+
+        if (this.status == newStatus) {
+            return; // mesmo status permitido, sem histórico
+        }
+
+        if (!this.status.canTransitionTo(newStatus)) {
+            throw new IllegalArgumentException(
+                    "Invalid status transition from " +
+                    this.status + " to " + newStatus
+            );
+        }
+
         this.status = newStatus;
     }
 

@@ -60,6 +60,45 @@
 			"problemMatcher": [
 				"$junit5"
 			]
+		},
+		{
+			"label": "Run LeadServiceTest",
+			"type": "shell",
+			"command": "mvn",
+			"args": [
+				"test",
+				"-Dtest=com.leadflow.backend.service.lead.LeadServiceTest"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$junit"
+			]
+		},
+		{
+			"label": "Run LeadServiceTest",
+			"type": "shell",
+			"command": "mvn",
+			"args": [
+				"-Dtest=LeadServiceTest",
+				"test"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$junit"
+			]
+		},
+		{
+			"label": "Run LeadServiceTest",
+			"type": "shell",
+			"command": "mvn",
+			"args": [
+				"test",
+				"-Dtest=LeadServiceTest"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$junit"
+			]
 		}
 	]
 }

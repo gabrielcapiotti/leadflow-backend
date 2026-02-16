@@ -8,6 +8,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -18,11 +19,11 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final TokenService tokenService;
-    private final UserDetailsServiceImpl userDetailsService;
+    private final UserDetailsService userDetailsService; // ✅ Interface
 
     public JwtAuthenticationFilter(
             TokenService tokenService,
-            UserDetailsServiceImpl userDetailsService
+            UserDetailsService userDetailsService // ✅ Interface
     ) {
         this.tokenService = tokenService;
         this.userDetailsService = userDetailsService;
@@ -37,7 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authorizationHeader = request.getHeader("Authorization");
 
-        // 1️⃣ Header inexistente ou inválido → segue a cadeia
+        // Header inexistente ou inválido → segue a cadeia
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -46,18 +47,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authorizationHeader.substring(7);
 
         try {
-            // 2️⃣ Token inválido → segue sem autenticar
             if (!tokenService.isValid(token)) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // 3️⃣ Evita sobrescrever autenticação existente
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
 
                 String email = tokenService.getEmail(token);
 
-                // Segurança extra
                 if (email == null || email.isBlank()) {
                     filterChain.doFilter(request, response);
                     return;
@@ -77,13 +75,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         new WebAuthenticationDetailsSource().buildDetails(request)
                 );
 
-                // 4️⃣ Registra usuário autenticado
                 SecurityContextHolder.getContext()
                         .setAuthentication(authentication);
             }
 
         } catch (Exception ex) {
-            // Token inválido ou corrompido NÃO derruba a aplicação
             SecurityContextHolder.clearContext();
         }
 

@@ -104,18 +104,31 @@ public class LeadService {
                     new IllegalArgumentException("Lead not found or already deleted")
             );
 
-        // 🔥 REGRA DE TRANSIÇÃO
-        if (lead.getStatus() == newStatus) {
-            return lead; // Allow same status without exception
+        LeadStatus oldStatus = lead.getStatus();
+
+        if (!oldStatus.canTransitionTo(newStatus)) {
+            throw new IllegalArgumentException("Invalid status transition");
+        }
+
+        if (oldStatus == newStatus) {
+            return lead;
         }
 
         lead.changeStatus(newStatus);
 
-        historyRepository.save(
-                new LeadStatusHistory(lead, newStatus, changedBy)
-        );
+        if (shouldSaveHistory(oldStatus, newStatus)) {
+            historyRepository.save(
+                    new LeadStatusHistory(lead, newStatus, changedBy)
+            );
+        }
 
         return lead;
+    }
+
+    private boolean shouldSaveHistory(LeadStatus oldStatus, LeadStatus newStatus) {
+        boolean shouldSave = oldStatus != newStatus;
+        System.out.println("shouldSaveHistory: oldStatus=" + oldStatus + ", newStatus=" + newStatus + ", shouldSave=" + shouldSave);
+        return shouldSave;
     }
 
     /* ==========================

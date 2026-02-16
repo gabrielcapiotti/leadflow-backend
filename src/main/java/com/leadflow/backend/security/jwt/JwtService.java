@@ -7,6 +7,8 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.leadflow.backend.entities.user.User;
+
 import java.security.Key;
 import java.util.Date;
 import java.util.Map;
@@ -87,11 +89,22 @@ public class JwtService {
         );
     }
 
+    public String extractTenant(String token) {
+        return extractClaim(token, claims ->
+                claims.get("tenantId", String.class)
+        );
+    }
+
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(signingKey)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    public Object generateToken(User any) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'generateToken'");
     }
 }

@@ -4,10 +4,12 @@ import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.entities.enums.LeadStatus;
 import com.leadflow.backend.entities.lead.Lead;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
+@Repository
 public interface LeadRepository extends JpaRepository<Lead, Long> {
 
     /* ==========================

@@ -12,17 +12,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.ArgumentMatchers.*;
-
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class LeadServiceTest {
@@ -41,7 +38,17 @@ class LeadServiceTest {
     @BeforeEach
     void setup() {
         Role role = new Role("USER");
+        ReflectionTestUtils.setField(role, "id", 1);
+
         user = new User("Test User", "test@example.com", "password", role);
+        ReflectionTestUtils.setField(user, "id", 1L);
+
+        lenient().when(leadRepository.save(any(Lead.class)))
+                .thenAnswer(invocation -> {
+                    Lead lead = invocation.getArgument(0);
+                    ReflectionTestUtils.setField(lead, "id", 1L);
+                    return lead;
+                });
     }
 
     /* ==========================
@@ -49,15 +56,8 @@ class LeadServiceTest {
        ========================== */
 
     @Test
-    @DisplayName("Should create lead and register history")
+    @DisplayName("Should create lead and register correct history")
     void shouldCreateLead() {
-
-        Lead savedLead = new Lead("Lead", "lead@example.com", "123");
-        savedLead.setUser(user);
-        ReflectionTestUtils.setField(savedLead, "id", 1L);
-
-        when(leadRepository.save(any(Lead.class)))
-                .thenReturn(savedLead);
 
         Lead created = leadService.createLead(
                 "Lead",
@@ -73,30 +73,31 @@ class LeadServiceTest {
         verify(leadRepository).save(any(Lead.class));
 
         verify(historyRepository).save(argThat(history ->
-                history.getLead().equals(savedLead) &&
+                history.getLead().equals(created) &&
                 history.getStatus() == LeadStatus.NEW &&
                 history.getChangedBy().equals(user)
         ));
     }
 
     @Test
-    @DisplayName("Should throw exception when creating lead with null user")
-    void shouldThrowWhenCreatingLeadWithNullUser() {
-        assertThatThrownBy(() -> leadService.createLead("Lead", "lead@example.com", "123", null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("User cannot be null");
+    void shouldThrowWhenUserIsNull() {
+        assertThatThrownBy(() ->
+                leadService.createLead("Lead", "lead@example.com", "123", null)
+        ).isInstanceOf(IllegalArgumentException.class)
+         .hasMessage("User cannot be null");
     }
 
     @Test
     void shouldNotAllowDuplicateEmail() {
-        Lead existingLead = new Lead("Existing Lead", "duplicate@example.com", "123");
-        ReflectionTestUtils.setField(existingLead, "id", 1L);
+
+        Lead existing = new Lead("Existing", "duplicate@example.com", "123");
+        existing.setUser(user);
 
         when(leadRepository.findByUserAndDeletedAtIsNull(user))
-                .thenReturn(List.of(existingLead));
+                .thenReturn(List.of(existing));
 
         assertThatThrownBy(() ->
-                leadService.createLead("New Lead", "duplicate@example.com", "456", user)
+                leadService.createLead("New", "duplicate@example.com", "456", user)
         ).isInstanceOf(IllegalArgumentException.class)
          .hasMessage("Email already in use");
     }
@@ -128,7 +129,7 @@ class LeadServiceTest {
     void shouldReturnLeadByIdForUser() {
 
         Lead lead = new Lead("Lead", "lead@example.com", "123");
-        lead.setUser(user);
+        ReflectionTestUtils.setField(lead, "id", 1L);
 
         when(leadRepository.findByIdAndUserAndDeletedAtIsNull(1L, user))
                 .thenReturn(Optional.of(lead));
@@ -154,92 +155,79 @@ class LeadServiceTest {
        ========================== */
 
     @Test
-    void shouldUpdateStatusAndSaveHistory() {
+    void shouldFollowValidLifecycle() {
 
         Lead lead = new Lead("Lead", "lead@example.com", "123");
-        lead.setUser(user);
+        lead.setStatus(LeadStatus.NEW);
         ReflectionTestUtils.setField(lead, "id", 1L);
 
-        // Ensure user has an ID
-        ReflectionTestUtils.setField(user, "id", 1L);
-
-        when(leadRepository.findByIdAndUserAndDeletedAtIsNull(eq(1L), any(User.class)))
+        when(leadRepository.findByIdAndUserAndDeletedAtIsNull(1L, user))
                 .thenReturn(Optional.of(lead));
 
-        Lead updated =
-                leadService.updateStatus(1L, LeadStatus.CONTACTED, user);
+        leadService.updateStatus(1L, LeadStatus.CONTACTED, user);
+        leadService.updateStatus(1L, LeadStatus.QUALIFIED, user);
+        leadService.updateStatus(1L, LeadStatus.CLOSED, user);
 
-        assertThat(updated.getStatus())
-                .isEqualTo(LeadStatus.CONTACTED);
+        assertThat(lead.getStatus()).isEqualTo(LeadStatus.CLOSED);
 
-        verify(historyRepository).save(argThat(history ->
-                history.getStatus() == LeadStatus.CONTACTED
-        ));
+        verify(historyRepository, times(3))
+                .save(any(LeadStatusHistory.class));
+    }
+
+    @Test
+    void shouldBlockRegression() {
+
+        Lead lead = new Lead("Lead", "lead@example.com", "123");
+        lead.setStatus(LeadStatus.CONTACTED);
+
+        when(leadRepository.findByIdAndUserAndDeletedAtIsNull(1L, user))
+                .thenReturn(Optional.of(lead));
+
+        assertThatThrownBy(() ->
+                leadService.updateStatus(1L, LeadStatus.NEW, user)
+        ).isInstanceOf(IllegalArgumentException.class)
+         .hasMessageContaining("Invalid status transition");
+    }
+
+    @Test
+    void shouldBlockSkippingStages() {
+
+        Lead lead = new Lead("Lead", "lead@example.com", "123");
+        lead.setStatus(LeadStatus.NEW);
+
+        when(leadRepository.findByIdAndUserAndDeletedAtIsNull(1L, user))
+                .thenReturn(Optional.of(lead));
+
+        assertThatThrownBy(() ->
+                leadService.updateStatus(1L, LeadStatus.QUALIFIED, user)
+        ).isInstanceOf(IllegalArgumentException.class)
+         .hasMessageContaining("Invalid status transition");
     }
 
     @Test
     void shouldNotSaveHistoryIfStatusIsSame() {
 
         Lead lead = new Lead("Lead", "lead@example.com", "123");
-        lead.setUser(user);
         lead.setStatus(LeadStatus.NEW);
 
         when(leadRepository.findByIdAndUserAndDeletedAtIsNull(1L, user))
                 .thenReturn(Optional.of(lead));
 
-        Lead result =
-                leadService.updateStatus(1L, LeadStatus.NEW, user);
-
-        assertThat(result.getStatus()).isEqualTo(LeadStatus.NEW);
+        leadService.updateStatus(1L, LeadStatus.NEW, user);
 
         verify(historyRepository, never()).save(any());
     }
 
     @Test
-    @DisplayName("Should not save history when status does not change")
-    void shouldNotSaveHistoryWhenStatusDoesNotChange() {
-        Lead mockLead = new Lead("Lead", "lead@example.com", "123");
-        ReflectionTestUtils.setField(mockLead, "id", 1L);
-        mockLead.setStatus(LeadStatus.NEW);
-
-        when(leadRepository.findByIdAndUserAndDeletedAtIsNull(1L, user))
-                .thenReturn(Optional.of(mockLead));
-
-        Lead result = leadService.updateStatus(1L, LeadStatus.NEW, user);
-
-        assertThat(result.getStatus()).isEqualTo(LeadStatus.NEW);
-
-        verify(historyRepository, never()).save(any(LeadStatusHistory.class));
-    }
-
-    @Test
-    @DisplayName("Should throw exception when updating a deleted lead")
     void shouldThrowWhenUpdatingDeletedLead() {
-        Lead mockLead = new Lead("Lead", "lead@example.com", "123");
-        ReflectionTestUtils.setField(mockLead, "id", 1L);
-        mockLead.setDeletedAt(LocalDateTime.now());
 
         when(leadRepository.findByIdAndUserAndDeletedAtIsNull(1L, user))
                 .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> leadService.updateStatus(1L, LeadStatus.CONTACTED, user))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Lead not found or already deleted");
-    }
-
-    @Test
-    void shouldValidateStatusTransition() {
-        Lead lead = new Lead("Lead", "lead@example.com", "123");
-        lead.setStatus(LeadStatus.NEW);
-        ReflectionTestUtils.setField(lead, "id", 1L);
-
-        when(leadRepository.findByIdAndUserAndDeletedAtIsNull(eq(1L), any(User.class)))
-                .thenReturn(Optional.of(lead));
-
-        Lead result = leadService.updateStatus(1L, LeadStatus.NEW, user);
-
-        assertThat(result.getStatus()).isEqualTo(LeadStatus.NEW);
-        verify(historyRepository, never()).save(any(LeadStatusHistory.class));
+        assertThatThrownBy(() ->
+                leadService.updateStatus(1L, LeadStatus.CONTACTED, user)
+        ).isInstanceOf(IllegalArgumentException.class)
+         .hasMessage("Lead not found or already deleted");
     }
 
     /* ==========================
@@ -250,8 +238,6 @@ class LeadServiceTest {
     void shouldSoftDeleteLead() {
 
         Lead lead = new Lead("Lead", "lead@example.com", "123");
-        lead.setUser(user);
-        ReflectionTestUtils.setField(lead, "id", 1L);
 
         when(leadRepository.findByIdAndUserAndDeletedAtIsNull(1L, user))
                 .thenReturn(Optional.of(lead));

@@ -15,15 +15,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 @RestController
 @RequestMapping("/api/leads")
 public class LeadController {
-
-    private static final Logger logger =
-            LoggerFactory.getLogger(LeadController.class);
 
     private final LeadService leadService;
 

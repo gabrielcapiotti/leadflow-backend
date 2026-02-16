@@ -3,11 +3,13 @@ package com.leadflow.backend.security;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import com.leadflow.backend.entities.user.User;
+import com.leadflow.backend.security.jwt.JwtService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -26,6 +28,11 @@ public class TokenService {
     private final SecretKey secretKey;
     private final long expiration;
 
+    public TokenService() {
+        this.secretKey = Keys.hmacShaKeyFor("default-secret-key-32-characters".getBytes(StandardCharsets.UTF_8));
+        this.expiration = 3600000; // Default to 1 hour
+    }
+
     public TokenService(
             @Value("${security.jwt.secret}") String secret,
             @Value("${security.jwt.expiration}") long expiration
@@ -43,11 +50,16 @@ public class TokenService {
         this.expiration = expiration;
     }
 
+    public TokenService(JwtService jwtService, PasswordEncoder passwordEncoder) {
+        this.secretKey = Keys.hmacShaKeyFor("default-secret-key-32-characters".getBytes(StandardCharsets.UTF_8));
+        this.expiration = 3600000; // Default to 1 hour
+    }
+
     /* ==========================
        GENERATE TOKEN
        ========================== */
 
-    public String generateToken(User user) {
+    public String generateToken(User user, String tenant) {
         Date now = new Date();
         Date expiresAt = new Date(now.getTime() + expiration);
 
@@ -55,6 +67,7 @@ public class TokenService {
                 .setSubject(user.getEmail())
                 .claim("userId", user.getId())
                 .claim("role", user.getRole().getName())
+                .claim("tenant", tenant) // Adiciona o tenant ao token
                 .setIssuedAt(now)
                 .setExpiration(expiresAt)
                 .signWith(secretKey, ALGORITHM)
