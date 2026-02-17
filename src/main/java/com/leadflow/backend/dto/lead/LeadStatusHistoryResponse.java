@@ -1,24 +1,33 @@
 package com.leadflow.backend.dto.lead;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.leadflow.backend.entities.enums.LeadStatus;
+
 import java.time.LocalDateTime;
+import java.util.Objects;
 
-public class LeadStatusHistoryResponse {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public final class LeadStatusHistoryResponse {
 
-    private Long id;
-    private String status;
-    private String updatedBy;
-    private LocalDateTime changedAt;
+    private final Long id;
+    private final String status;
+    private final String updatedBy;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private final LocalDateTime changedAt;
 
     public LeadStatusHistoryResponse(
             Long id,
-            String status,
-            String updatedBy,
-            LocalDateTime changedAt
+            LeadStatus status,
+            LocalDateTime changedAt,
+            String updatedBy
     ) {
-        this.id = id;
-        this.status = status;
-        this.updatedBy = updatedBy;
-        this.changedAt = changedAt;
+
+        this.id = Objects.requireNonNull(id, "id cannot be null");
+        this.status = Objects.requireNonNull(status, "status cannot be null").name();
+        this.changedAt = Objects.requireNonNull(changedAt, "changedAt cannot be null");
+        this.updatedBy = updatedBy; // pode ser null ou "SYSTEM"
     }
 
     public Long getId() {

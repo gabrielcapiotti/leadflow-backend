@@ -1,13 +1,18 @@
 package com.leadflow.backend.dto.role;
 
-public class RoleResponse {
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-    private Integer id;
-    private String name;
+import java.util.Objects;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public final class RoleResponse {
+
+    private final Integer id;
+    private final String name;
 
     public RoleResponse(Integer id, String name) {
-        this.id = id;
-        this.name = name;
+        this.id = Objects.requireNonNull(id, "id cannot be null");
+        this.name = Objects.requireNonNull(name, "name cannot be null");
     }
 
     public Integer getId() {

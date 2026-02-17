@@ -1,13 +1,15 @@
 package com.leadflow.backend.controller.role;
 
-import com.leadflow.backend.security.JwtAuthenticationFilter;
-import com.leadflow.backend.security.TokenService;
-import com.leadflow.backend.security.UserDetailsServiceImpl;
+import com.leadflow.backend.config.TestSecurityConfig;
+import com.leadflow.backend.exception.GlobalExceptionHandler;
 import com.leadflow.backend.service.RoleService;
+
 import org.junit.jupiter.api.Test;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -17,6 +19,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(RoleController.class)
+@Import({TestSecurityConfig.class, GlobalExceptionHandler.class})
 class RoleControllerSecurityTest {
 
     @Autowired
@@ -25,14 +28,9 @@ class RoleControllerSecurityTest {
     @MockBean
     private RoleService roleService;
 
-    @MockBean
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
-
-    @MockBean
-    private TokenService tokenService;
-
-    @MockBean
-    private UserDetailsServiceImpl userDetailsService;
+    /* ==========================
+       NOT AUTHENTICATED
+       ========================== */
 
     @Test
     void shouldReturn401WhenNotAuthenticated() throws Exception {
@@ -40,12 +38,20 @@ class RoleControllerSecurityTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    /* ==========================
+       USER ROLE
+       ========================== */
+
     @Test
     @WithMockUser(roles = "USER")
     void shouldReturn403ForUserRole() throws Exception {
         mockMvc.perform(get("/api/roles"))
                 .andExpect(status().isForbidden());
     }
+
+    /* ==========================
+       ADMIN ROLE
+       ========================== */
 
     @Test
     @WithMockUser(roles = "ADMIN")

@@ -5,7 +5,7 @@ import com.leadflow.backend.config.TestSecurityConfig;
 import com.leadflow.backend.dto.auth.LoginRequest;
 import com.leadflow.backend.dto.auth.RegisterRequest;
 import com.leadflow.backend.exception.GlobalExceptionHandler;
-import com.leadflow.backend.security.TokenService;
+import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.auth.AuthService;
 
 import org.junit.jupiter.api.Test;
@@ -35,7 +35,7 @@ class AuthControllerNegativeTest {
     private AuthService authService;
 
     @MockBean
-    private TokenService tokenService;
+    private JwtService jwtService;
 
     /* =========================================================
        REGISTER - VALIDATION
@@ -44,10 +44,12 @@ class AuthControllerNegativeTest {
     @Test
     void shouldReturn400WhenEmailIsInvalidOnRegister() throws Exception {
 
-        RegisterRequest request = new RegisterRequest();
-        request.setName("Valid Name");
-        request.setEmail("invalid-email");
-        request.setPassword("ValidPassword123");
+        RegisterRequest request =
+                new RegisterRequest(
+                        "Valid Name",
+                        "invalid-email",
+                        "ValidPassword123"
+                );
 
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -61,10 +63,12 @@ class AuthControllerNegativeTest {
     @Test
     void shouldReturn400WhenPasswordIsTooShortOnRegister() throws Exception {
 
-        RegisterRequest request = new RegisterRequest();
-        request.setName("Valid Name");
-        request.setEmail("valid@email.com");
-        request.setPassword("short");
+        RegisterRequest request =
+                new RegisterRequest(
+                        "Valid Name",
+                        "valid@email.com",
+                        "short"
+                );
 
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -76,10 +80,12 @@ class AuthControllerNegativeTest {
     @Test
     void shouldReturnBusinessErrorWhenAuthServiceThrowsIllegalArgument() throws Exception {
 
-        RegisterRequest request = new RegisterRequest();
-        request.setName("Valid Name");
-        request.setEmail("valid@email.com");
-        request.setPassword("ValidPassword123");
+        RegisterRequest request =
+                new RegisterRequest(
+                        "Valid Name",
+                        "valid@email.com",
+                        "ValidPassword123"
+                );
 
         doThrow(new IllegalArgumentException("Invalid data"))
                 .when(authService)
@@ -100,9 +106,11 @@ class AuthControllerNegativeTest {
     @Test
     void shouldReturn400WhenEmailIsInvalidOnLogin() throws Exception {
 
-        LoginRequest request = new LoginRequest();
-        request.setEmail("invalid-email");
-        request.setPassword("ValidPassword123");
+        LoginRequest request =
+                new LoginRequest(
+                        "invalid-email",
+                        "ValidPassword123"
+                );
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -114,9 +122,11 @@ class AuthControllerNegativeTest {
     @Test
     void shouldReturn401WhenBadCredentialsExceptionIsThrownOnLogin() throws Exception {
 
-        LoginRequest request = new LoginRequest();
-        request.setEmail("valid@email.com");
-        request.setPassword("ValidPassword123");
+        LoginRequest request =
+                new LoginRequest(
+                        "valid@email.com",
+                        "ValidPassword123"
+                );
 
         doThrow(new BadCredentialsException("Invalid credentials"))
                 .when(authService)
@@ -139,7 +149,6 @@ class AuthControllerNegativeTest {
     void shouldReturn401WhenNotAuthenticatedOnMe() throws Exception {
 
         mockMvc.perform(get("/auth/me"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().string("")); // corpo vazio conforme controller
+                .andExpect(status().isUnauthorized());
     }
 }

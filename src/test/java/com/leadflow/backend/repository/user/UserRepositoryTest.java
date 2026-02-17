@@ -10,7 +10,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -29,9 +28,12 @@ class UserRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        role = roleRepository.save(new Role("USER"));
 
-        userRepository.save(
+        role = roleRepository.saveAndFlush(
+                new Role("ROLE_USER")
+        );
+
+        userRepository.saveAndFlush(
                 new User(
                         "Test User",
                         "test@example.com",
@@ -72,10 +74,10 @@ class UserRepositoryTest {
 
     @Test
     @DisplayName("Should return true for active user")
-    void existsByEmailAndDeletedAtIsNull_ShouldReturnTrue() {
+    void existsByEmailIgnoreCaseAndDeletedAtIsNull_ShouldReturnTrue() {
 
         boolean exists =
-                userRepository.existsByEmailAndDeletedAtIsNull("test@example.com");
+                userRepository.existsByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com");
 
         assertThat(exists).isTrue();
     }
@@ -85,13 +87,13 @@ class UserRepositoryTest {
     void shouldNotReturnDeletedUser() {
 
         User user =
-                userRepository.findByEmail("test@example.com").get();
+                userRepository.findByEmail("test@example.com").orElseThrow();
 
-        user.setDeletedAt(LocalDateTime.now());
-        userRepository.save(user);
+        user.softDelete();
+        userRepository.saveAndFlush(user);
 
         boolean exists =
-                userRepository.existsByEmailAndDeletedAtIsNull("test@example.com");
+                userRepository.existsByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com");
 
         assertThat(exists).isFalse();
     }

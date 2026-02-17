@@ -6,9 +6,13 @@ import com.leadflow.backend.entities.enums.LeadStatus;
 import com.leadflow.backend.entities.lead.Lead;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.service.lead.LeadService;
+import com.leadflow.backend.service.user.UserService;
+
 import jakarta.validation.Valid;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -20,39 +24,29 @@ import java.util.List;
 public class LeadController {
 
     private final LeadService leadService;
+    private final UserService userService;
 
-    public LeadController(LeadService leadService) {
+    public LeadController(
+            LeadService leadService,
+            UserService userService
+    ) {
         this.leadService = leadService;
+        this.userService = userService;
     }
 
-    /* ==========================
-       HELPER - CONVERTE PRINCIPAL
-       ========================== */
-
-    private User buildUserFromPrincipal(UserDetails principal) {
-
-        if (principal == null) {
-            throw new RuntimeException("User not authenticated");
-        }
-
-        // Aqui usamos apenas o username (email)
-        // O Service deve buscar o usuário real se necessário
-        return new User(principal.getUsername(), null, null, null);
-    }
-
-    /* ==========================
+    /* ======================================================
        LIST
-       ========================== */
+       ====================================================== */
 
     @GetMapping
     public ResponseEntity<List<LeadResponse>> list(
             @AuthenticationPrincipal UserDetails principal
     ) {
 
-        User currentUser = buildUserFromPrincipal(principal);
+        User user = resolveUser(principal);
 
         List<LeadResponse> response = leadService
-                .listActiveLeads(currentUser)
+                .listActiveLeads(user)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -60,9 +54,9 @@ public class LeadController {
         return ResponseEntity.ok(response);
     }
 
-    /* ==========================
+    /* ======================================================
        CREATE
-       ========================== */
+       ====================================================== */
 
     @PostMapping
     public ResponseEntity<LeadResponse> create(
@@ -70,13 +64,13 @@ public class LeadController {
             @Valid @RequestBody CreateLeadRequest request
     ) {
 
-        User currentUser = buildUserFromPrincipal(principal);
+        User user = resolveUser(principal);
 
         Lead lead = leadService.createLead(
                 request.getName(),
                 request.getEmail(),
                 request.getPhone(),
-                currentUser
+                user
         );
 
         return ResponseEntity
@@ -84,9 +78,9 @@ public class LeadController {
                 .body(toResponse(lead));
     }
 
-    /* ==========================
+    /* ======================================================
        GET BY ID
-       ========================== */
+       ====================================================== */
 
     @GetMapping("/{id}")
     public ResponseEntity<LeadResponse> getById(
@@ -94,16 +88,16 @@ public class LeadController {
             @PathVariable Long id
     ) {
 
-        User currentUser = buildUserFromPrincipal(principal);
+        User user = resolveUser(principal);
 
-        Lead lead = leadService.getByIdForUser(id, currentUser);
+        Lead lead = leadService.getByIdForUser(id, user);
 
         return ResponseEntity.ok(toResponse(lead));
     }
 
-    /* ==========================
+    /* ======================================================
        UPDATE STATUS
-       ========================== */
+       ====================================================== */
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<LeadResponse> updateStatus(
@@ -112,16 +106,16 @@ public class LeadController {
             @RequestParam LeadStatus status
     ) {
 
-        User currentUser = buildUserFromPrincipal(principal);
+        User user = resolveUser(principal);
 
-        Lead lead = leadService.updateStatus(id, status, currentUser);
+        Lead lead = leadService.updateStatus(id, status, user);
 
         return ResponseEntity.ok(toResponse(lead));
     }
 
-    /* ==========================
-       DELETE
-       ========================== */
+    /* ======================================================
+       DELETE (SOFT)
+       ====================================================== */
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
@@ -129,21 +123,36 @@ public class LeadController {
             @PathVariable Long id
     ) {
 
-        User currentUser = buildUserFromPrincipal(principal);
+        User user = resolveUser(principal);
 
-        leadService.softDelete(id, currentUser);
+        leadService.softDelete(id, user);
 
         return ResponseEntity.noContent().build();
     }
 
-    /* ==========================
+    /* ======================================================
+       INTERNAL
+       ====================================================== */
+
+    private User resolveUser(UserDetails principal) {
+
+        if (principal == null) {
+            throw new AuthenticationCredentialsNotFoundException(
+                    "User not authenticated"
+            );
+        }
+
+        return userService.getActiveByEmail(principal.getUsername());
+    }
+
+    /* ======================================================
        MAPPER
-       ========================== */
+       ====================================================== */
 
     private LeadResponse toResponse(Lead lead) {
 
         if (lead == null) {
-            throw new RuntimeException("Lead cannot be null");
+            throw new IllegalArgumentException("Lead cannot be null");
         }
 
         return new LeadResponse(

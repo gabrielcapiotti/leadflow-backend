@@ -1,5 +1,6 @@
 package com.leadflow.backend.security;
 
+import com.leadflow.backend.multitenancy.filter.TenantFilter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,9 +18,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtFilter;
+    private final TenantFilter tenantFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtFilter) {
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtFilter,
+            TenantFilter tenantFilter
+    ) {
         this.jwtFilter = jwtFilter;
+        this.tenantFilter = tenantFilter;
     }
 
     @Bean
@@ -39,30 +45,31 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-            // ❌ CSRF desabilitado (JWT stateless)
             .csrf(csrf -> csrf.disable())
 
-            // 🚫 Sessão desabilitada
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
 
-            // 🔐 Autorização baseada em JWT + RBAC por método
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**").permitAll()
                 .anyRequest().authenticated()
             )
 
-            // 🧱 Headers de segurança
             .headers(headers -> headers
                 .frameOptions(frame -> frame.sameOrigin())
-                .contentTypeOptions(content -> {})
             )
 
-            // 🔑 JWT filter
+            // 1️⃣ JWT autentica
             .addFilterBefore(
                 jwtFilter,
                 UsernamePasswordAuthenticationFilter.class
+            )
+
+            // 2️⃣ Tenant é resolvido após JWT
+            .addFilterAfter(
+                tenantFilter,
+                JwtAuthenticationFilter.class
             );
 
         return http.build();

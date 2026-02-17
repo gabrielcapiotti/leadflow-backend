@@ -3,14 +3,18 @@ package com.leadflow.backend.service;
 import com.leadflow.backend.entities.log.Log;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.repository.log.LogRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 public class LogService {
+
+    private static final int DEFAULT_RECENT_LIMIT = 10;
 
     private final LogRepository logRepository;
 
@@ -18,56 +22,56 @@ public class LogService {
         this.logRepository = logRepository;
     }
 
-    /* ==========================
+    /* ======================================================
        CREATE
-       ========================== */
+       ====================================================== */
 
-    /**
-     * Registra uma ação associada a um usuário.
-     */
     @Transactional
     public void log(User user, String action) {
-        Log log = new Log(user, action);
+
+        if (action == null || action.isBlank()) {
+            throw new IllegalArgumentException("Log action cannot be null or blank");
+        }
+
+        Log log = new Log(user, action.trim());
         logRepository.save(log);
     }
 
-    /**
-     * Registra uma ação do sistema (sem usuário).
-     */
     @Transactional
     public void logSystem(String action) {
-        Log log = new Log(null, action);
+
+        if (action == null || action.isBlank()) {
+            throw new IllegalArgumentException("System log action cannot be null");
+        }
+
+        Log log = new Log(null, action.trim());
         logRepository.save(log);
     }
 
-    /* ==========================
-       READ (ADMIN / AUDITORIA)
-       ========================== */
+    /* ======================================================
+       READ (PAGINADO)
+       ====================================================== */
 
-    /**
-     * Retorna os últimos logs do sistema.
-     */
     @Transactional(readOnly = true)
-    public List<Log> getRecentLogs() {
-        return logRepository.findTop10ByOrderByCreatedAtDesc();
+    public Page<Log> getRecentLogs() {
+
+        Pageable pageable = PageRequest.of(0, DEFAULT_RECENT_LIMIT);
+        return logRepository.findAllByOrderByCreatedAtDesc(pageable);
     }
 
-    /**
-     * Retorna logs de um usuário específico.
-     */
     @Transactional(readOnly = true)
-    public List<Log> getLogsByUser(User user) {
-        return logRepository.findByUserOrderByCreatedAtDesc(user);
+    public Page<Log> getLogsByUser(User user, Pageable pageable) {
+
+        return logRepository.findByUserOrderByCreatedAtDesc(user, pageable);
     }
 
-    /**
-     * Retorna logs por intervalo de datas.
-     */
     @Transactional(readOnly = true)
-    public List<Log> getLogsBetween(
+    public Page<Log> getLogsBetween(
             LocalDateTime start,
-            LocalDateTime end
+            LocalDateTime end,
+            Pageable pageable
     ) {
-        return logRepository.findByCreatedAtBetween(start, end);
+
+        return logRepository.findByCreatedAtBetween(start, end, pageable);
     }
 }

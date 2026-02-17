@@ -1,69 +1,123 @@
 package com.leadflow.backend.exception;
 
 import com.leadflow.backend.dto.error.ApiErrorResponse;
+import jakarta.validation.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.stream.Collectors;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     /* ==========================
-       VALIDATION (@Valid)
+       VALIDATION (@Valid Body)
        ========================== */
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidation(
             MethodArgumentNotValidException ex
     ) {
+
         String message = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(err -> err.getField() + ": " + err.getDefaultMessage())
+                .map(this::formatFieldError)
                 .collect(Collectors.joining(", "));
 
-        ApiErrorResponse error = new ApiErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
+        log.debug("Validation error: {}", message);
+
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
                 "Validation Error",
                 message
         );
-
-        return ResponseEntity.badRequest().body(error);
     }
 
     /* ==========================
-       BUSINESS ERRORS
+       VALIDATION (RequestParam / PathVariable)
+       ========================== */
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleConstraintViolation(
+            ConstraintViolationException ex
+    ) {
+
+        String message = ex.getConstraintViolations()
+                .stream()
+                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                .collect(Collectors.joining(", "));
+
+        log.debug("Constraint violation: {}", message);
+
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                "Validation Error",
+                message
+        );
+    }
+
+    /* ==========================
+       BUSINESS RULES
        ========================== */
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiErrorResponse> handleIllegalArgument(
             IllegalArgumentException ex
     ) {
-        ApiErrorResponse error = new ApiErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
+
+        log.debug("Business error: {}", ex.getMessage());
+
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
                 "Business Error",
                 ex.getMessage()
         );
-
-        return ResponseEntity.badRequest().body(error);
     }
 
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ApiErrorResponse> handleIllegalState(
             IllegalStateException ex
     ) {
-        ApiErrorResponse error = new ApiErrorResponse(
-                HttpStatus.CONFLICT.value(),
+
+        log.debug("Invalid state: {}", ex.getMessage());
+
+        return buildResponse(
+                HttpStatus.CONFLICT,
                 "Invalid State",
                 ex.getMessage()
         );
+    }
 
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    /* ==========================
+       DATABASE
+       ========================== */
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDataIntegrity(
+            DataIntegrityViolationException ex
+    ) {
+
+        log.warn("Data integrity violation", ex);
+
+        return buildResponse(
+                HttpStatus.CONFLICT,
+                "Database Constraint Violation",
+                "Operation violates database constraints"
+        );
     }
 
     /* ==========================
@@ -74,26 +128,54 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleBadCredentials(
             BadCredentialsException ex
     ) {
-        ApiErrorResponse error = new ApiErrorResponse(
-                HttpStatus.UNAUTHORIZED.value(),
+
+        return buildResponse(
+                HttpStatus.UNAUTHORIZED,
                 "Authentication Error",
                 "Invalid email or password"
         );
+    }
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    @ExceptionHandler(AuthenticationCredentialsNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleNotAuthenticated(
+            AuthenticationCredentialsNotFoundException ex
+    ) {
+
+        return buildResponse(
+                HttpStatus.UNAUTHORIZED,
+                "Unauthorized",
+                "Authentication is required to access this resource"
+        );
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiErrorResponse> handleAccessDenied(
             AccessDeniedException ex
     ) {
-        ApiErrorResponse error = new ApiErrorResponse(
-                HttpStatus.FORBIDDEN.value(),
+
+        return buildResponse(
+                HttpStatus.FORBIDDEN,
                 "Access Denied",
                 "You do not have permission to access this resource"
         );
+    }
 
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    /* ==========================
+       MALFORMED JSON
+       ========================== */
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidJson(
+            HttpMessageNotReadableException ex
+    ) {
+
+        log.debug("Malformed JSON request", ex);
+
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                "Malformed JSON",
+                "Request body is invalid or unreadable"
+        );
     }
 
     /* ==========================
@@ -104,14 +186,35 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleGeneric(
             Exception ex
     ) {
-        ApiErrorResponse error = new ApiErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+
+        log.error("Unexpected error", ex);
+
+        return buildResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
                 "Internal Server Error",
                 "An unexpected error occurred"
         );
+    }
 
+    /* ==========================
+       HELPER
+       ========================== */
+
+    private ResponseEntity<ApiErrorResponse> buildResponse(
+            HttpStatus status,
+            String error,
+            String message
+    ) {
         return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(error);
+                .status(status)
+                .body(new ApiErrorResponse(
+                        status.value(),
+                        error,
+                        message
+                ));
+    }
+
+    private String formatFieldError(FieldError error) {
+        return error.getField() + ": " + error.getDefaultMessage();
     }
 }

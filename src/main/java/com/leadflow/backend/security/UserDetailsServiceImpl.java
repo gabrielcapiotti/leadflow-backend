@@ -23,7 +23,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String email)
             throws UsernameNotFoundException {
 
-        User user = userRepository.findByEmailAndDeletedAtIsNull(email)
+        User user = userRepository
+                .findByEmailIgnoreCaseAndDeletedAtIsNull(email)
                 .orElseThrow(() ->
                         new UsernameNotFoundException("User not found")
                 );
@@ -33,7 +34,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 user.getPassword(),
                 List.of(
                         new SimpleGrantedAuthority(
-                                "ROLE_" + user.getRole().getName()
+                                user.getRole().getName()
                         )
                 )
         );

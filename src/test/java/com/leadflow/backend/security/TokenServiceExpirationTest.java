@@ -11,11 +11,11 @@ class TokenServiceExpirationTest {
     @Test
     void shouldReturnFalseWhenTokenIsExpired() throws InterruptedException {
 
-        // Secret com pelo menos 32 caracteres
+        // Secret válido (>= 32 chars)
         String secret = "test-secret-key-with-at-least-32-characters-long";
 
-        // Expiração extremamente curta (5ms)
-        long expirationMillis = 5L;
+        // Expiração curta mas não absurda
+        long expirationMillis = 50L;
 
         TokenService tokenService =
                 new TokenService(secret, expirationMillis);
@@ -25,8 +25,8 @@ class TokenServiceExpirationTest {
 
         String token = tokenService.generateToken(user, "test_tenant");
 
-        // Aguarda expirar
-        Thread.sleep(15);
+        // Espera suficiente para garantir expiração
+        Thread.sleep(100);
 
         boolean isValid = tokenService.isValid(token);
 

@@ -7,16 +7,16 @@ import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.repository.lead.LeadRepository;
 import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.postgresql.util.PSQLException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("integration-flyway")
@@ -33,10 +33,9 @@ class FlywayIntegrationTest {
     private RoleRepository roleRepository;
 
     @Test
-    @DisplayName("Should fail when enum contains value not allowed by Flyway CHECK constraint")
-    void shouldFailWhenLeadStatusConstraintIsInconsistent() {
+    @DisplayName("Should persist lead with QUALIFIED status when Flyway constraint is correct")
+    void shouldPersistLeadWithQualifiedStatus() {
 
-        // Arrange
         Role role = roleRepository.save(new Role("USER"));
 
         User user = userRepository.save(
@@ -46,16 +45,11 @@ class FlywayIntegrationTest {
         Lead lead = new Lead("Lead Test", "lead@email.com", "123456");
         lead.setUser(user);
 
-        // Enum possui QUALIFIED
-        // Mas o CHECK constraint do Flyway NÃO permite QUALIFIED
-        lead.setStatus(LeadStatus.QUALIFIED);
+        // Usa método correto
+        lead.changeStatus(LeadStatus.QUALIFIED);
 
-        // Act + Assert
-        assertThatThrownBy(() ->
-                leadRepository.saveAndFlush(lead)
-        )
-        .isInstanceOf(DataIntegrityViolationException.class)
-        .hasRootCauseInstanceOf(PSQLException.class)
-        .hasMessageContaining("constraint");
+        Lead saved = leadRepository.saveAndFlush(lead);
+
+        assertThat(saved.getStatus()).isEqualTo(LeadStatus.QUALIFIED);
     }
 }

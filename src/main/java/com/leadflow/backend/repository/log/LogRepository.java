@@ -1,42 +1,52 @@
 package com.leadflow.backend.repository.log;
 
-import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.entities.log.Log;
+import com.leadflow.backend.entities.user.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Repository
 public interface LogRepository extends JpaRepository<Log, Long> {
 
-    /* ==========================
+    /* ======================================================
        CONSULTAS POR USUÁRIO
-       ========================== */
+       ====================================================== */
 
-    // Logs de um usuário específico (mais recentes primeiro)
-    List<Log> findByUserOrderByCreatedAtDesc(User user);
+    @EntityGraph(attributePaths = {"user"})
+    Page<Log> findByUserOrderByCreatedAtDesc(
+            User user,
+            Pageable pageable
+    );
 
-    /* ==========================
+    /* ======================================================
        AUDITORIA / RELATÓRIOS
-       ========================== */
+       ====================================================== */
 
-    // Logs por intervalo de datas
-    List<Log> findByCreatedAtBetween(
-        LocalDateTime start,
-        LocalDateTime end
+    Page<Log> findByCreatedAtBetween(
+            LocalDateTime start,
+            LocalDateTime end,
+            Pageable pageable
     );
 
-    // Logs de um usuário em intervalo de datas
-    List<Log> findByUserAndCreatedAtBetween(
-        User user,
-        LocalDateTime start,
-        LocalDateTime end
+    Page<Log> findByUserAndCreatedAtBetween(
+            User user,
+            LocalDateTime start,
+            LocalDateTime end,
+            Pageable pageable
     );
 
-    /* ==========================
+    /* ======================================================
        MONITORAMENTO DO SISTEMA
-       ========================== */
+       ====================================================== */
 
-    // Últimos N logs do sistema (fixo em 10)
+    Page<Log> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
+    // Mantido por compatibilidade (opcional)
     List<Log> findTop10ByOrderByCreatedAtDesc();
 }

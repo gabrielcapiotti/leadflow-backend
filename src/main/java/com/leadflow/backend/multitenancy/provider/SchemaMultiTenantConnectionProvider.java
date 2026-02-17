@@ -1,15 +1,19 @@
 package com.leadflow.backend.multitenancy.provider;
 
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.regex.Pattern;
 
+@Component
 public class SchemaMultiTenantConnectionProvider
-        implements MultiTenantConnectionProvider<String> {
+        implements MultiTenantConnectionProvider<String>, Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private static final String DEFAULT_SCHEMA = "public";
 
@@ -38,11 +42,17 @@ public class SchemaMultiTenantConnectionProvider
 
     @Override
     public Connection getConnection(String tenantIdentifier) throws SQLException {
+
         String schema = resolveSchemaSafely(tenantIdentifier);
+
         Connection connection = getAnyConnection();
-        try (Statement statement = connection.createStatement()) {
-            statement.execute("SET search_path TO \"" + schema + "\"");
+
+        try {
+            connection.setSchema(schema);
+        } catch (SQLException ex) {
+            connection.setSchema(DEFAULT_SCHEMA);
         }
+
         return connection;
     }
 
@@ -50,8 +60,8 @@ public class SchemaMultiTenantConnectionProvider
     public void releaseConnection(String tenantIdentifier, Connection connection)
             throws SQLException {
 
-        try (Statement statement = connection.createStatement()) {
-            statement.execute("SET search_path TO \"" + DEFAULT_SCHEMA + "\"");
+        try {
+            connection.setSchema(DEFAULT_SCHEMA);
         } finally {
             connection.close();
         }
@@ -64,16 +74,21 @@ public class SchemaMultiTenantConnectionProvider
 
     @Override
     public boolean isUnwrappableAs(Class<?> unwrapType) {
-        return false;
+        return unwrapType.isAssignableFrom(getClass()) ||
+               unwrapType.isAssignableFrom(MultiTenantConnectionProvider.class);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> T unwrap(Class<T> unwrapType) {
+        if (isUnwrappableAs(unwrapType)) {
+            return (T) this;
+        }
         return null;
     }
 
     /**
-     * Sanitiza e valida schema antes de aplicar no search_path.
+     * Sanitiza e valida schema antes de aplicar.
      */
     private String resolveSchemaSafely(String tenantIdentifier) {
 

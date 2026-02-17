@@ -1,18 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.leadflow.backend.service.auth.AuthServiceTest
 -------------------------------------------------------------------------------
-Tests run: 6, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.543 s <<< FAILURE! -- in com.leadflow.backend.service.auth.AuthServiceTest
-com.leadflow.backend.service.auth.AuthServiceTest.shouldThrowWhenEmailAlreadyExists -- Time elapsed: 0.007 s <<< ERROR!
-org.mockito.exceptions.misusing.UnnecessaryStubbingException: 
-
-Unnecessary stubbings detected.
-Clean & maintainable test code requires zero unnecessary code.
-Following stubbings are unnecessary (click to navigate to relevant line of code):
-  1. -> at com.leadflow.backend.service.auth.AuthServiceTest.shouldThrowWhenEmailAlreadyExists(AuthServiceTest.java:71)
-Please remove unnecessary stubbings or use 'lenient' strictness. More info: javadoc for UnnecessaryStubbingException class.
-	at org.mockito.junit.jupiter.MockitoExtension.lambda$afterEach$2(MockitoExtension.java:200)
-	at java.base/java.util.Optional.ifPresent(Optional.java:178)
-	at org.mockito.junit.jupiter.MockitoExtension.afterEach(MockitoExtension.java:198)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
-
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.512 s -- in com.leadflow.backend.service.auth.AuthServiceTest

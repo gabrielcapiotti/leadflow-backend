@@ -1,5 +1,6 @@
 package com.leadflow.backend.security;
 
+import com.leadflow.backend.security.jwt.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,14 +19,14 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final TokenService tokenService;
-    private final UserDetailsService userDetailsService; // ✅ Interface
+    private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
 
     public JwtAuthenticationFilter(
-            TokenService tokenService,
-            UserDetailsService userDetailsService // ✅ Interface
+            JwtService jwtService,
+            UserDetailsService userDetailsService
     ) {
-        this.tokenService = tokenService;
+        this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
     }
 
@@ -36,47 +37,43 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String authorizationHeader = request.getHeader("Authorization");
+        final String authHeader = request.getHeader("Authorization");
 
-        // Header inexistente ou inválido → segue a cadeia
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        String token = authorizationHeader.substring(7);
+        final String token = authHeader.substring(7);
 
         try {
-            if (!tokenService.isValid(token)) {
-                filterChain.doFilter(request, response);
-                return;
-            }
 
-            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            final String email = jwtService.extractEmail(token);
 
-                String email = tokenService.getEmail(token);
-
-                if (email == null || email.isBlank()) {
-                    filterChain.doFilter(request, response);
-                    return;
-                }
+            if (email != null &&
+                SecurityContextHolder.getContext().getAuthentication() == null) {
 
                 UserDetails userDetails =
                         userDetailsService.loadUserByUsername(email);
 
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
+                if (jwtService.isTokenValid(token, 
+                        (com.leadflow.backend.entities.user.User) userDetails)) {
 
-                authentication.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
 
-                SecurityContextHolder.getContext()
-                        .setAuthentication(authentication);
+                    authentication.setDetails(
+                            new WebAuthenticationDetailsSource()
+                                    .buildDetails(request)
+                    );
+
+                    SecurityContextHolder.getContext()
+                            .setAuthentication(authentication);
+                }
             }
 
         } catch (Exception ex) {

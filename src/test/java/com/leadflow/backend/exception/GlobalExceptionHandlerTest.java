@@ -1,6 +1,6 @@
 package com.leadflow.backend.exception;
 
-import com.leadflow.backend.dto.error.ApiErrorResponse;
+import com.leadflow.backend.config.TestSecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -19,16 +19,19 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(GlobalExceptionHandlerTest.DummyController.class)
-@Import(GlobalExceptionHandler.class)
+import org.springframework.test.context.ActiveProfiles;
+
+@WebMvcTest(controllers = com.leadflow.backend.exception.GlobalExceptionHandlerTest.DummyController.class)
+@Import({GlobalExceptionHandler.class, TestSecurityConfig.class})
+@ActiveProfiles("test")
 class GlobalExceptionHandlerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    // ==========================
-    // Dummy Controller
-    // ==========================
+    /* ==========================
+       DUMMY CONTROLLER
+       ========================== */
 
     @RestController
     @RequestMapping("/dummy")
@@ -37,7 +40,6 @@ class GlobalExceptionHandlerTest {
 
         @PostMapping("/validation-error")
         public void validateInput(@Valid @RequestBody DummyRequest request) {
-            // nunca chega aqui se inválido
         }
 
         @GetMapping("/illegal-argument")
@@ -64,6 +66,21 @@ class GlobalExceptionHandlerTest {
         public void throwGenericException() {
             throw new RuntimeException("Unexpected error");
         }
+
+        @GetMapping("/illegal")
+        public void illegal() {
+            throw new IllegalArgumentException("Invalid");
+        }
+
+        @GetMapping("/state")
+        public void state() {
+            throw new IllegalStateException("State error");
+        }
+
+        @GetMapping("/generic")
+        public void generic() {
+            throw new RuntimeException("Unexpected");
+        }
     }
 
     static class DummyRequest {
@@ -80,9 +97,9 @@ class GlobalExceptionHandlerTest {
         }
     }
 
-    // ==========================
-    // TESTS
-    // ==========================
+    /* ==========================
+       TESTS
+       ========================== */
 
     @Test
     void shouldHandleValidationError() throws Exception {
@@ -90,7 +107,7 @@ class GlobalExceptionHandlerTest {
         mockMvc.perform(
                 post("/dummy/validation-error")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}") // name ausente
+                        .content("{}")
         )
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.status").value(400))
@@ -101,6 +118,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void shouldHandleIllegalArgumentException() throws Exception {
+
         mockMvc.perform(get("/dummy/illegal-argument"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
@@ -111,6 +129,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void shouldHandleIllegalStateException() throws Exception {
+
         mockMvc.perform(get("/dummy/illegal-state"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
@@ -121,6 +140,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void shouldHandleBadCredentialsException() throws Exception {
+
         mockMvc.perform(get("/dummy/bad-credentials"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value(401))
@@ -131,21 +151,25 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void shouldHandleAccessDeniedException() throws Exception {
+
         mockMvc.perform(get("/dummy/access-denied"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(403))
                 .andExpect(jsonPath("$.error").value("Access Denied"))
-                .andExpect(jsonPath("$.message").value("You do not have permission to access this resource"))
+                .andExpect(jsonPath("$.message")
+                        .value("You do not have permission to access this resource"))
                 .andExpect(jsonPath("$.timestamp").exists());
     }
 
     @Test
     void shouldHandleGenericException() throws Exception {
+
         mockMvc.perform(get("/dummy/generic-error"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.status").value(500))
                 .andExpect(jsonPath("$.error").value("Internal Server Error"))
-                .andExpect(jsonPath("$.message").value("An unexpected error occurred"))
+                .andExpect(jsonPath("$.message")
+                        .value("An unexpected error occurred"))
                 .andExpect(jsonPath("$.timestamp").exists());
     }
 }

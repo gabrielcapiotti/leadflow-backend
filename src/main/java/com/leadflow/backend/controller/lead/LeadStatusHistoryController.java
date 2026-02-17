@@ -1,12 +1,16 @@
 package com.leadflow.backend.controller.lead;
 
 import com.leadflow.backend.dto.lead.LeadStatusHistoryResponse;
+import com.leadflow.backend.entities.lead.Lead;
 import com.leadflow.backend.entities.user.User;
-import com.leadflow.backend.entities.lead.LeadStatusHistory;
 import com.leadflow.backend.service.lead.LeadService;
 import com.leadflow.backend.service.lead.LeadStatusHistoryService;
+import com.leadflow.backend.service.user.UserService;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,48 +21,50 @@ public class LeadStatusHistoryController {
 
     private final LeadService leadService;
     private final LeadStatusHistoryService historyService;
+    private final UserService userService;
 
     public LeadStatusHistoryController(
             LeadService leadService,
-            LeadStatusHistoryService historyService
+            LeadStatusHistoryService historyService,
+            UserService userService
     ) {
         this.leadService = leadService;
         this.historyService = historyService;
+        this.userService = userService;
     }
 
-    /* ==========================
+    /* ======================================================
        HISTORY BY LEAD (ISOLADO)
-       ========================== */
+       ====================================================== */
 
     @GetMapping("/{leadId}/history")
     public ResponseEntity<List<LeadStatusHistoryResponse>> getHistory(
-            @AuthenticationPrincipal User currentUser,
+            @AuthenticationPrincipal UserDetails principal,
             @PathVariable Long leadId
     ) {
-        // Garante que o lead pertence ao usuário
-        var lead = leadService.getByIdForUser(leadId, currentUser);
+
+        User user = resolveUser(principal);
+
+        Lead lead = leadService.getByIdForUser(leadId, user);
 
         List<LeadStatusHistoryResponse> response =
-                historyService.getHistoryByLead(lead)
-                        .stream()
-                        .map(this::toResponse)
-                        .toList();
+                historyService.getHistoryByLead(lead);
 
         return ResponseEntity.ok(response);
     }
 
-    /* ==========================
-       MAPPER
-       ========================== */
+    /* ======================================================
+       INTERNAL
+       ====================================================== */
 
-    private LeadStatusHistoryResponse toResponse(LeadStatusHistory history) {
-        return new LeadStatusHistoryResponse(
-                history.getId(),
-                history.getStatus().name(),
-                history.getUpdatedBy() != null
-                        ? history.getUpdatedBy().getEmail()
-                        : "SYSTEM",
-                history.getChangedAt()
-        );
+    private User resolveUser(UserDetails principal) {
+
+        if (principal == null) {
+            throw new AuthenticationCredentialsNotFoundException(
+                    "User not authenticated"
+            );
+        }
+
+        return userService.getActiveByEmail(principal.getUsername());
     }
 }

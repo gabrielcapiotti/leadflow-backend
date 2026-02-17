@@ -8,13 +8,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class SettingMapper {
 
-    /* ==========================
+    /* ======================================================
        ENTITY → RESPONSE
-       ========================== */
+       ====================================================== */
 
     public SettingResponse toResponse(Setting setting) {
+
         if (setting == null) {
-            return null;
+            throw new IllegalArgumentException("Setting cannot be null");
         }
 
         return new SettingResponse(
@@ -27,22 +28,51 @@ public class SettingMapper {
         );
     }
 
-    /* ==========================
-       REQUEST → ENTITY
-       ========================== */
+    /* ======================================================
+       REQUEST → ENTITY (UPDATE SEGURO)
+       ====================================================== */
 
     public void updateEntity(
             Setting setting,
             UpdateSettingRequest request
     ) {
-        if (setting == null || request == null) {
-            return;
+
+        if (setting == null) {
+            throw new IllegalArgumentException("Setting cannot be null");
         }
 
-        setting.setVendorName(request.getVendorName());
-        setting.setWhatsapp(request.getWhatsapp());
-        setting.setCompanyName(request.getCompanyName());
-        setting.setLogo(request.getLogo());
-        setting.setWelcomeMessage(request.getWelcomeMessage());
+        if (request == null) {
+            throw new IllegalArgumentException("Update request cannot be null");
+        }
+
+        // Usa valores atuais se campo vier null (update parcial)
+        String vendorName = request.getVendorName() != null
+                ? request.getVendorName()
+                : setting.getVendorName();
+
+        String whatsapp = request.getWhatsapp() != null
+                ? request.getWhatsapp()
+                : setting.getWhatsapp();
+
+        String companyName = request.getCompanyName() != null
+                ? request.getCompanyName()
+                : setting.getCompanyName();
+
+        String logo = request.getLogo() != null
+                ? request.getLogo()
+                : setting.getLogo();
+
+        String welcomeMessage = request.getWelcomeMessage() != null
+                ? request.getWelcomeMessage()
+                : setting.getWelcomeMessage();
+
+        // Delegação correta para regra de domínio
+        setting.update(
+                vendorName,
+                whatsapp,
+                companyName,
+                logo,
+                welcomeMessage
+        );
     }
 }

@@ -2,7 +2,9 @@ package com.leadflow.backend.multitenancy.resolver;
 
 import com.leadflow.backend.security.jwt.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.stereotype.Component;
 
+@Component
 public class JwtTenantResolver {
 
     private static final String BEARER_PREFIX = "Bearer ";
@@ -24,15 +26,10 @@ public class JwtTenantResolver {
         String token = authHeader.substring(BEARER_PREFIX.length());
 
         try {
-            if (!jwtService.isTokenValid(token)) {
-                return null;
-            }
-
-            return jwtService.extractRole(token);
+            // Aqui NÃO precisamos validar novamente se já existe JwtAuthenticationFilter
+            return jwtService.extractTenant(token);
 
         } catch (Exception ex) {
-            // Nunca quebrar fluxo aqui.
-            // Autenticação será tratada pelo JwtAuthenticationFilter.
             return null;
         }
     }

@@ -1,12 +1,17 @@
 package com.leadflow.backend.controller.lead;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.leadflow.backend.config.TestSecurityConfig;
 import com.leadflow.backend.dto.lead.CreateLeadRequest;
 import com.leadflow.backend.entities.enums.LeadStatus;
 import com.leadflow.backend.entities.lead.Lead;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
+import com.leadflow.backend.exception.GlobalExceptionHandler;
+import com.leadflow.backend.multitenancy.filter.TenantFilter;
+import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.lead.LeadService;
+import com.leadflow.backend.service.user.UserService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,11 +28,11 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(LeadController.class)
+@Import({TestSecurityConfig.class, GlobalExceptionHandler.class})
 class LeadControllerTest {
 
     @Autowired
@@ -38,17 +44,29 @@ class LeadControllerTest {
     @MockBean
     private LeadService leadService;
 
+    @MockBean
+    private UserService userService;
+
+    @MockBean
+    private TenantFilter tenantFilter;
+
+    @MockBean
+    private JwtService jwtService;
+
     private Lead lead;
+    private User user;
 
     @BeforeEach
     void setUp() {
 
         Role role = new Role("USER");
-        User user = new User("Test User", "test@example.com", "password", role);
+        user = new User("Test User", "test@example.com", "password", role);
 
         lead = new Lead("Test Lead", "lead@example.com", "123456789");
         lead.setUser(user);
-        lead.setStatus(LeadStatus.NEW);
+
+        when(userService.getActiveByEmail("test@example.com"))
+                .thenReturn(user);
     }
 
     /* ==========================
@@ -72,13 +90,14 @@ class LeadControllerTest {
         when(leadService.createLead(anyString(), anyString(), anyString(), any(User.class)))
                 .thenReturn(lead);
 
-        CreateLeadRequest request = new CreateLeadRequest();
-        request.setName("Test Lead");
-        request.setEmail("lead@example.com");
-        request.setPhone("123456789");
+        CreateLeadRequest request =
+                new CreateLeadRequest(
+                        "Test Lead",
+                        "lead@example.com",
+                        "123456789"
+                );
 
         mockMvc.perform(post("/api/leads")
-                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -93,13 +112,14 @@ class LeadControllerTest {
         when(leadService.createLead(any(), any(), any(), any()))
                 .thenThrow(new IllegalArgumentException("Email already in use"));
 
-        CreateLeadRequest request = new CreateLeadRequest();
-        request.setName("Test");
-        request.setEmail("duplicate@example.com");
-        request.setPhone("123");
+        CreateLeadRequest request =
+                new CreateLeadRequest(
+                        "Test",
+                        "duplicate@example.com",
+                        "123"
+                );
 
         mockMvc.perform(post("/api/leads")
-                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -130,13 +150,12 @@ class LeadControllerTest {
     @WithMockUser(username = "test@example.com", roles = "USER")
     void updateLeadStatus_ShouldReturnUpdatedLead() throws Exception {
 
-        lead.setStatus(LeadStatus.CONTACTED);
+        lead.changeStatus(LeadStatus.CONTACTED);
 
         when(leadService.updateStatus(eq(1L), eq(LeadStatus.CONTACTED), any(User.class)))
                 .thenReturn(lead);
 
         mockMvc.perform(patch("/api/leads/1/status")
-                        .with(csrf())
                         .param("status", "CONTACTED"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CONTACTED"));
@@ -150,8 +169,7 @@ class LeadControllerTest {
     @WithMockUser(username = "test@example.com", roles = "USER")
     void deleteLead_ShouldReturnNoContent() throws Exception {
 
-        mockMvc.perform(delete("/api/leads/1")
-                        .with(csrf()))
+        mockMvc.perform(delete("/api/leads/1"))
                 .andExpect(status().isNoContent());
     }
 }

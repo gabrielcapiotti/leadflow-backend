@@ -1,15 +1,17 @@
 package com.leadflow.backend.service.lead;
 
-import com.leadflow.backend.entities.user.User;
+import com.leadflow.backend.dto.lead.LeadStatusHistoryResponse;
+import com.leadflow.backend.entities.enums.LeadStatus;
 import com.leadflow.backend.entities.lead.Lead;
 import com.leadflow.backend.entities.lead.LeadStatusHistory;
-import com.leadflow.backend.entities.enums.LeadStatus;
+import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.repository.lead.LeadStatusHistoryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class LeadStatusHistoryService {
@@ -22,20 +24,17 @@ public class LeadStatusHistoryService {
         this.historyRepository = historyRepository;
     }
 
-    /* ==========================
-       CREATE / REGISTER
-       ========================== */
+    /* ======================================================
+       REGISTER STATUS CHANGE
+       ====================================================== */
 
-    /**
-     * Registra uma mudança de status no histórico.
-     * Deve ser chamado APENAS após o Lead mudar de status.
-     */
     @Transactional
     public LeadStatusHistory registerStatusChange(
             Lead lead,
             LeadStatus newStatus,
             User changedBy
     ) {
+
         LeadStatusHistory history = new LeadStatusHistory(
                 lead,
                 newStatus,
@@ -45,32 +44,41 @@ public class LeadStatusHistoryService {
         return historyRepository.save(history);
     }
 
-    /* ==========================
-       READ
-       ========================== */
+    /* ======================================================
+       READ (ENTITY)
+       ====================================================== */
 
-    /**
-     * Retorna todo o histórico de um lead
-     * (do mais recente para o mais antigo)
-     */
     @Transactional(readOnly = true)
-    public List<LeadStatusHistory> getHistoryByLead(Lead lead) {
+    public List<LeadStatusHistory> getHistoryEntitiesByLead(Lead lead) {
         return historyRepository.findByLeadOrderByChangedAtDesc(lead);
     }
 
-    /**
-     * Retorna o último status registrado de um lead
-     */
     @Transactional(readOnly = true)
     public Optional<LeadStatusHistory> getLastStatus(Lead lead) {
         return historyRepository.findFirstByLeadOrderByChangedAtDesc(lead);
     }
 
-    /**
-     * Retorna todo o histórico por status
-     */
     @Transactional(readOnly = true)
     public List<LeadStatusHistory> getHistoryByStatus(LeadStatus status) {
         return historyRepository.findByStatus(status);
+    }
+
+    /* ======================================================
+       READ (DTO SAFE FOR CONTROLLER)
+       ====================================================== */
+
+    @Transactional(readOnly = true)
+    public List<LeadStatusHistoryResponse> getHistoryByLead(Lead lead) {
+
+        return historyRepository
+                .findByLeadOrderByChangedAtDesc(lead)
+                .stream()
+                .map(history -> new LeadStatusHistoryResponse(
+                        history.getId(),
+                        history.getStatus(),
+                        history.getChangedAt(),
+                        history.getChangedBy().getEmail()
+                ))
+                .collect(Collectors.toList());
     }
 }

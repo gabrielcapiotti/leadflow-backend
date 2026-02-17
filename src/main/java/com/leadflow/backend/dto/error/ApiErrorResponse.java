@@ -1,13 +1,16 @@
 package com.leadflow.backend.dto.error;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.time.LocalDateTime;
 
-public class ApiErrorResponse {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public final class ApiErrorResponse {
 
-    private int status;
-    private String error;
-    private String message;
-    private LocalDateTime timestamp;
+    private final int status;
+    private final String error;
+    private final String message;
+    private final LocalDateTime timestamp;
 
     public ApiErrorResponse(int status, String error, String message) {
         this.status = status;

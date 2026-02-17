@@ -1,12 +1,11 @@
 package com.leadflow.backend.entities;
 
+import com.leadflow.backend.entities.user.User;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import com.leadflow.backend.entities.user.User;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 @Entity
 @Table(
@@ -25,14 +24,10 @@ public class Setting {
        RELACIONAMENTO
        ========================== */
 
-    /**
-     * Pode ser null:
-     * - settings globais
-     * - bootstrap
-     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
         name = "user_id",
+        nullable = false,
         foreignKey = @ForeignKey(name = "fk_settings_user")
     )
     private User user;
@@ -75,15 +70,10 @@ public class Setting {
        CONSTRUTORES
        ========================== */
 
-    /**
-     * Construtor protegido exigido pelo JPA
-     */
     protected Setting() {
+        // JPA only
     }
 
-    /**
-     * Construtor de domínio
-     */
     public Setting(
             User user,
             String vendorName,
@@ -92,92 +82,101 @@ public class Setting {
             String logo,
             String welcomeMessage
     ) {
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+
+        validateVendorName(vendorName);
+        validateWhatsapp(whatsapp);
+
         this.user = user;
-        this.vendorName = vendorName;
-        this.whatsapp = whatsapp;
-        this.companyName = companyName;
-        this.logo = logo;
-        this.welcomeMessage = welcomeMessage;
+        this.vendorName = vendorName.trim();
+        this.whatsapp = whatsapp.trim();
+        this.companyName = normalize(companyName);
+        this.logo = normalize(logo);
+        this.welcomeMessage = normalize(welcomeMessage);
     }
 
     /* ==========================
-       GETTERS & SETTERS
+       GETTERS
        ========================== */
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
 
-    public User getUser() {
-        return user;
-    }
+    public User getUser() { return user; }
 
-    public void setUser(User user) {
-        this.user = user;
-    }
+    public String getVendorName() { return vendorName; }
 
-    public String getVendorName() {
-        return vendorName;
-    }
+    public String getWhatsapp() { return whatsapp; }
 
-    public void setVendorName(String vendorName) {
-        this.vendorName = vendorName;
-    }
+    public String getCompanyName() { return companyName; }
 
-    public String getWhatsapp() {
-        return whatsapp;
-    }
+    public String getLogo() { return logo; }
 
-    public void setWhatsapp(String whatsapp) {
-        this.whatsapp = whatsapp;
-    }
+    public String getWelcomeMessage() { return welcomeMessage; }
 
-    public String getCompanyName() {
-        return companyName;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
 
-    public void setCompanyName(String companyName) {
-        this.companyName = companyName;
-    }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 
-    public String getLogo() {
-        return logo;
-    }
-
-    public void setLogo(String logo) {
-        this.logo = logo;
-    }
-
-    public String getWelcomeMessage() {
-        return welcomeMessage;
-    }
-
-    public void setWelcomeMessage(String welcomeMessage) {
-        this.welcomeMessage = welcomeMessage;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public LocalDateTime getDeletedAt() {
-        return deletedAt;
-    }
-
-    public void setDeletedAt(LocalDateTime deletedAt) {
-        this.deletedAt = deletedAt;
-    }
+    public LocalDateTime getDeletedAt() { return deletedAt; }
 
     /* ==========================
-       DOMÍNIO
+       REGRAS DE DOMÍNIO
        ========================== */
+
+    public void update(
+            String vendorName,
+            String whatsapp,
+            String companyName,
+            String logo,
+            String welcomeMessage
+    ) {
+        ensureNotDeleted();
+
+        validateVendorName(vendorName);
+        validateWhatsapp(whatsapp);
+
+        this.vendorName = vendorName.trim();
+        this.whatsapp = whatsapp.trim();
+        this.companyName = normalize(companyName);
+        this.logo = normalize(logo);
+        this.welcomeMessage = normalize(welcomeMessage);
+    }
+
+    public void softDelete() {
+        ensureNotDeleted();
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    public void restore() {
+        this.deletedAt = null;
+    }
 
     public boolean isDeleted() {
         return deletedAt != null;
+    }
+
+    private void ensureNotDeleted() {
+        if (isDeleted()) {
+            throw new IllegalStateException("Cannot modify deleted setting");
+        }
+    }
+
+    private void validateVendorName(String vendorName) {
+        if (vendorName == null || vendorName.isBlank()) {
+            throw new IllegalArgumentException("Vendor name cannot be blank");
+        }
+    }
+
+    private void validateWhatsapp(String whatsapp) {
+        if (whatsapp == null || whatsapp.isBlank()) {
+            throw new IllegalArgumentException("Whatsapp cannot be blank");
+        }
+    }
+
+    private String normalize(String value) {
+        return value == null ? null : value.trim();
     }
 
     /* ==========================
@@ -187,26 +186,12 @@ public class Setting {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Setting)) return false;
-        Setting setting = (Setting) o;
-        return Objects.equals(id, setting.id);
+        if (!(o instanceof Setting other)) return false;
+        return id != null && id.equals(other.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
-    }
-
-    /* ==========================
-       TO STRING
-       ========================== */
-
-    @Override
-    public String toString() {
-        return "Setting{" +
-               "id=" + id +
-               ", vendorName='" + vendorName + '\'' +
-               ", companyName='" + companyName + '\'' +
-               '}';
+        return getClass().hashCode();
     }
 }

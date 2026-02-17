@@ -34,6 +34,7 @@ class AuthServiceTest {
     void setUp() {
         passwordEncoder = new BCryptPasswordEncoder();
         authService = new AuthService(userRepository, roleRepository, passwordEncoder);
+
         userRole = new Role("USER");
     }
 
@@ -44,11 +45,11 @@ class AuthServiceTest {
     @Test
     void shouldRegisterUserSuccessfully() {
 
-        when(roleRepository.findByName("USER"))
-                .thenReturn(Optional.of(userRole));
-
-        when(userRepository.existsByEmailAndDeletedAtIsNull("test@example.com"))
+        when(userRepository.existsByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
                 .thenReturn(false);
+
+        when(roleRepository.findByNameIgnoreCase("ROLE_USER"))
+                .thenReturn(Optional.of(userRole));
 
         when(userRepository.save(any(User.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -60,37 +61,47 @@ class AuthServiceTest {
         );
 
         assertThat(result.getEmail()).isEqualTo("test@example.com");
-        assertThat(passwordEncoder.matches("password123", result.getPassword())).isTrue();
+        assertThat(passwordEncoder.matches("password123", result.getPassword()))
+                .isTrue();
 
+        verify(userRepository).existsByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com");
+        verify(roleRepository).findByNameIgnoreCase("ROLE_USER");
         verify(userRepository).save(any(User.class));
     }
 
     @Test
     void shouldThrowWhenEmailAlreadyExists() {
 
-        when(roleRepository.findByName("USER"))
-                .thenReturn(Optional.of(userRole));
-
-        when(userRepository.existsByEmailAndDeletedAtIsNull("test@example.com"))
+        when(userRepository.existsByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
                 .thenReturn(true);
 
         assertThatThrownBy(() ->
                 authService.registerUser("Test", "test@example.com", "password")
-        ).isInstanceOf(IllegalArgumentException.class)
-         .hasMessageContaining("Email");
+        )
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Email");
 
+        verify(userRepository).existsByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com");
+        verify(roleRepository, never()).findByNameIgnoreCase(any());
         verify(userRepository, never()).save(any());
     }
 
     @Test
     void shouldThrowWhenRoleNotFound() {
 
-        when(roleRepository.findByName("USER"))
+        when(userRepository.existsByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
+                .thenReturn(false);
+
+        when(roleRepository.findByNameIgnoreCase("ROLE_USER"))
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() ->
                 authService.registerUser("Test", "test@example.com", "password")
-        ).isInstanceOf(IllegalStateException.class);
+        )
+        .isInstanceOf(IllegalStateException.class);
+
+        verify(roleRepository).findByNameIgnoreCase("ROLE_USER");
+        verify(userRepository, never()).save(any());
     }
 
     /* ==========================
@@ -101,11 +112,11 @@ class AuthServiceTest {
     void shouldAuthenticateSuccessfully() {
 
         String rawPassword = "password123";
-        String encoded = passwordEncoder.encode(rawPassword);
+        String encodedPassword = passwordEncoder.encode(rawPassword);
 
-        User user = new User("Test", "test@example.com", encoded, userRole);
+        User user = new User("Test", "test@example.com", encodedPassword, userRole);
 
-        when(userRepository.findByEmailAndDeletedAtIsNull("test@example.com"))
+        when(userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
                 .thenReturn(Optional.of(user));
 
         User result = authService.authenticateUser(
@@ -119,26 +130,28 @@ class AuthServiceTest {
     @Test
     void shouldThrowWhenUserNotFound() {
 
-        when(userRepository.findByEmailAndDeletedAtIsNull("test@example.com"))
+        when(userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() ->
                 authService.authenticateUser("test@example.com", "password")
-        ).isInstanceOf(IllegalArgumentException.class);
+        )
+        .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void shouldThrowWhenPasswordIsInvalid() {
 
-        String encoded = passwordEncoder.encode("correct-password");
+        String encodedPassword = passwordEncoder.encode("correct-password");
 
-        User user = new User("Test", "test@example.com", encoded, userRole);
+        User user = new User("Test", "test@example.com", encodedPassword, userRole);
 
-        when(userRepository.findByEmailAndDeletedAtIsNull("test@example.com"))
+        when(userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
                 .thenReturn(Optional.of(user));
 
         assertThatThrownBy(() ->
                 authService.authenticateUser("test@example.com", "wrong-password")
-        ).isInstanceOf(IllegalArgumentException.class);
+        )
+        .isInstanceOf(IllegalArgumentException.class);
     }
 }

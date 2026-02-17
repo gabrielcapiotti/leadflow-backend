@@ -1,34 +1,41 @@
 package com.leadflow.backend.repository.user;
 
 import com.leadflow.backend.entities.user.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
+@Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    /* ==========================
-       AUTENTICAÇÃO
-       ========================== */
+    /* ======================================================
+       AUTENTICAÇÃO (USUÁRIOS ATIVOS)
+       ====================================================== */
 
-    // Login seguro (apenas usuários ativos)
-    Optional<User> findByEmailAndDeletedAtIsNull(String email);
+    @EntityGraph(attributePaths = {"role"})
+    Optional<User> findByEmailIgnoreCaseAndDeletedAtIsNull(String email);
 
-    /* ==========================
+    /* ======================================================
        VALIDAÇÃO DE CADASTRO
-       ========================== */
+       ====================================================== */
 
-    // Verifica existência de email ativo
-    boolean existsByEmailAndDeletedAtIsNull(String email);
+    boolean existsByEmailIgnoreCaseAndDeletedAtIsNull(String email);
 
-    /* ==========================
-       CONSULTAS ADMIN / INTERNAS
-       ========================== */
+    /* ======================================================
+       CONSULTAS ADMINISTRATIVAS
+       ====================================================== */
 
-    // Busca por email (inclui usuários soft-deleted)
+    Optional<User> findByEmailIgnoreCase(String email);
+
     Optional<User> findByEmail(String email);
 
-    // Lista todos os usuários ativos
-    List<User> findByDeletedAtIsNull();
+    Page<User> findByDeletedAtIsNull(Pageable pageable);
+
+    boolean existsByEmailAndDeletedAtIsNull(String string);
+
+    Object findByEmailAndDeletedAtIsNull(String string);
 }

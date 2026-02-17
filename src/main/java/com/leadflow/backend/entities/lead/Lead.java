@@ -1,20 +1,20 @@
 package com.leadflow.backend.entities.lead;
 
-import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.entities.enums.LeadStatus;
+import com.leadflow.backend.entities.user.User;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 @Entity
 @Table(
     name = "leads",
     indexes = {
         @Index(name = "idx_leads_email", columnList = "email"),
-        @Index(name = "idx_leads_user", columnList = "user_id")
+        @Index(name = "idx_leads_user", columnList = "user_id"),
+        @Index(name = "idx_leads_user_email", columnList = "user_id,email")
     }
 )
 public class Lead {
@@ -23,25 +23,25 @@ public class Lead {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /* ==========================
-       RELACIONAMENTO
-       ========================== */
+    /* ======================================================
+       RELATIONSHIP
+       ====================================================== */
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    /* ==========================
-       CAMPOS
-       ========================== */
+    /* ======================================================
+       FIELDS
+       ====================================================== */
 
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(nullable = false, length = 100, unique = true)
+    @Column(nullable = false, length = 100)
     private String email;
 
-    @Column(nullable = false, length = 15)
+    @Column(length = 15)
     private String phone;
 
     @Enumerated(EnumType.STRING)
@@ -59,91 +59,66 @@ public class Lead {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    /* ==========================
-       CONSTRUTORES
-       ========================== */
+    /* ======================================================
+       CONSTRUCTORS
+       ====================================================== */
 
-    public Lead() {
-        // JPA only
-    }
+    protected Lead() {}
 
     public Lead(String name, String email, String phone) {
-        this.name = name;
-        this.email = email;
+
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Name cannot be blank");
+        }
+
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email cannot be blank");
+        }
+
+        this.name = name.trim();
+        this.email = email.trim().toLowerCase();
         this.phone = phone;
         this.status = LeadStatus.NEW;
     }
 
-    /* ==========================
-       GETTERS & SETTERS
-       ========================== */
+    /* ======================================================
+       GETTERS
+       ====================================================== */
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public User getUser() { return user; }
+    public String getName() { return name; }
+    public String getEmail() { return email; }
+    public String getPhone() { return phone; }
+    public LeadStatus getStatus() { return status; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public LocalDateTime getDeletedAt() { return deletedAt; }
 
-    public User getUser() {
-        return user;
-    }
+    /* ======================================================
+       BUSINESS METHODS
+       ====================================================== */
 
     public void setUser(User user) {
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
         this.user = user;
     }
 
-    public String getName() {
-        return name;
-    }
+    public void updateContact(String name, String email, String phone) {
 
-    public void setName(String name) {
-        this.name = name;
-    }
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Name cannot be blank");
+        }
 
-    public String getEmail() {
-        return email;
-    }
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email cannot be blank");
+        }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
+        this.name = name.trim();
+        this.email = email.trim().toLowerCase();
         this.phone = phone;
-    }
-
-    public LeadStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(LeadStatus status) {
-        this.status = status;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public LocalDateTime getDeletedAt() {
-        return deletedAt;
-    }
-
-    public void setDeletedAt(LocalDateTime deletedAt) {
-        this.deletedAt = deletedAt;
-    }
-
-    /* ==========================
-       DOMÍNIO
-       ========================== */
-
-    public boolean isDeleted() {
-        return deletedAt != null;
     }
 
     public void changeStatus(LeadStatus newStatus) {
@@ -152,40 +127,45 @@ public class Lead {
             throw new IllegalArgumentException("Status cannot be null");
         }
 
-        if (this.status == newStatus) {
-            return; // mesmo status permitido, sem histórico
-        }
-
         if (!this.status.canTransitionTo(newStatus)) {
             throw new IllegalArgumentException(
-                    "Invalid status transition from " +
-                    this.status + " to " + newStatus
+                "Invalid status transition from " +
+                this.status + " to " + newStatus
             );
         }
 
         this.status = newStatus;
     }
 
-    /* ==========================
-       EQUALS & HASHCODE
-       ========================== */
+    public void softDelete() {
+        if (this.deletedAt == null) {
+            this.deletedAt = LocalDateTime.now();
+        }
+    }
+
+    public void restore() {
+        this.deletedAt = null;
+    }
+
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
+
+    /* ======================================================
+       JPA SAFE EQUALS / HASHCODE
+       ====================================================== */
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Lead)) return false;
-        Lead lead = (Lead) o;
-        return Objects.equals(id, lead.id);
+        if (!(o instanceof Lead other)) return false;
+        return id != null && id.equals(other.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return getClass().hashCode();
     }
-
-    /* ==========================
-       TO STRING
-       ========================== */
 
     @Override
     public String toString() {
@@ -197,8 +177,7 @@ public class Lead {
                '}';
     }
 
-    public void setId(long l) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setId'");
+    protected void setId(Long id) {
+        this.id = id;
     }
 }

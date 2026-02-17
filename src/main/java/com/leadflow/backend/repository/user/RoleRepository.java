@@ -2,22 +2,24 @@ package com.leadflow.backend.repository.user;
 
 import com.leadflow.backend.entities.user.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+@Repository
 public interface RoleRepository extends JpaRepository<Role, Integer> {
 
-    /* ==========================
-       CONSULTAS PRINCIPAIS
-       ========================== */
+    /* ======================================================
+       CONSULTA PRINCIPAL (RBAC / AUTH)
+       ====================================================== */
 
-    // Busca role por nome (uso em AuthService, RBAC)
-    Optional<Role> findByName(String name);
+    Optional<Role> findByNameIgnoreCase(String name);
 
-    /* ==========================
-       VALIDAÇÕES / ADMIN
-       ========================== */
+    /* ======================================================
+       VALIDAÇÃO / BOOTSTRAP
+       ====================================================== */
 
-    // Verifica existência de role (útil para bootstrap / migrations)
-    boolean existsByName(String name);
+    boolean existsByNameIgnoreCase(String name);
+
+    void findByName(String string);
 }

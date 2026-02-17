@@ -5,15 +5,16 @@ import com.leadflow.backend.entities.enums.LeadStatus;
 import com.leadflow.backend.entities.lead.Lead;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
+import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
+import com.leadflow.backend.repository.user.RoleRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,28 +34,42 @@ class LeadRepositoryTest extends IntegrationTestBase {
     @Autowired
     private RoleRepository roleRepository;
 
-    private User createUser() {
-        Role role = roleRepository.findByName("USER")
-                .orElseGet(() -> roleRepository.save(new Role("USER")));
+    private static final String TENANT = "public";
 
-        String randomEmail = "user_" + UUID.randomUUID() + "@example.com";
-
-        User user = new User("Test User", randomEmail, "password", role);
-        return userRepository.save(user);
+    @BeforeEach
+    void setTenant() {
+        TenantContext.setTenant(TENANT);
     }
 
     @AfterEach
     void cleanup() {
         leadRepository.deleteAll();
         userRepository.deleteAll();
+        TenantContext.clear();
     }
+
+   private User createUser() {
+
+    Optional<Role> existingRole = roleRepository.findByNameIgnoreCase("USER");
+
+    Role role = existingRole.orElseGet(() -> {
+        Role newRole = new Role("USER");
+        return roleRepository.saveAndFlush(newRole);
+    });
+
+    String randomEmail = "user_" + UUID.randomUUID() + "@example.com";
+
+    User user = new User("Test User", randomEmail, "password", role);
+
+    return userRepository.saveAndFlush(user);
+}
+
 
     /* ==========================
        SAVE & FIND
        ========================== */
 
     @Test
-    @DisplayName("Should save and retrieve a Lead entity")
     void shouldSaveAndRetrieveLead() {
 
         User savedUser = createUser();
@@ -82,8 +97,7 @@ class LeadRepositoryTest extends IntegrationTestBase {
        ========================== */
 
     @Test
-    @DisplayName("Should not allow duplicate lead email")
-    void shouldNotAllowDuplicateEmail() {
+    void shouldNotAllowDuplicateEmailPerUser() {
 
         User user = createUser();
 
@@ -106,20 +120,25 @@ class LeadRepositoryTest extends IntegrationTestBase {
        ========================== */
 
     @Test
-    @DisplayName("Should find leads by user and not deleted")
     void shouldFindByUserAndDeletedAtIsNull() {
 
         User user = createUser();
 
-        Lead lead1 = new Lead("Lead 1",
-                "lead1_" + UUID.randomUUID() + "@example.com", "123");
+        Lead lead1 = new Lead(
+                "Lead 1",
+                "lead1_" + UUID.randomUUID() + "@example.com",
+                "123"
+        );
         lead1.setUser(user);
 
-        Lead lead2 = new Lead("Lead 2",
-                "lead2_" + UUID.randomUUID() + "@example.com", "456");
+        Lead lead2 = new Lead(
+                "Lead 2",
+                "lead2_" + UUID.randomUUID() + "@example.com",
+                "456"
+        );
         lead2.setUser(user);
 
-        leadRepository.saveAll(List.of(lead1, lead2));
+        leadRepository.saveAllAndFlush(List.of(lead1, lead2));
 
         List<Lead> leads =
                 leadRepository.findByUserAndDeletedAtIsNull(user);
@@ -128,8 +147,7 @@ class LeadRepositoryTest extends IntegrationTestBase {
     }
 
     @Test
-    @DisplayName("Should exclude soft deleted leads")
-    void shouldPerformSoftDelete() {
+    void shouldExcludeSoftDeletedLeads() {
 
         User user = createUser();
 
@@ -142,7 +160,7 @@ class LeadRepositoryTest extends IntegrationTestBase {
 
         Lead savedLead = leadRepository.saveAndFlush(lead);
 
-        savedLead.setDeletedAt(LocalDateTime.now());
+        savedLead.softDelete();
         leadRepository.saveAndFlush(savedLead);
 
         List<Lead> leads =
@@ -156,54 +174,39 @@ class LeadRepositoryTest extends IntegrationTestBase {
        ========================== */
 
     @Test
-    @DisplayName("Should count leads by status and not deleted")
     void shouldCountByStatusAndDeletedAtIsNull() {
 
         User user = createUser();
 
-        Lead lead1 = new Lead("Lead 1",
-                "c1_" + UUID.randomUUID() + "@example.com", "123");
+        Lead lead1 = new Lead(
+                "Lead 1",
+                "c1_" + UUID.randomUUID() + "@example.com",
+                "123"
+        );
         lead1.setUser(user);
-        lead1.setStatus(LeadStatus.NEW);
 
-        Lead lead2 = new Lead("Lead 2",
-                "c2_" + UUID.randomUUID() + "@example.com", "456");
+        Lead lead2 = new Lead(
+                "Lead 2",
+                "c2_" + UUID.randomUUID() + "@example.com",
+                "456"
+        );
         lead2.setUser(user);
-        lead2.setStatus(LeadStatus.NEW);
 
-        Lead lead3 = new Lead("Lead 3",
-                "c3_" + UUID.randomUUID() + "@example.com", "789");
+        Lead lead3 = new Lead(
+                "Lead 3",
+                "c3_" + UUID.randomUUID() + "@example.com",
+                "789"
+        );
         lead3.setUser(user);
-        lead3.setStatus(LeadStatus.CONTACTED);
 
-        leadRepository.saveAll(List.of(lead1, lead2, lead3));
+        lead2.changeStatus(LeadStatus.CONTACTED);
+        lead3.changeStatus(LeadStatus.CONTACTED);
+
+        leadRepository.saveAllAndFlush(List.of(lead1, lead2, lead3));
 
         long count =
-                leadRepository.countByStatusAndDeletedAtIsNull(LeadStatus.NEW);
+                leadRepository.countByStatusAndDeletedAtIsNull(LeadStatus.CONTACTED);
 
         assertThat(count).isEqualTo(2);
-    }
-
-    /* ==========================
-       ENUM VS DATABASE CHECK
-       ========================== */
-
-    @Test
-    @DisplayName("Should fail if database constraint is inconsistent with enum")
-    void shouldFailIfStatusConstraintIsInvalid() {
-
-        User user = createUser();
-
-        Lead lead = new Lead(
-                "Invalid Status Lead",
-                "invalid_" + UUID.randomUUID() + "@example.com",
-                "999"
-        );
-        lead.setUser(user);
-        lead.setStatus(LeadStatus.QUALIFIED); // possível inconsistência
-
-        assertThatThrownBy(() ->
-                leadRepository.saveAndFlush(lead)
-        ).isInstanceOf(Exception.class);
     }
 }

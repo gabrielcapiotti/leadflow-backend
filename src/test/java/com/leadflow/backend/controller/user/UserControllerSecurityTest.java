@@ -1,24 +1,38 @@
 package com.leadflow.backend.controller.user;
 
+import com.leadflow.backend.config.TestSecurityConfig;
+import com.leadflow.backend.exception.GlobalExceptionHandler;
 import com.leadflow.backend.service.user.UserService;
+
 import org.junit.jupiter.api.Test;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.ActiveProfiles;
 
+import static org.mockito.Mockito.when;
+import static java.util.Collections.emptyList;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(UserController.class)
+@WebMvcTest
+@ActiveProfiles("test")
+@Import({TestSecurityConfig.class, GlobalExceptionHandler.class})
 class UserControllerSecurityTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockBean
-    private UserService userService; // Mock necessário
+    private UserService userService;
+
+    /* ==========================
+       USER ROLE
+       ========================== */
 
     @Test
     @WithMockUser(roles = "USER")
@@ -27,12 +41,23 @@ class UserControllerSecurityTest {
                 .andExpect(status().isForbidden());
     }
 
+    /* ==========================
+       ADMIN ROLE
+       ========================== */
+
     @Test
     @WithMockUser(roles = "ADMIN")
     void shouldReturn200ForAdminRole() throws Exception {
+
+        when(userService.listActiveUsers()).thenReturn(emptyList());
+
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk());
     }
+
+    /* ==========================
+       NOT AUTHENTICATED
+       ========================== */
 
     @Test
     void shouldReturn401WhenNotAuthenticated() throws Exception {

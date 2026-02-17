@@ -1,15 +1,11 @@
 package com.leadflow.backend.security;
 
+import com.leadflow.backend.entities.user.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import com.leadflow.backend.entities.user.User;
-import com.leadflow.backend.security.jwt.JwtService;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -22,44 +18,41 @@ public class TokenService {
     private static final Logger logger =
             LoggerFactory.getLogger(TokenService.class);
 
-    private static final SignatureAlgorithm ALGORITHM = SignatureAlgorithm.HS256;
-    private static final int MIN_SECRET_LENGTH = 32; // 256 bits
-
     private final SecretKey secretKey;
     private final long expiration;
 
-    public TokenService() {
-        this.secretKey = Keys.hmacShaKeyFor("default-secret-key-32-characters".getBytes(StandardCharsets.UTF_8));
-        this.expiration = 3600000; // Default to 1 hour
-    }
+    /* ======================================================
+       CONSTRUTOR SPRING (produção)
+       ====================================================== */
 
     public TokenService(
             @Value("${security.jwt.secret}") String secret,
             @Value("${security.jwt.expiration}") long expiration
     ) {
-        if (secret == null || secret.length() < MIN_SECRET_LENGTH) {
-            throw new IllegalArgumentException(
-                    "JWT secret must have at least 32 characters (256 bits)"
-            );
-        }
-
-        this.secretKey = Keys.hmacShaKeyFor(
-                secret.getBytes(StandardCharsets.UTF_8)
-        );
-
+        this.secretKey = buildKey(secret);
         this.expiration = expiration;
     }
 
-    public TokenService(JwtService jwtService, PasswordEncoder passwordEncoder) {
-        this.secretKey = Keys.hmacShaKeyFor("default-secret-key-32-characters".getBytes(StandardCharsets.UTF_8));
-        this.expiration = 3600000; // Default to 1 hour
+    private SecretKey buildKey(String secret) {
+        if (secret == null || secret.length() < 32) {
+            throw new IllegalArgumentException(
+                    "JWT secret must be at least 32 characters"
+            );
+        }
+
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    /* ==========================
-       GENERATE TOKEN
-       ========================== */
+    /* ======================================================
+       GENERATE TOKEN (com tenant)
+       ====================================================== */
 
     public String generateToken(User user, String tenant) {
+
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+
         Date now = new Date();
         Date expiresAt = new Date(now.getTime() + expiration);
 
@@ -67,16 +60,24 @@ public class TokenService {
                 .setSubject(user.getEmail())
                 .claim("userId", user.getId())
                 .claim("role", user.getRole().getName())
-                .claim("tenant", tenant) // Adiciona o tenant ao token
+                .claim("tenant", tenant)
                 .setIssuedAt(now)
                 .setExpiration(expiresAt)
-                .signWith(secretKey, ALGORITHM)
+                .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    /* ==========================
+    /* ======================================================
+       OVERLOAD (caso produção use user.getTenantId())
+       ====================================================== */
+
+    public String generateToken(User user) {
+        return generateToken(user, "public");
+    }
+
+    /* ======================================================
        VALIDATION
-       ========================== */
+       ====================================================== */
 
     public boolean isValid(String token) {
         try {
@@ -88,9 +89,9 @@ public class TokenService {
         }
     }
 
-    /* ==========================
+    /* ======================================================
        EXTRACTION
-       ========================== */
+       ====================================================== */
 
     public String getEmail(String token) {
         return parseToken(token).getBody().getSubject();
@@ -104,9 +105,13 @@ public class TokenService {
         return parseToken(token).getBody().get("role", String.class);
     }
 
-    /* ==========================
-       INTERNAL
-       ========================== */
+    public String getTenant(String token) {
+        return parseToken(token).getBody().get("tenant", String.class);
+    }
+
+    /* ======================================================
+       INTERNAL PARSE
+       ====================================================== */
 
     private Jws<Claims> parseToken(String token) {
         return Jwts.parserBuilder()

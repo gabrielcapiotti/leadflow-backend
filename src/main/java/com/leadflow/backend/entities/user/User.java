@@ -5,14 +5,13 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 @Entity
 @Table(
-    name = "users",
-    uniqueConstraints = {
-        @UniqueConstraint(name = "uk_users_email", columnNames = "email")
-    }
+        name = "users",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_users_email", columnNames = "email")
+        }
 )
 public class User {
 
@@ -23,17 +22,17 @@ public class User {
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(nullable = false, length = 100, unique = true)
+    @Column(nullable = false, length = 100, updatable = false)
     private String email;
 
     @Column(nullable = false, length = 255)
     private String password;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
-        name = "role_id",
-        nullable = false,
-        foreignKey = @ForeignKey(name = "fk_users_role")
+            name = "role_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_users_role")
     )
     private Role role;
 
@@ -48,24 +47,41 @@ public class User {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    /* ==========================
+    /* ======================================================
        CONSTRUTORES
-       ========================== */
+       ====================================================== */
 
-    public User() {
+    protected User() {
         // JPA only
     }
 
-    public User(String name, String email, String password, Role role) {
-        this.name = name;
-        this.email = email;
-        this.password = password;
+    public User(String name, String email, String encryptedPassword, Role role) {
+
+        if (name == null || name.isBlank())
+            throw new IllegalArgumentException("Name cannot be null or blank");
+
+        if (email == null || email.isBlank())
+            throw new IllegalArgumentException("Email cannot be null or blank");
+
+        if (encryptedPassword == null || encryptedPassword.isBlank())
+            throw new IllegalArgumentException("Password cannot be null or blank");
+
+        if (role == null)
+            throw new IllegalArgumentException("Role cannot be null");
+
+        this.name = name.trim();
+        this.email = normalizeEmail(email);
+        this.password = encryptedPassword;
         this.role = role;
     }
 
-    /* ==========================
-       GETTERS & SETTERS
-       ========================== */
+    private String normalizeEmail(String email) {
+        return email.trim().toLowerCase();
+    }
+
+    /* ======================================================
+       GETTERS
+       ====================================================== */
 
     public Long getId() {
         return id;
@@ -75,35 +91,16 @@ public class User {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getEmail() {
         return email;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    /**
-     * ⚠️ Sempre salvar SENHA JÁ CRIPTOGRAFADA
-     */
     public String getPassword() {
         return password;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public Role getRole() {
         return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -118,47 +115,104 @@ public class User {
         return deletedAt;
     }
 
-    public void setDeletedAt(LocalDateTime deletedAt) {
-        this.deletedAt = deletedAt;
+    /* ======================================================
+       MULTITENANCY
+       ====================================================== */
+
+    public String getTenantId() {
+        // Caso ainda não use multitenancy real no User,
+        // pode retornar tenant fixo ou null.
+        return "public";
     }
 
-    /* ==========================
-       DOMÍNIO / REGRAS
-       ========================== */
+    /* ======================================================
+       REGRAS DE DOMÍNIO
+       ====================================================== */
+
+    public void changeName(String newName) {
+        if (newName == null || newName.isBlank())
+            throw new IllegalArgumentException("Name cannot be blank");
+
+        this.name = newName.trim();
+    }
+
+    public void changePassword(String encryptedPassword) {
+        if (encryptedPassword == null || encryptedPassword.isBlank())
+            throw new IllegalArgumentException("Password cannot be blank");
+
+        this.password = encryptedPassword;
+    }
+
+    public void changeRole(Role newRole) {
+        if (newRole == null)
+            throw new IllegalArgumentException("Role cannot be null");
+
+        this.role = newRole;
+    }
+
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    public void restore() {
+        this.deletedAt = null;
+    }
 
     public boolean isDeleted() {
         return deletedAt != null;
     }
 
-    /* ==========================
+    /* ======================================================
+       SETTERS CONTROLADOS (COMPATIBILIDADE)
+       ====================================================== */
+
+    public void setName(String name) {
+        changeName(name);
+    }
+
+    public void setRole(Role role) {
+        changeRole(role);
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    /**
+     * ⚠️ Email não deveria ser alterado.
+     * Mantido apenas para compatibilidade.
+     */
+    public void setEmail(String email) {
+        this.email = normalizeEmail(email);
+    }
+
+    /* ======================================================
        EQUALS & HASHCODE
-       ========================== */
+       ====================================================== */
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof User)) return false;
-        User user = (User) o;
-
-        return Objects.equals(id, user.id);
+        if (!(o instanceof User other)) return false;
+        return id != null && id.equals(other.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return getClass().hashCode();
     }
 
-    /* ==========================
-       TO STRING (SEGURANÇA)
-       ========================== */
+    /* ======================================================
+       TO STRING (SEM SENHA)
+       ====================================================== */
 
     @Override
     public String toString() {
         return "User{" +
-               "id=" + id +
-               ", name='" + name + '\'' +
-               ", email='" + email + '\'' +
-               ", role=" + (role != null ? role.getName() : null) +
-               '}';
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", role=" + (role != null ? role.getName() : null) +
+                '}';
     }
 }

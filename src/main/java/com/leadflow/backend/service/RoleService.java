@@ -17,23 +17,15 @@ public class RoleService {
         this.roleRepository = roleRepository;
     }
 
-    /* ==========================
+    /* ======================================================
        READ
-       ========================== */
+       ====================================================== */
 
-    /**
-     * Lista todas as roles do sistema.
-     * Uso: admin, dropdowns controlados.
-     */
     @Transactional(readOnly = true)
     public List<Role> listAll() {
         return roleRepository.findAll();
     }
 
-    /**
-     * Busca role por ID.
-     * Uso interno / administrativo.
-     */
     @Transactional(readOnly = true)
     public Role getById(@NonNull Integer roleId) {
         return roleRepository.findById(roleId)
@@ -42,31 +34,42 @@ public class RoleService {
                 );
     }
 
-    /**
-     * Busca role por nome.
-     * Uso: autenticação e RBAC.
-     */
     @Transactional(readOnly = true)
     public Role getByName(String name) {
-        return roleRepository.findByName(name)
+
+        String normalized = normalize(name);
+
+        return roleRepository.findByNameIgnoreCase(normalized)
                 .orElseThrow(() ->
                         new IllegalArgumentException("Role not found")
                 );
     }
 
-    /* ==========================
+    /* ======================================================
        SEED / BOOTSTRAP
-       ========================== */
+       ====================================================== */
 
-    /**
-     * Garante que uma role exista.
-     * ⚠️ Deve ser usado APENAS em seed / bootstrap.
-     */
     @Transactional
     public Role getOrCreate(String name) {
-        return roleRepository.findByName(name)
+
+        String normalized = normalize(name);
+
+        return roleRepository.findByNameIgnoreCase(normalized)
                 .orElseGet(() ->
-                        roleRepository.save(new Role(name))
+                        roleRepository.save(new Role(normalized))
                 );
+    }
+
+    /* ======================================================
+       INTERNAL
+       ====================================================== */
+
+    private String normalize(String name) {
+
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Role name cannot be null or blank");
+        }
+
+        return name.trim().toUpperCase();
     }
 }

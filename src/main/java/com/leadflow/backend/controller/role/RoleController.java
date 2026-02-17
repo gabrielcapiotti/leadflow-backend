@@ -3,8 +3,10 @@ package com.leadflow.backend.controller.role;
 import com.leadflow.backend.dto.role.RoleResponse;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.service.RoleService;
+
+import jakarta.validation.constraints.Positive;
+
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +24,7 @@ public class RoleController {
     }
 
     /* ==========================
-       LIST
+       LIST ALL ROLES
        ========================== */
 
     @GetMapping
@@ -37,14 +39,16 @@ public class RoleController {
     }
 
     /* ==========================
-       GET BY ID
+       GET ROLE BY ID
        ========================== */
 
     @GetMapping("/{id}")
     public ResponseEntity<RoleResponse> getById(
-            @PathVariable @NonNull Integer id
+            @PathVariable @Positive(message = "Role id must be positive") Integer id
     ) {
+
         Role role = roleService.getById(id);
+
         return ResponseEntity.ok(toResponse(role));
     }
 
@@ -53,6 +57,11 @@ public class RoleController {
        ========================== */
 
     private RoleResponse toResponse(Role role) {
+
+        if (role == null) {
+            throw new IllegalArgumentException("Role cannot be null");
+        }
+
         return new RoleResponse(
                 role.getId(),
                 role.getName()

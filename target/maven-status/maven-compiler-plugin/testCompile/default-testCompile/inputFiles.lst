@@ -9,6 +9,7 @@ C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\lead
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\repository\user\UserRepositoryTest.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\multitenancy\PostgreSQLTestContainerConfig.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\controller\auth\AuthControllerNegativeTest.java
+C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\repository\user\RoleRepositoryTest.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\service\auth\AuthServiceTest.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\exception\GlobalExceptionHandlerTest.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\controller\lead\LeadControllerTest.java

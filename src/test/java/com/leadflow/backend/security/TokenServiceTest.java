@@ -4,23 +4,23 @@ import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@ExtendWith(MockitoExtension.class)
 class TokenServiceTest {
 
     private TokenService tokenService;
     private User user;
 
+    private static final String SECRET =
+            "test-secret-key-for-jwt-token-generation-minimum-256-bits-required";
+
     @BeforeEach
     void setUp() throws Exception {
-        // Initialize TokenService with test configuration
+
         tokenService = new TokenService(
-            "test-secret-key-for-jwt-token-generation-minimum-256-bits-required",
-            3600000L  // 1 hour
+                SECRET,
+                3600000L // 1 hora
         );
 
         Role role = new Role("USER");
@@ -36,62 +36,102 @@ class TokenServiceTest {
         field.set(target, value);
     }
 
-    @Test
-    void generateToken_ShouldReturnValidToken() {
-        String tenant = "test_tenant";
-        String token = tokenService.generateToken(user, tenant);
+    /* ==========================
+       GENERATE TOKEN
+       ========================== */
 
-        assertNotNull(token);
-        assertFalse(token.isEmpty());
-        assertTrue(token.split("\\.").length == 3); // JWT has 3 parts
+    @Test
+    void generateToken_ShouldReturnValidJwtStructure() {
+
+        String token = tokenService.generateToken(user, "test_tenant");
+
+        assertThat(token)
+                .isNotNull()
+                .isNotBlank();
+
+        // JWT possui 3 partes separadas por ponto
+        assertThat(token.split("\\."))
+                .hasSize(3);
     }
+
+    /* ==========================
+       VALIDATION
+       ========================== */
 
     @Test
     void isValid_ShouldReturnTrue_ForValidToken() {
-        String tenant = "test_tenant";
-        String token = tokenService.generateToken(user, tenant);
+
+        String token = tokenService.generateToken(user, "test_tenant");
 
         boolean isValid = tokenService.isValid(token);
 
-        assertTrue(isValid);
+        assertThat(isValid).isTrue();
     }
 
     @Test
     void isValid_ShouldReturnFalse_ForInvalidToken() {
-        String invalidToken = "invalid.jwt.token";
 
-        boolean isValid = tokenService.isValid(invalidToken);
+        boolean isValid = tokenService.isValid("invalid.jwt.token");
 
-        assertFalse(isValid);
+        assertThat(isValid).isFalse();
     }
 
     @Test
+    void isValid_ShouldReturnFalse_WhenTokenExpired() throws InterruptedException {
+
+        TokenService shortLivedService =
+                new TokenService(SECRET, 50L);
+
+        String token = shortLivedService.generateToken(user, "test_tenant");
+
+        Thread.sleep(100);
+
+        boolean isValid = shortLivedService.isValid(token);
+
+        assertThat(isValid).isFalse();
+    }
+
+    /* ==========================
+       CLAIM EXTRACTION
+       ========================== */
+
+    @Test
     void getEmail_ShouldReturnCorrectEmail() {
-        String tenant = "test_tenant";
-        String token = tokenService.generateToken(user, tenant);
+
+        String token = tokenService.generateToken(user, "test_tenant");
 
         String email = tokenService.getEmail(token);
 
-        assertEquals("test@example.com", email);
+        assertThat(email).isEqualTo("test@example.com");
     }
 
     @Test
     void getUserId_ShouldReturnCorrectUserId() {
-        String tenant = "test_tenant";
-        String token = tokenService.generateToken(user, tenant);
+
+        String token = tokenService.generateToken(user, "test_tenant");
 
         Long userId = tokenService.getUserId(token);
 
-        assertEquals(1L, userId);
+        assertThat(userId).isEqualTo(1L);
     }
 
     @Test
     void getRole_ShouldReturnCorrectRole() {
-        String tenant = "test_tenant";
-        String token = tokenService.generateToken(user, tenant);
+
+        String token = tokenService.generateToken(user, "test_tenant");
 
         String role = tokenService.getRole(token);
 
-        assertEquals("USER", role);
+        assertThat(role).isEqualTo("USER");
+    }
+
+    @Test
+    void getTenant_ShouldReturnCorrectTenant() {
+
+        String token = tokenService.generateToken(user, "tenant_x");
+
+        String tenant = tokenService.getTenant(token);
+
+        assertThat(tenant).isEqualTo("tenant_x");
     }
 }

@@ -7,7 +7,7 @@ import com.leadflow.backend.dto.auth.RegisterRequest;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.exception.GlobalExceptionHandler;
-import com.leadflow.backend.security.TokenService;
+import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.auth.AuthService;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -45,7 +45,7 @@ class AuthControllerTest {
     private AuthService authService;
 
     @MockBean
-    private TokenService tokenService;
+    private JwtService jwtService;
 
     private User mockUser;
 
@@ -68,7 +68,7 @@ class AuthControllerTest {
         when(authService.authenticateUser(anyString(), anyString()))
                 .thenReturn(mockUser);
 
-        when(tokenService.generateToken(any(User.class), anyString()))
+        when(jwtService.generateToken(any(User.class)))
                 .thenReturn("mocked-jwt-token");
     }
 
@@ -80,10 +80,12 @@ class AuthControllerTest {
     @DisplayName("Should register user and return JWT token")
     void shouldRegisterUserAndReturnToken() throws Exception {
 
-        RegisterRequest request = new RegisterRequest();
-        request.setName("Test User");
-        request.setEmail("user" + UUID.randomUUID() + "@test.com");
-        request.setPassword("12345678");
+        RegisterRequest request =
+                new RegisterRequest(
+                        "Test User",
+                        "user" + UUID.randomUUID() + "@test.com",
+                        "12345678"
+                );
 
         mockMvc.perform(
                 post("/auth/register")
@@ -102,10 +104,12 @@ class AuthControllerTest {
     @DisplayName("Should return detailed validation error when email is invalid")
     void shouldReturnValidationErrorForInvalidEmail() throws Exception {
 
-        RegisterRequest request = new RegisterRequest();
-        request.setName("Test User");
-        request.setEmail("invalid-email");
-        request.setPassword("12345678");
+        RegisterRequest request =
+                new RegisterRequest(
+                        "Test User",
+                        "invalid-email",
+                        "12345678"
+                );
 
         mockMvc.perform(
                 post("/auth/register")
@@ -115,7 +119,7 @@ class AuthControllerTest {
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.status").value(400))
         .andExpect(jsonPath("$.error").value("Validation Error"))
-        .andExpect(jsonPath("$.message", containsString("email")))
+        .andExpect(jsonPath("$.message", containsString("Email")))
         .andExpect(jsonPath("$.timestamp").exists());
     }
 
@@ -127,10 +131,12 @@ class AuthControllerTest {
     @DisplayName("Should return validation error when password is too short")
     void shouldReturnValidationErrorForShortPassword() throws Exception {
 
-        RegisterRequest request = new RegisterRequest();
-        request.setName("Test User");
-        request.setEmail("valid@email.com");
-        request.setPassword("123"); // senha curta
+        RegisterRequest request =
+                new RegisterRequest(
+                        "Test User",
+                        "valid@email.com",
+                        "123"
+                );
 
         mockMvc.perform(
                 post("/auth/register")
@@ -153,10 +159,12 @@ class AuthControllerTest {
     @DisplayName("Should aggregate multiple validation errors in single response")
     void shouldReturnMultipleValidationErrors() throws Exception {
 
-        RegisterRequest request = new RegisterRequest();
-        request.setName(""); // inválido
-        request.setEmail("invalid");
-        request.setPassword("123");
+        RegisterRequest request =
+                new RegisterRequest(
+                        "",
+                        "invalid",
+                        "123"
+                );
 
         mockMvc.perform(
                 post("/auth/register")
@@ -178,9 +186,11 @@ class AuthControllerTest {
     @DisplayName("Should login and return JWT")
     void shouldLoginAndReturnToken() throws Exception {
 
-        LoginRequest request = new LoginRequest();
-        request.setEmail("metest@test.com");
-        request.setPassword("password");
+        LoginRequest request =
+                new LoginRequest(
+                        "metest@test.com",
+                        "password"
+                );
 
         mockMvc.perform(
                 post("/auth/login")
@@ -202,9 +212,11 @@ class AuthControllerTest {
         when(authService.authenticateUser(anyString(), anyString()))
                 .thenThrow(new IllegalArgumentException("Invalid credentials"));
 
-        LoginRequest request = new LoginRequest();
-        request.setEmail("wrong@email.com");
-        request.setPassword("wrong");
+        LoginRequest request =
+                new LoginRequest(
+                        "wrong@email.com",
+                        "wrong"
+                );
 
         mockMvc.perform(
                 post("/auth/login")

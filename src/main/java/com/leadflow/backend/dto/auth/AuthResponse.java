@@ -1,13 +1,13 @@
 package com.leadflow.backend.dto.auth;
 
-public class AuthResponse {
-    private final String token;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-    public AuthResponse(String token) {
-        this.token = token;
-    }
-
-    public String getToken() {
-        return token;
+public record AuthResponse(
+        @JsonProperty("token") String token
+) {
+    public AuthResponse {
+        if (token == null || token.isBlank()) {
+            throw new IllegalArgumentException("Token cannot be null or blank");
+        }
     }
 }

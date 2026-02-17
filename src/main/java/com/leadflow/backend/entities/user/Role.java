@@ -5,7 +5,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 @Entity
 @Table(
@@ -20,7 +19,7 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, length = 50, updatable = false)
     private String name;
 
     @CreationTimestamp
@@ -40,11 +39,24 @@ public class Role {
     }
 
     public Role(String name) {
-        this.name = name;
+
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Role name cannot be null or blank");
+        }
+
+        this.name = normalize(name);
     }
 
     /* ==========================
-       GETTERS & SETTERS
+       NORMALIZAÇÃO
+       ========================== */
+
+    private String normalize(String value) {
+        return value.trim().toUpperCase();
+    }
+
+    /* ==========================
+       GETTERS (imutável)
        ========================== */
 
     public Integer getId() {
@@ -53,10 +65,6 @@ public class Role {
 
     public String getName() {
         return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -68,25 +76,23 @@ public class Role {
     }
 
     /* ==========================
-       EQUALS & HASHCODE
+       EQUALS & HASHCODE (JPA SAFE)
        ========================== */
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Role)) return false;
-        Role role = (Role) o;
-
-        return Objects.equals(id, role.id);
+        if (!(o instanceof Role other)) return false;
+        return id != null && id.equals(other.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return getClass().hashCode();
     }
 
     /* ==========================
-       TO STRING (OPCIONAL)
+       TO STRING
        ========================== */
 
     @Override

@@ -1,23 +1,27 @@
 package com.leadflow.backend.entities.log;
 
+import com.leadflow.backend.entities.user.User;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-import com.leadflow.backend.entities.user.User;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 @Entity
-@Table(name = "logs")
+@Table(
+    name = "logs",
+    indexes = {
+        @Index(name = "idx_logs_user_id", columnList = "user_id"),
+        @Index(name = "idx_logs_created_at", columnList = "created_at")
+    }
+)
 public class Log {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * Usuário que realizou a ação (pode ser null)
+    /*
+     * Usuário que realizou a ação (pode ser null – ex: sistema)
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
@@ -26,7 +30,7 @@ public class Log {
     )
     private User user;
 
-    /**
+    /*
      * Descrição da ação executada
      */
     @Column(nullable = false, columnDefinition = "TEXT")
@@ -35,10 +39,6 @@ public class Log {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
 
     /* ==========================
        CONSTRUTORES
@@ -49,12 +49,17 @@ public class Log {
     }
 
     public Log(User user, String action) {
+
+        if (action == null || action.isBlank()) {
+            throw new IllegalArgumentException("Action cannot be null or blank");
+        }
+
         this.user = user;
-        this.action = action;
+        this.action = action.trim();
     }
 
     /* ==========================
-       GETTERS & SETTERS
+       GETTERS (imutável)
        ========================== */
 
     public Long getId() {
@@ -65,41 +70,28 @@ public class Log {
         return user;
     }
 
-    public void setUser(User user) {
-        this.user = user;
-    }
-
     public String getAction() {
         return action;
-    }
-
-    public void setAction(String action) {
-        this.action = action;
     }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
     /* ==========================
-       EQUALS & HASHCODE
+       EQUALS & HASHCODE (JPA SAFE)
        ========================== */
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Log)) return false;
-        Log log = (Log) o;
-        return Objects.equals(id, log.id);
+        if (!(o instanceof Log other)) return false;
+        return id != null && id.equals(other.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return getClass().hashCode();
     }
 
     /* ==========================

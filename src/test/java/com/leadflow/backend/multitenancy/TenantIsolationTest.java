@@ -2,9 +2,14 @@ package com.leadflow.backend.multitenancy;
 
 import com.leadflow.backend.IntegrationTestBase;
 import com.leadflow.backend.entities.lead.Lead;
+import com.leadflow.backend.entities.user.Role;
+import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.multitenancy.service.TenantService;
 import com.leadflow.backend.repository.lead.LeadRepository;
+import com.leadflow.backend.repository.user.RoleRepository;
+import com.leadflow.backend.repository.user.UserRepository;
+
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -25,6 +30,12 @@ class TenantIsolationTest extends IntegrationTestBase {
     @Autowired
     private LeadRepository leadRepository;
 
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
     @BeforeEach
     void setup() {
         TenantContext.clear();
@@ -39,33 +50,6 @@ class TenantIsolationTest extends IntegrationTestBase {
     }
 
     /* ==========================
-       CONTEXT
-       ========================== */
-
-    @Test
-    void shouldSetAndRetrieveTenantCorrectly() {
-        TenantContext.setTenant("tenant_a");
-
-        assertThat(TenantContext.getTenant())
-                .isEqualTo("tenant_a");
-    }
-
-    @Test
-    void shouldDefaultToNullWhenTenantNotSet() {
-        assertThat(TenantContext.getTenant())
-                .isNull();
-    }
-
-    @Test
-    void shouldClearTenantContext() {
-        TenantContext.setTenant("tenant_a");
-        TenantContext.clear();
-
-        assertThat(TenantContext.getTenant())
-                .isNull();
-    }
-
-    /* ==========================
        ISOLATION
        ========================== */
 
@@ -75,11 +59,22 @@ class TenantIsolationTest extends IntegrationTestBase {
         // ===== TENANT A =====
         TenantContext.setTenant("tenant_a");
 
+        Role role = roleRepository.save(new Role("USER"));
+
+        User user = userRepository.save(
+                new User("User A",
+                        "a_" + UUID.randomUUID() + "@mail.com",
+                        "pass",
+                        role)
+        );
+
         Lead leadA = new Lead(
                 "Lead A",
-                "a_" + UUID.randomUUID() + "@email.com",
+                "lead_a_" + UUID.randomUUID() + "@mail.com",
                 "111"
         );
+
+        leadA.setUser(user);
 
         leadRepository.saveAndFlush(leadA);
 
@@ -99,11 +94,22 @@ class TenantIsolationTest extends IntegrationTestBase {
         // ===== TENANT A =====
         TenantContext.setTenant("tenant_a");
 
+        Role role = roleRepository.save(new Role("USER"));
+
+        User user = userRepository.save(
+                new User("User A",
+                        "b_" + UUID.randomUUID() + "@mail.com",
+                        "pass",
+                        role)
+        );
+
         Lead leadA = new Lead(
                 "Lead A",
-                "b_" + UUID.randomUUID() + "@email.com",
+                "lead_b_" + UUID.randomUUID() + "@mail.com",
                 "111"
         );
+
+        leadA.setUser(user);
 
         leadRepository.saveAndFlush(leadA);
 

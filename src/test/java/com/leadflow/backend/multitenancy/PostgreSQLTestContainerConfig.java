@@ -9,10 +9,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 /**
  * Base class para testes de integração com PostgreSQL via Testcontainers.
  *
- * ✔ Usa lifecycle gerenciado pelo JUnit
+ * ✔ Lifecycle gerenciado pelo JUnit
  * ✔ Integra automaticamente com Spring
- * ✔ Não precisa chamar start() manualmente
  * ✔ Evita múltiplas inicializações
+ * ✔ Compatível com Flyway
  */
 @Testcontainers
 public abstract class PostgreSQLTestContainerConfig {
@@ -23,12 +23,25 @@ public abstract class PostgreSQLTestContainerConfig {
             new PostgreSQLContainer<>("postgres:16-alpine")
                     .withDatabaseName("leadflow_test")
                     .withUsername("postgres")
-                    .withPassword("postgres");
+                    .withPassword("postgres")
+                    .withReuse(true); // melhora performance
 
     @DynamicPropertySource
     static void configureDatasource(DynamicPropertyRegistry registry) {
+
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.datasource.driver-class-name", postgres::getDriverClassName);
+
+        // Hibernate
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "none");
+
+        // Flyway
+        registry.add("spring.flyway.enabled", () -> "true");
+        registry.add("spring.flyway.locations", () -> "classpath:db/migration");
+
+        // Evita conflitos com multi-tenant durante testes
+        registry.add("spring.jpa.properties.hibernate.multiTenancy", () -> "NONE");
     }
 }

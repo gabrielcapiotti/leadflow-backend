@@ -1,13 +1,18 @@
 package com.leadflow.backend.dto.settings;
 
-public class SettingResponse {
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-    private Long id;
-    private String vendorName;
-    private String whatsapp;
-    private String companyName;
-    private String logo;
-    private String welcomeMessage;
+import java.util.Objects;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public final class SettingResponse {
+
+    private final Long id;
+    private final String vendorName;
+    private final String whatsapp;
+    private final String companyName;
+    private final String logo;
+    private final String welcomeMessage;
 
     public SettingResponse(
             Long id,
@@ -17,9 +22,9 @@ public class SettingResponse {
             String logo,
             String welcomeMessage
     ) {
-        this.id = id;
-        this.vendorName = vendorName;
-        this.whatsapp = whatsapp;
+        this.id = Objects.requireNonNull(id, "id cannot be null");
+        this.vendorName = Objects.requireNonNull(vendorName, "vendorName cannot be null");
+        this.whatsapp = Objects.requireNonNull(whatsapp, "whatsapp cannot be null");
         this.companyName = companyName;
         this.logo = logo;
         this.welcomeMessage = welcomeMessage;

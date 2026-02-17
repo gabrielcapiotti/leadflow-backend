@@ -4,19 +4,14 @@ import com.leadflow.backend.entities.enums.LeadStatus;
 import com.leadflow.backend.entities.user.User;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 @Entity
 @Table(
     name = "lead_status_history",
     indexes = {
-        @Index(
-            name = "idx_lsh_lead_id",
-            columnList = "lead_id"
-        )
+        @Index(name = "idx_lsh_lead_id", columnList = "lead_id")
     }
 )
 public class LeadStatusHistory {
@@ -56,9 +51,10 @@ public class LeadStatusHistory {
     @Column(name = "changed_at", nullable = false, updatable = false)
     private LocalDateTime changedAt;
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    /*
+     * Histórico NÃO deve ser mutável.
+     * Removido updated_at — não faz sentido versionar histórico.
+     */
 
     /* ==========================
        CONSTRUTORES
@@ -69,6 +65,15 @@ public class LeadStatusHistory {
     }
 
     public LeadStatusHistory(Lead lead, LeadStatus status, User changedBy) {
+
+        if (lead == null) {
+            throw new IllegalArgumentException("Lead cannot be null");
+        }
+
+        if (status == null) {
+            throw new IllegalArgumentException("Status cannot be null");
+        }
+
         this.lead = lead;
         this.status = status;
         this.changedBy = changedBy;
@@ -99,31 +104,37 @@ public class LeadStatusHistory {
     }
 
     /**
-     * Alias semântico para controllers/DTOs
+     * Alias semântico para DTO
      */
     public User getUpdatedBy() {
         return changedBy;
     }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
+    /* ==========================
+       IMUTABILIDADE
+       ========================== */
+
+    // Histórico não deve ser alterado após criação.
+    // Nenhum setter público.
+
+    protected void setLead(Lead lead) {
+        this.lead = lead;
     }
 
     /* ==========================
-       EQUALS & HASHCODE
+       EQUALS & HASHCODE (JPA SAFE)
        ========================== */
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof LeadStatusHistory)) return false;
-        LeadStatusHistory that = (LeadStatusHistory) o;
-        return Objects.equals(id, that.id);
+        if (!(o instanceof LeadStatusHistory other)) return false;
+        return id != null && id.equals(other.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return getClass().hashCode();
     }
 
     /* ==========================
@@ -137,10 +148,5 @@ public class LeadStatusHistory {
                ", status=" + status +
                ", changedAt=" + changedAt +
                '}';
-    }
-
-    public void setLead(Lead created) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setLead'");
     }
 }

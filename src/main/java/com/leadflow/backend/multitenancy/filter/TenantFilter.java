@@ -2,42 +2,48 @@ package com.leadflow.backend.multitenancy.filter;
 
 import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.multitenancy.resolver.JwtTenantResolver;
-import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-public class TenantFilter implements Filter {
-
-    private final JwtTenantResolver jwtTenantResolver;
+@Component
+@ConditionalOnProperty(
+    name = "multitenancy.enabled",
+    havingValue = "true",
+    matchIfMissing = true
+)
+public class TenantFilter extends OncePerRequestFilter {
 
     private static final String DEFAULT_TENANT = "public";
+
+    private final JwtTenantResolver jwtTenantResolver;
 
     public TenantFilter(JwtTenantResolver jwtTenantResolver) {
         this.jwtTenantResolver = jwtTenantResolver;
     }
 
     @Override
-    public void doFilter(ServletRequest request,
-                         ServletResponse response,
-                         FilterChain chain)
-            throws IOException, ServletException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
 
         try {
 
-            HttpServletRequest httpRequest = (HttpServletRequest) request;
-
-            String tenant = resolveTenantSafely(httpRequest);
+            String tenant = resolveTenantSafely(request);
 
             TenantContext.setTenant(
                     tenant != null ? tenant : DEFAULT_TENANT
             );
 
-            chain.doFilter(request, response);
+            filterChain.doFilter(request, response);
 
         } finally {
             TenantContext.clear();
@@ -45,16 +51,14 @@ public class TenantFilter implements Filter {
     }
 
     /**
-     * Resolve o tenant de forma segura, sem quebrar o fluxo
-     * caso o token esteja ausente ou inválido.
+     * Resolve o tenant de forma segura.
+     * Nunca deve quebrar o fluxo da requisição.
      */
     private String resolveTenantSafely(HttpServletRequest request) {
 
         try {
             return jwtTenantResolver.resolveTenant(request);
         } catch (Exception ex) {
-            // ⚠️ Nunca quebrar a requisição aqui.
-            // A autenticação será tratada pelo JwtAuthenticationFilter.
             return null;
         }
     }

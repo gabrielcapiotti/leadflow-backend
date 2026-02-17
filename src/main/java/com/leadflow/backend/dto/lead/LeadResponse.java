@@ -1,17 +1,23 @@
 package com.leadflow.backend.dto.lead;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.leadflow.backend.entities.enums.LeadStatus;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
-public class LeadResponse {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public final class LeadResponse {
 
-    private Long id;
-    private String name;
-    private String email;
-    private String phone;
-    private LeadStatus status;
-    private LocalDateTime createdAt;
+    private final Long id;
+    private final String name;
+    private final String email;
+    private final String phone;
+    private final LeadStatus status;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private final LocalDateTime createdAt;
 
     public LeadResponse(
             Long id,
@@ -21,12 +27,12 @@ public class LeadResponse {
             LeadStatus status,
             LocalDateTime createdAt
     ) {
-        this.id = id;
-        this.name = name;
-        this.email = email;
+        this.id = Objects.requireNonNull(id, "id cannot be null");
+        this.name = Objects.requireNonNull(name, "name cannot be null");
+        this.email = Objects.requireNonNull(email, "email cannot be null");
         this.phone = phone;
-        this.status = status;
-        this.createdAt = createdAt;
+        this.status = Objects.requireNonNull(status, "status cannot be null");
+        this.createdAt = Objects.requireNonNull(createdAt, "createdAt cannot be null");
     }
 
     public Long getId() {

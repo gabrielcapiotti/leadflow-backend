@@ -4,14 +4,15 @@ import com.leadflow.backend.dto.user.UpdateUserRequest;
 import com.leadflow.backend.dto.user.UserResponse;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.service.user.UserService;
+
 import jakarta.validation.Valid;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/users")
@@ -24,56 +25,75 @@ public class UserController {
         this.userService = userService;
     }
 
-    /* ==========================
-       LIST
-       ========================== */
+    /* ======================================================
+       LIST (PAGINADO)
+       ====================================================== */
 
     @GetMapping
-    public ResponseEntity<List<UserResponse>> list() {
+    public ResponseEntity<Page<UserResponse>> list(Pageable pageable) {
 
-        List<UserResponse> response = userService.listActiveUsers()
-                .stream()
-                .map(this::toResponse)
-                .toList();
+        Page<UserResponse> response = userService
+                .listActiveUsers(pageable)
+                .map(this::toResponse);
 
         return ResponseEntity.ok(response);
     }
 
-    /* ==========================
+    /* ======================================================
+       GET BY ID
+       ====================================================== */
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponse> getById(
+            @PathVariable @NonNull Long id
+    ) {
+
+        User user = userService.getActiveById(id);
+        return ResponseEntity.ok(toResponse(user));
+    }
+
+    /* ======================================================
        UPDATE
-       ========================== */
+       ====================================================== */
 
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> update(
             @PathVariable @NonNull Long id,
             @Valid @RequestBody UpdateUserRequest request
     ) {
-        Integer roleId = Objects.requireNonNull(request.getRoleId(), "roleId");
+
         User user = userService.updateUser(
                 id,
                 request.getName(),
                 request.getEmail(),
-            roleId
+                request.getRoleId()
         );
 
         return ResponseEntity.ok(toResponse(user));
     }
 
-    /* ==========================
+    /* ======================================================
        DELETE (SOFT)
-       ========================== */
+       ====================================================== */
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable @NonNull Long id) {
+    public ResponseEntity<Void> delete(
+            @PathVariable @NonNull Long id
+    ) {
         userService.softDelete(id);
         return ResponseEntity.noContent().build();
     }
 
-    /* ==========================
+    /* ======================================================
        MAPPER
-       ========================== */
+       ====================================================== */
 
     private UserResponse toResponse(User user) {
+
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+
         return new UserResponse(
                 user.getId(),
                 user.getName(),

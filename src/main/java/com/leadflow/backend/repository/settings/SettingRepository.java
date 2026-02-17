@@ -2,23 +2,25 @@ package com.leadflow.backend.repository.settings;
 
 import com.leadflow.backend.entities.Setting;
 import com.leadflow.backend.entities.user.User;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+@Repository
 public interface SettingRepository extends JpaRepository<Setting, Long> {
 
-    /* ==========================
-       CONSULTAS PRINCIPAIS
-       ========================== */
+    /* ======================================================
+       CONSULTA PRINCIPAL
+       ====================================================== */
 
-    // Busca configuração ativa por usuário
+    @EntityGraph(attributePaths = {"user"})
     Optional<Setting> findByUser(User user);
 
-    /* ==========================
-       VALIDAÇÕES / APOIO
-       ========================== */
+    /* ======================================================
+       VALIDAÇÕES
+       ====================================================== */
 
-    // Verifica se o usuário já possui configuração
     boolean existsByUser(User user);
 }

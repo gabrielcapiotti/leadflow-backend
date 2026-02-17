@@ -6,8 +6,6 @@ import com.leadflow.backend.repository.settings.SettingRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-
 @Service
 public class SettingService {
 
@@ -17,13 +15,10 @@ public class SettingService {
         this.settingRepository = settingRepository;
     }
 
-    /* ==========================
-       CREATE / UPDATE
-       ========================== */
+    /* ======================================================
+       CREATE OR UPDATE
+       ====================================================== */
 
-    /**
-     * Cria ou atualiza as configurações do usuário autenticado.
-     */
     @Transactional
     public Setting saveOrUpdate(
             User user,
@@ -34,54 +29,81 @@ public class SettingService {
             String welcomeMessage
     ) {
 
-        return settingRepository.findByUser(user)
-                .map(existing -> {
-                    existing.setVendorName(vendorName);
-                    existing.setWhatsapp(whatsapp);
-                    existing.setCompanyName(companyName);
-                    existing.setLogo(logo);
-                    existing.setWelcomeMessage(welcomeMessage);
-                    existing.setDeletedAt(null); // reativa se estava soft-deleted
-                    return settingRepository.save(existing);
-                })
-                .orElseGet(() -> settingRepository.save(
-                        new Setting(
-                                user,
-                                vendorName,
-                                whatsapp,
-                                companyName,
-                                logo,
-                                welcomeMessage
-                        )
-                ));
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+
+        Setting setting = settingRepository
+                .findByUser(user)
+                .orElse(null);
+
+        if (setting == null) {
+            // Criação correta usando construtor completo
+            setting = new Setting(
+                    user,
+                    vendorName,
+                    whatsapp,
+                    companyName,
+                    logo,
+                    welcomeMessage
+            );
+        } else {
+
+            // Se estava soft deleted, reativa implicitamente
+            if (setting.isDeleted()) {
+                setting = new Setting(
+                        user,
+                        vendorName != null ? vendorName : setting.getVendorName(),
+                        whatsapp != null ? whatsapp : setting.getWhatsapp(),
+                        companyName != null ? companyName : setting.getCompanyName(),
+                        logo != null ? logo : setting.getLogo(),
+                        welcomeMessage != null ? welcomeMessage : setting.getWelcomeMessage()
+                );
+            } else {
+
+                // Update seguro usando método de domínio
+                setting.update(
+                        vendorName != null ? vendorName : setting.getVendorName(),
+                        whatsapp != null ? whatsapp : setting.getWhatsapp(),
+                        companyName != null ? companyName : setting.getCompanyName(),
+                        logo != null ? logo : setting.getLogo(),
+                        welcomeMessage != null ? welcomeMessage : setting.getWelcomeMessage()
+                );
+            }
+        }
+
+        return settingRepository.save(setting);
     }
 
-    /* ==========================
+    /* ======================================================
        READ
-       ========================== */
+       ====================================================== */
 
-    /**
-     * Retorna as configurações do usuário autenticado.
-     */
     @Transactional(readOnly = true)
     public Setting getByUser(User user) {
+
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+
         return settingRepository.findByUser(user)
+                .filter(s -> !s.isDeleted())
                 .orElseThrow(() ->
-                        new IllegalStateException("Settings not found for user id=" + user.getId())
+                        new IllegalStateException(
+                                "Settings not found for user id=" + user.getId()
+                        )
                 );
     }
 
-    /* ==========================
-       DELETE (SOFT DELETE)
-       ========================== */
+    /* ======================================================
+       SOFT DELETE
+       ====================================================== */
 
-    /**
-     * Soft delete das configurações do usuário.
-     */
     @Transactional
     public void softDelete(User user) {
+
         Setting setting = getByUser(user);
-        setting.setDeletedAt(LocalDateTime.now());
-        settingRepository.save(setting);
+
+        setting.softDelete();
     }
 }
