@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(
@@ -17,8 +18,8 @@ import java.time.LocalDateTime;
 public class Setting {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue
+    private UUID id;
 
     /* ==========================
        RELACIONAMENTO
@@ -101,7 +102,7 @@ public class Setting {
        GETTERS
        ========================== */
 
-    public Long getId() { return id; }
+    public UUID getId() { return id; }
 
     public User getUser() { return user; }
 

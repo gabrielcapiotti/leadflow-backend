@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class LeadService {
@@ -41,10 +42,17 @@ public class LeadService {
             throw new IllegalArgumentException("User cannot be null");
         }
 
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email cannot be null or blank");
+        }
+
         boolean emailExists = leadRepository
                 .findByUserAndDeletedAtIsNull(createdBy)
                 .stream()
-                .anyMatch(l -> l.getEmail().equalsIgnoreCase(email));
+                .anyMatch(l ->
+                        l.getEmail() != null &&
+                        l.getEmail().equalsIgnoreCase(email)
+                );
 
         if (emailExists) {
             throw new IllegalArgumentException("Email already in use");
@@ -63,11 +71,16 @@ public class LeadService {
     }
 
     /* ======================================================
-       READ (ISOLADO POR USUÁRIO)
+       LIST (ISOLADO POR USUÁRIO)
        ====================================================== */
 
     @Transactional(readOnly = true)
     public List<Lead> listActiveLeads(User user) {
+
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+
         return leadRepository.findByUserAndDeletedAtIsNull(user);
     }
 
@@ -76,7 +89,12 @@ public class LeadService {
        ====================================================== */
 
     @Transactional(readOnly = true)
-    public Lead getByIdForUser(Long leadId, User user) {
+    public Lead getByIdForUser(UUID leadId, User user) {
+
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+
         return leadRepository
                 .findByIdAndUserAndDeletedAtIsNull(leadId, user)
                 .orElseThrow(() ->
@@ -90,10 +108,18 @@ public class LeadService {
 
     @Transactional
     public Lead updateStatus(
-            Long leadId,
+            UUID leadId,
             LeadStatus newStatus,
             User user
     ) {
+
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+
+        if (newStatus == null) {
+            throw new IllegalArgumentException("Status cannot be null");
+        }
 
         Lead lead = leadRepository
                 .findByIdAndUserAndDeletedAtIsNull(leadId, user)
@@ -125,7 +151,11 @@ public class LeadService {
        ====================================================== */
 
     @Transactional
-    public void softDelete(Long leadId, User user) {
+    public void softDelete(UUID leadId, User user) {
+
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
 
         Lead lead = leadRepository
                 .findByIdAndUserAndDeletedAtIsNull(leadId, user)
@@ -135,7 +165,11 @@ public class LeadService {
 
         lead.softDelete();
 
-        // ⚠️ Necessário para testes com Mockito
         leadRepository.save(lead);
+    }
+
+    public Lead getById(UUID id) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getById'");
     }
 }

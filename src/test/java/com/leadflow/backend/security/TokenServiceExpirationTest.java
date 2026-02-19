@@ -1,5 +1,6 @@
 package com.leadflow.backend.security;
 
+import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import org.junit.jupiter.api.Test;
@@ -14,18 +15,33 @@ class TokenServiceExpirationTest {
         // Secret válido (>= 32 chars)
         String secret = "test-secret-key-with-at-least-32-characters-long";
 
-        // Expiração curta mas não absurda
+        // Expiração curta
         long expirationMillis = 50L;
 
         TokenService tokenService =
                 new TokenService(secret, expirationMillis);
 
+        // ===== TENANT =====
+        Tenant tenant = new Tenant(
+                "Test Tenant",
+                "test_schema"
+        );
+
+        // ===== ROLE =====
         Role role = new Role("USER");
-        User user = new User("Test", "test@example.com", "password", role);
 
-        String token = tokenService.generateToken(user, "test_tenant");
+        // ===== USER =====
+        User user = new User(
+                "Test",
+                "test@example.com",
+                "password",
+                role,
+                tenant
+        );
 
-        // Espera suficiente para garantir expiração
+        String token = tokenService.generateToken(user, tenant.getSchemaName());
+
+        // Aguarda expiração
         Thread.sleep(100);
 
         boolean isValid = tokenService.isValid(token);

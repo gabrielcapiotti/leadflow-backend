@@ -3,6 +3,9 @@ package com.leadflow.backend.service.settings;
 import com.leadflow.backend.entities.Setting;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.repository.settings.SettingRepository;
+
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -105,5 +108,10 @@ public class SettingService {
         Setting setting = getByUser(user);
 
         setting.softDelete();
+    }
+
+    public Setting getById(UUID id) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getById'");
     }
 }

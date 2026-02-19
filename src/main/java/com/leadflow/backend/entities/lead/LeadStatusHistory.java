@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(
@@ -17,8 +18,8 @@ import java.time.LocalDateTime;
 public class LeadStatusHistory {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue
+    private UUID id;
 
     /* ==========================
        RELACIONAMENTOS
@@ -83,7 +84,7 @@ public class LeadStatusHistory {
        GETTERS
        ========================== */
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 

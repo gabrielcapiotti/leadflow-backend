@@ -14,6 +14,8 @@ import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/users")
 @PreAuthorize("hasRole('ADMIN')")
@@ -45,10 +47,10 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getById(
-            @PathVariable @NonNull Long id
+            @PathVariable @NonNull UUID id
     ) {
 
-        User user = userService.getActiveById(id);
+        User user = userService.getById(id);
         return ResponseEntity.ok(toResponse(user));
     }
 
@@ -58,7 +60,7 @@ public class UserController {
 
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> update(
-            @PathVariable @NonNull Long id,
+            @PathVariable @NonNull UUID id,
             @Valid @RequestBody UpdateUserRequest request
     ) {
 
@@ -78,8 +80,9 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @PathVariable @NonNull Long id
+            @PathVariable @NonNull UUID id
     ) {
+
         userService.softDelete(id);
         return ResponseEntity.noContent().build();
     }

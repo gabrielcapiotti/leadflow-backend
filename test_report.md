@@ -1,71 +1,53 @@
-# Relatório de Testes
+# Test Report
 
-## Resumo
-Este documento fornece um relatório detalhado sobre o estado atual da suíte de testes, incluindo erros e testes bem-sucedidos.
+## Summary
+- **Total Tests Run**: 6
+- **Failures**: 3
+- **Errors**: 0
+- **Skipped**: 0
 
----
+## Failures
 
-## Erros
+### Test: `createLead_ShouldReturnCreatedLead`
+- **Expected Status**: 201
+- **Actual Status**: 500
+- **Error**:
+  ```
+  java.lang.AssertionError: Status expected:<201> but was:<500>
+      at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+      at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+      at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+      at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+      at com.leadflow.backend.controller.lead.LeadControllerTest.createLead_ShouldReturnCreatedLead(LeadControllerTest.java:97)
+  ```
 
-### 1. **Problema com Fork JVM do Testcontainers**
-- **Mensagem de Erro**: `Surefire is going to kill self fork JVM`
-- **Causa**:
-  - O container PostgreSQL não está sendo encerrado corretamente.
-  - O contexto do Spring está preso aguardando uma conexão.
-  - Algum bean está chamando `System.exit`.
-  - O container está sendo iniciado várias vezes.
-- **Solução Implementada**:
-  - Criada uma classe global `IntegrationTestBase` para gerenciar o container PostgreSQL.
-  - Garantido que o container seja iniciado apenas uma vez usando `static { postgres.start(); }`.
+### Test: `updateLeadStatus_ShouldReturnUpdatedLead`
+- **Expected Status**: 200
+- **Actual Status**: 500
+- **Error**:
+  ```
+  java.lang.AssertionError: Status expected:<200> but was:<500>
+      at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+      at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+      at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+      at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+      at com.leadflow.backend.controller.lead.LeadControllerTest.updateLeadStatus_ShouldReturnUpdatedLead(LeadControllerTest.java:154)
+  ```
 
-### 2. **CannotCreateTransaction**
-- **Mensagem de Erro**: `CannotCreateTransaction: Could not open JPA EntityManager for transaction`
-- **Causa**:
-  - O datasource não consegue abrir uma conexão.
-  - O container PostgreSQL não está pronto ou é encerrado antes do teste utilizá-lo.
-- **Solução Implementada**:
-  - Atualizados todos os testes de repositório para usar `@SpringBootTest` em vez de `@DataJpaTest`.
-  - Garantido que todos os testes estendam `IntegrationTestBase`.
+### Test: `listActiveLeads_ShouldReturnLeadList`
+- **Expected Status**: 200
+- **Actual Status**: 500
+- **Error**:
+  ```
+  java.lang.AssertionError: Status expected:<200> but was:<500>
+      at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+      at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+      at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:640)
+      at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+      at com.leadflow.backend.controller.lead.LeadControllerTest.listActiveLeads_ShouldReturnLeadList(LeadControllerTest.java:135)
+  ```
 
----
-
-## Conquistas
-
-### 1. **Removida Configuração do H2**
-- Removidas todas as configurações relacionadas ao H2 do `application-test.yml`.
-- Garantido que o perfil de teste utilize o Testcontainers com PostgreSQL.
-
-### 2. **Criada a Classe `IntegrationTestBase`**
-- Centralizado o gerenciamento do container PostgreSQL.
-- Configuradas dinamicamente as propriedades do datasource usando `DynamicPropertySource`.
-
-### 3. **Atualizados os Testes de Repositório**
-- Substituído `@DataJpaTest` por `@SpringBootTest`.
-- Garantido que `UserRepositoryTest` e `LeadRepositoryTest` estendam `IntegrationTestBase`.
-
-### 4. **Validados os Testes de Controladores**
-- Verificado que `AuthControllerTest` e `LeadControllerTest` utilizam `@WebMvcTest` com dependências mockadas.
-- Garantido que não dependem do banco de dados ou do Testcontainers.
-
-### 5. **Padronizados os Testes Multi-Tenant**
-- Atualizado `TenantIsolationTest` para estender `IntegrationTestBase`.
-- Removido o gerenciamento local do container PostgreSQL.
-
----
-
-## Próximos Passos
-
-1. **Executar a Suíte de Testes**
-   - Rodar a suíte de testes atualizada para validar as alterações.
-   - Garantir que todos os testes passem sem problemas de fork JVM ou erros de transação.
-
-2. **Monitorar Possíveis Problemas Adicionais**
-   - Verificar se ainda existem conflitos de carregamento de contexto ou configuração do datasource.
-
-3. **Otimizar a Execução dos Testes**
-   - Investigar otimizações adicionais para reduzir o tempo de execução dos testes.
-
----
-
-## Conclusão
-A suíte de testes foi atualizada para usar uma arquitetura padronizada com Testcontainers e PostgreSQL. As alterações abordam os principais problemas de falhas no fork da JVM e erros de transação. É necessária uma validação adicional para confirmar o sucesso dessas alterações.
+## Next Steps
+- Investigate the root cause of the `500 Internal Server Error` in the failing tests.
+- Ensure that all required beans and configurations are properly loaded in the test context.
+- Validate the `LeadController` logic and dependencies for potential issues.

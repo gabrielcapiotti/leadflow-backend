@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class RoleService {
@@ -27,7 +28,7 @@ public class RoleService {
     }
 
     @Transactional(readOnly = true)
-    public Role getById(@NonNull Integer roleId) {
+    public Role getById(@NonNull UUID roleId) {
         return roleRepository.findById(roleId)
                 .orElseThrow(() ->
                         new IllegalArgumentException("Role not found")

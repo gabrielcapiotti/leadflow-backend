@@ -4,13 +4,12 @@ import com.leadflow.backend.dto.role.RoleResponse;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.service.RoleService;
 
-import jakarta.validation.constraints.Positive;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/roles")
@@ -39,12 +38,12 @@ public class RoleController {
     }
 
     /* ==========================
-       GET ROLE BY ID
+       GET ROLE BY UUID
        ========================== */
 
     @GetMapping("/{id}")
     public ResponseEntity<RoleResponse> getById(
-            @PathVariable @Positive(message = "Role id must be positive") Integer id
+            @PathVariable UUID id
     ) {
 
         Role role = roleService.getById(id);

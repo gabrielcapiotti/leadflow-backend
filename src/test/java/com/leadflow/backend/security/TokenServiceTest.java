@@ -1,9 +1,12 @@
 package com.leadflow.backend.security;
 
+import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -11,6 +14,8 @@ class TokenServiceTest {
 
     private TokenService tokenService;
     private User user;
+    private UUID userId;
+    private UUID roleId;
 
     private static final String SECRET =
             "test-secret-key-for-jwt-token-generation-minimum-256-bits-required";
@@ -23,11 +28,29 @@ class TokenServiceTest {
                 3600000L // 1 hora
         );
 
-        Role role = new Role("USER");
-        setField(role, "id", 1);
+        roleId = UUID.randomUUID();
+        userId = UUID.randomUUID();
 
-        user = new User("Test User", "test@example.com", "password", role);
-        setField(user, "id", 1L);
+        // ===== TENANT =====
+        Tenant tenant = new Tenant(
+                "Test Tenant",
+                "test_schema"
+        );
+
+        // ===== ROLE =====
+        Role role = new Role("USER");
+        setField(role, "id", roleId);
+
+        // ===== USER =====
+        user = new User(
+                "Test User",
+                "test@example.com",
+                "password",
+                role,
+                tenant
+        );
+
+        setField(user, "id", userId);
     }
 
     private void setField(Object target, String fieldName, Object value) throws Exception {
@@ -110,9 +133,9 @@ class TokenServiceTest {
 
         String token = tokenService.generateToken(user, "test_tenant");
 
-        Long userId = tokenService.getUserId(token);
+        UUID extractedUserId = tokenService.getUserId(token);
 
-        assertThat(userId).isEqualTo(1L);
+        assertThat(extractedUserId).isEqualTo(userId);
     }
 
     @Test

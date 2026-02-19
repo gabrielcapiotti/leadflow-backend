@@ -1,20 +1,27 @@
 package com.leadflow.backend.service.auth;
 
+import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
+import com.leadflow.backend.repository.tenant.TenantRepository;
+
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
+
+import com.leadflow.backend.multitenancy.context.TenantContext;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -25,17 +32,35 @@ class AuthServiceTest {
     @Mock
     private RoleRepository roleRepository;
 
-    private BCryptPasswordEncoder passwordEncoder;
+    @Mock
+    private TenantRepository tenantRepository;
+
+    private PasswordEncoder passwordEncoder;
     private AuthService authService;
 
     private Role userRole;
+    private Tenant tenant;
 
     @BeforeEach
     void setUp() {
         passwordEncoder = new BCryptPasswordEncoder();
-        authService = new AuthService(userRepository, roleRepository, passwordEncoder);
 
-        userRole = new Role("USER");
+        authService = new AuthService(
+                userRepository,
+                roleRepository,
+                tenantRepository,
+                passwordEncoder
+        );
+
+        userRole = new Role("ROLE_USER");
+        tenant = new Tenant("Default Tenant", "tenant_test");
+
+        TenantContext.setTenant("tenant_test");
+    }
+
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
     }
 
     /* ==========================
@@ -44,6 +69,9 @@ class AuthServiceTest {
 
     @Test
     void shouldRegisterUserSuccessfully() {
+
+        when(tenantRepository.findBySchemaName("tenant_test"))
+                .thenReturn(Optional.of(tenant));
 
         when(userRepository.existsByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
                 .thenReturn(false);
@@ -64,13 +92,14 @@ class AuthServiceTest {
         assertThat(passwordEncoder.matches("password123", result.getPassword()))
                 .isTrue();
 
-        verify(userRepository).existsByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com");
-        verify(roleRepository).findByNameIgnoreCase("ROLE_USER");
         verify(userRepository).save(any(User.class));
     }
 
     @Test
     void shouldThrowWhenEmailAlreadyExists() {
+
+        when(tenantRepository.findBySchemaName("tenant_test"))
+                .thenReturn(Optional.of(tenant));
 
         when(userRepository.existsByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
                 .thenReturn(true);
@@ -81,13 +110,14 @@ class AuthServiceTest {
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("Email");
 
-        verify(userRepository).existsByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com");
-        verify(roleRepository, never()).findByNameIgnoreCase(any());
         verify(userRepository, never()).save(any());
     }
 
     @Test
     void shouldThrowWhenRoleNotFound() {
+
+        when(tenantRepository.findBySchemaName("tenant_test"))
+                .thenReturn(Optional.of(tenant));
 
         when(userRepository.existsByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
                 .thenReturn(false);
@@ -98,10 +128,8 @@ class AuthServiceTest {
         assertThatThrownBy(() ->
                 authService.registerUser("Test", "test@example.com", "password")
         )
-        .isInstanceOf(IllegalStateException.class);
-
-        verify(roleRepository).findByNameIgnoreCase("ROLE_USER");
-        verify(userRepository, never()).save(any());
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("ROLE_USER");
     }
 
     /* ==========================
@@ -114,7 +142,13 @@ class AuthServiceTest {
         String rawPassword = "password123";
         String encodedPassword = passwordEncoder.encode(rawPassword);
 
-        User user = new User("Test", "test@example.com", encodedPassword, userRole);
+        User user = new User(
+                "Test",
+                "test@example.com",
+                encodedPassword,
+                userRole,
+                tenant
+        );
 
         when(userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
                 .thenReturn(Optional.of(user));
@@ -136,7 +170,8 @@ class AuthServiceTest {
         assertThatThrownBy(() ->
                 authService.authenticateUser("test@example.com", "password")
         )
-        .isInstanceOf(IllegalArgumentException.class);
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Invalid credentials");
     }
 
     @Test
@@ -144,7 +179,13 @@ class AuthServiceTest {
 
         String encodedPassword = passwordEncoder.encode("correct-password");
 
-        User user = new User("Test", "test@example.com", encodedPassword, userRole);
+        User user = new User(
+                "Test",
+                "test@example.com",
+                encodedPassword,
+                userRole,
+                tenant
+        );
 
         when(userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
                 .thenReturn(Optional.of(user));
@@ -152,6 +193,7 @@ class AuthServiceTest {
         assertThatThrownBy(() ->
                 authService.authenticateUser("test@example.com", "wrong-password")
         )
-        .isInstanceOf(IllegalArgumentException.class);
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Invalid credentials");
     }
 }

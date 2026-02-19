@@ -2,7 +2,6 @@ C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\lead
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\service\lead\LeadStatusHistoryService.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\entities\user\User.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\dto\auth\LoginRequest.java
-C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\config\TestConfiguration.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\dto\lead\CreateLeadRequest.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\entities\user\Role.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\multitenancy\identifier\CurrentTenantIdentifierResolverImpl.java
@@ -35,10 +34,10 @@ C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\lead
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\service\settings\SettingService.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\repository\settings\SettingRepository.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\dto\error\ApiErrorResponse.java
+C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\repository\tenant\TenantRepository.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\dto\settings\SettingResponse.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\BackendApplication.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\dto\settings\UpdateSettingRequest.java
-C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\config\TestSecurityConfig.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\dto\role\RoleResponse.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\repository\user\RoleRepository.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\multitenancy\service\TenantService.java

@@ -1,21 +1,26 @@
 package com.leadflow.backend.repository.user;
 
+import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import com.leadflow.backend.multitenancy.context.TenantContext;
+import com.leadflow.backend.repository.tenant.TenantRepository;
+
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 
 @DataJpaTest
 @ActiveProfiles("test")
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class UserRepositoryTest {
 
     @Autowired
@@ -24,23 +29,37 @@ class UserRepositoryTest {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private TenantRepository tenantRepository;
+
     private Role role;
+    private Tenant tenant;
 
     @BeforeEach
     void setUp() {
+
+        TenantContext.setTenant("public");
+
+        tenant = tenantRepository.saveAndFlush(
+                new Tenant(
+                        "Test Tenant " + UUID.randomUUID(),
+                        "test_schema_" + UUID.randomUUID().toString().replace("-", "")
+                )
+        );
 
         role = roleRepository.saveAndFlush(
                 new Role("ROLE_USER")
         );
 
-        userRepository.saveAndFlush(
-                new User(
-                        "Test User",
-                        "test@example.com",
-                        "encoded-password",
-                        role
-                )
+        User user = new User(
+                "Test User",
+                "test@example.com",
+                "encoded-password",
+                role,
+                tenant
         );
+
+        userRepository.saveAndFlush(user);
     }
 
     /* ==========================
@@ -103,16 +122,16 @@ class UserRepositoryTest {
        ========================== */
 
     @Test
-    @DisplayName("Should not allow duplicate email")
+    @DisplayName("Should not allow duplicate email within same tenant")
     void shouldNotAllowDuplicateEmail() {
 
-        User duplicate =
-                new User(
-                        "Another User",
-                        "test@example.com",
-                        "password",
-                        role
-                );
+        User duplicate = new User(
+                "Another User",
+                "test@example.com",
+                "password",
+                role,
+                tenant
+        );
 
         assertThatThrownBy(() ->
                 userRepository.saveAndFlush(duplicate)

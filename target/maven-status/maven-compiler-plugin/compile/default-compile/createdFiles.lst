@@ -1,4 +1,3 @@
-com\leadflow\backend\config\TestConfiguration.class
 com\leadflow\backend\dto\auth\AuthResponse.class
 com\leadflow\backend\service\settings\SettingMapper.class
 com\leadflow\backend\entities\enums\LeadStatus$1.class
@@ -28,6 +27,7 @@ com\leadflow\backend\BackendApplication.class
 com\leadflow\backend\service\auth\AuthService.class
 com\leadflow\backend\entities\enums\LeadStatus.class
 com\leadflow\backend\entities\log\Log.class
+com\leadflow\backend\repository\tenant\TenantRepository.class
 com\leadflow\backend\security\SecurityConfig.class
 com\leadflow\backend\security\TokenService.class
 com\leadflow\backend\dto\settings\UpdateSettingRequest.class
@@ -39,7 +39,6 @@ com\leadflow\backend\entities\lead\Lead.class
 com\leadflow\backend\controller\auth\AuthController.class
 com\leadflow\backend\controller\role\RoleController.class
 com\leadflow\backend\multitenancy\config\MultiTenantJpaConfig.class
-com\leadflow\backend\config\TestSecurityConfig.class
 com\leadflow\backend\dto\settings\SettingResponse.class
 com\leadflow\backend\dto\role\RoleResponse.class
 com\leadflow\backend\controller\lead\LeadController.class

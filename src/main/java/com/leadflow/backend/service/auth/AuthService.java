@@ -1,9 +1,12 @@
 package com.leadflow.backend.service.auth;
 
+import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
+import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
+import com.leadflow.backend.repository.tenant.TenantRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,25 +20,40 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final TenantRepository tenantRepository;
     private final PasswordEncoder passwordEncoder;
 
     public AuthService(
             UserRepository userRepository,
             RoleRepository roleRepository,
+            TenantRepository tenantRepository,
             PasswordEncoder passwordEncoder
     ) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.tenantRepository = tenantRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     /* ======================================================
-       REGISTRO (DEFAULT ROLE_USER)
+       REGISTER
        ====================================================== */
 
     public User registerUser(String name, String email, String password) {
 
         logger.info("Attempting to register user with email: {}", email);
+
+        String currentSchema = TenantContext.getTenant();
+
+        if (currentSchema == null || currentSchema.isBlank()) {
+            throw new IllegalStateException("No tenant defined in TenantContext");
+        }
+
+        Tenant tenant = tenantRepository
+                .findBySchemaName(currentSchema)
+                .orElseThrow(() ->
+                        new IllegalStateException("Tenant not found: " + currentSchema)
+                );
 
         if (userRepository.existsByEmailIgnoreCaseAndDeletedAtIsNull(email)) {
             throw new IllegalArgumentException("Email already in use");
@@ -49,9 +67,10 @@ public class AuthService {
 
         User user = new User(
                 name,
-                email.toLowerCase(),
+                email,
                 passwordEncoder.encode(password),
-                userRole
+                userRole,
+                tenant
         );
 
         logger.info("User successfully registered: {}", email);

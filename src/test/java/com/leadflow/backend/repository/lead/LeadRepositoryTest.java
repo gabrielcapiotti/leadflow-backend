@@ -1,14 +1,16 @@
 package com.leadflow.backend.repository.lead;
 
 import com.leadflow.backend.IntegrationTestBase;
+import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.enums.LeadStatus;
 import com.leadflow.backend.entities.lead.Lead;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.multitenancy.context.TenantContext;
+import com.leadflow.backend.repository.tenant.TenantRepository;
 import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
-import com.leadflow.backend.repository.user.RoleRepository;
+
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -34,36 +36,57 @@ class LeadRepositoryTest extends IntegrationTestBase {
     @Autowired
     private RoleRepository roleRepository;
 
-    private static final String TENANT = "public";
+    @Autowired
+    private TenantRepository tenantRepository;
+
+    private static final String TENANT_SCHEMA = "public";
 
     @BeforeEach
     void setTenant() {
-        TenantContext.setTenant(TENANT);
+        TenantContext.setTenant(TENANT_SCHEMA);
     }
 
     @AfterEach
     void cleanup() {
         leadRepository.deleteAll();
         userRepository.deleteAll();
+        tenantRepository.deleteAll();
         TenantContext.clear();
     }
 
-   private User createUser() {
+    /* ==========================
+       HELPER
+       ========================== */
 
-    Optional<Role> existingRole = roleRepository.findByNameIgnoreCase("USER");
+    private User createUser() {
 
-    Role role = existingRole.orElseGet(() -> {
-        Role newRole = new Role("USER");
-        return roleRepository.saveAndFlush(newRole);
-    });
+        Optional<Role> existingRole =
+                roleRepository.findByNameIgnoreCase("USER");
 
-    String randomEmail = "user_" + UUID.randomUUID() + "@example.com";
+        Role role = existingRole.orElseGet(() ->
+                roleRepository.saveAndFlush(new Role("USER"))
+        );
 
-    User user = new User("Test User", randomEmail, "password", role);
+        Tenant tenant = tenantRepository.saveAndFlush(
+                new Tenant(
+                        "Test Tenant " + UUID.randomUUID(),
+                        "test_schema_" + UUID.randomUUID()
+                )
+        );
 
-    return userRepository.saveAndFlush(user);
-}
+        String randomEmail =
+                "user_" + UUID.randomUUID() + "@example.com";
 
+        User user = new User(
+                "Test User",
+                randomEmail,
+                "password",
+                role,
+                tenant
+        );
+
+        return userRepository.saveAndFlush(user);
+    }
 
     /* ==========================
        SAVE & FIND
@@ -79,7 +102,9 @@ class LeadRepositoryTest extends IntegrationTestBase {
                 "lead_" + UUID.randomUUID() + "@example.com",
                 "123456789"
         );
+
         lead.setUser(savedUser);
+        lead.setTenant(savedUser.getTenant());
 
         Lead savedLead = leadRepository.saveAndFlush(lead);
 
@@ -87,7 +112,8 @@ class LeadRepositoryTest extends IntegrationTestBase {
                 leadRepository.findById(savedLead.getId());
 
         assertThat(retrievedLead).isPresent();
-        assertThat(retrievedLead.get().getName()).isEqualTo("Test Lead");
+        assertThat(retrievedLead.get().getName())
+                .isEqualTo("Test Lead");
         assertThat(retrievedLead.get().getUser().getId())
                 .isEqualTo(savedUser.getId());
     }
@@ -101,14 +127,17 @@ class LeadRepositoryTest extends IntegrationTestBase {
 
         User user = createUser();
 
-        String email = "duplicate_" + UUID.randomUUID() + "@example.com";
+        String email =
+                "duplicate_" + UUID.randomUUID() + "@example.com";
 
         Lead lead1 = new Lead("Lead 1", email, "111");
         lead1.setUser(user);
+        lead1.setTenant(user.getTenant());
         leadRepository.saveAndFlush(lead1);
 
         Lead lead2 = new Lead("Lead 2", email, "222");
         lead2.setUser(user);
+        lead2.setTenant(user.getTenant());
 
         assertThatThrownBy(() ->
                 leadRepository.saveAndFlush(lead2)
@@ -130,6 +159,7 @@ class LeadRepositoryTest extends IntegrationTestBase {
                 "123"
         );
         lead1.setUser(user);
+        lead1.setTenant(user.getTenant());
 
         Lead lead2 = new Lead(
                 "Lead 2",
@@ -137,6 +167,7 @@ class LeadRepositoryTest extends IntegrationTestBase {
                 "456"
         );
         lead2.setUser(user);
+        lead2.setTenant(user.getTenant());
 
         leadRepository.saveAllAndFlush(List.of(lead1, lead2));
 
@@ -156,7 +187,9 @@ class LeadRepositoryTest extends IntegrationTestBase {
                 "soft_" + UUID.randomUUID() + "@example.com",
                 "123456789"
         );
+
         lead.setUser(user);
+        lead.setTenant(user.getTenant());
 
         Lead savedLead = leadRepository.saveAndFlush(lead);
 
@@ -184,6 +217,7 @@ class LeadRepositoryTest extends IntegrationTestBase {
                 "123"
         );
         lead1.setUser(user);
+        lead1.setTenant(user.getTenant());
 
         Lead lead2 = new Lead(
                 "Lead 2",
@@ -191,6 +225,7 @@ class LeadRepositoryTest extends IntegrationTestBase {
                 "456"
         );
         lead2.setUser(user);
+        lead2.setTenant(user.getTenant());
 
         Lead lead3 = new Lead(
                 "Lead 3",
@@ -198,14 +233,19 @@ class LeadRepositoryTest extends IntegrationTestBase {
                 "789"
         );
         lead3.setUser(user);
+        lead3.setTenant(user.getTenant());
 
         lead2.changeStatus(LeadStatus.CONTACTED);
         lead3.changeStatus(LeadStatus.CONTACTED);
 
-        leadRepository.saveAllAndFlush(List.of(lead1, lead2, lead3));
+        leadRepository.saveAllAndFlush(
+                List.of(lead1, lead2, lead3)
+        );
 
         long count =
-                leadRepository.countByStatusAndDeletedAtIsNull(LeadStatus.CONTACTED);
+                leadRepository.countByStatusAndDeletedAtIsNull(
+                        LeadStatus.CONTACTED
+                );
 
         assertThat(count).isEqualTo(2);
     }

@@ -16,6 +16,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/settings")
 public class SettingController {
@@ -35,7 +37,7 @@ public class SettingController {
     }
 
     /* ======================================================
-       GET
+       GET (isolado por usuário)
        ====================================================== */
 
     @GetMapping
@@ -46,6 +48,20 @@ public class SettingController {
         User user = resolveUser(principal);
 
         Setting setting = settingService.getByUser(user);
+
+        return ResponseEntity.ok(settingMapper.toResponse(setting));
+    }
+
+    /* ======================================================
+       GET BY ID (ADMIN / uso interno)
+       ====================================================== */
+
+    @GetMapping("/{id}")
+    public ResponseEntity<SettingResponse> getById(
+            @PathVariable UUID id
+    ) {
+
+        Setting setting = settingService.getById(id);
 
         return ResponseEntity.ok(settingMapper.toResponse(setting));
     }
@@ -75,7 +91,7 @@ public class SettingController {
     }
 
     /* ======================================================
-       DELETE
+       DELETE (soft delete por usuário)
        ====================================================== */
 
     @DeleteMapping

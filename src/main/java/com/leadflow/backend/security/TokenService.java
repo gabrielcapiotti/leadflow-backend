@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 
 @Service
 public class TokenService {
@@ -97,9 +98,16 @@ public class TokenService {
         return parseToken(token).getBody().getSubject();
     }
 
-    public Long getUserId(String token) {
-        return parseToken(token).getBody().get("userId", Long.class);
+    public UUID getUserId(String token) {
+        Object claim = parseToken(token).getBody().get("userId");
+
+        if (claim == null) {
+            throw new IllegalArgumentException("userId claim not found in token");
+        }
+
+        return UUID.fromString(claim.toString());
     }
+
 
     public String getRole(String token) {
         return parseToken(token).getBody().get("role", String.class);

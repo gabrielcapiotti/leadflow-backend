@@ -1,12 +1,14 @@
 package com.leadflow.backend.multitenancy;
 
 import com.leadflow.backend.IntegrationTestBase;
+import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.lead.Lead;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.multitenancy.service.TenantService;
 import com.leadflow.backend.repository.lead.LeadRepository;
+import com.leadflow.backend.repository.tenant.TenantRepository;
 import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
 
@@ -28,6 +30,9 @@ class TenantIsolationTest extends IntegrationTestBase {
     private TenantService tenantService;
 
     @Autowired
+    private TenantRepository tenantRepository;
+
+    @Autowired
     private LeadRepository leadRepository;
 
     @Autowired
@@ -40,6 +45,7 @@ class TenantIsolationTest extends IntegrationTestBase {
     void setup() {
         TenantContext.clear();
 
+        // Cria schemas se ainda não existirem
         tenantService.createTenantSchema("tenant_a");
         tenantService.createTenantSchema("tenant_b");
     }
@@ -50,7 +56,7 @@ class TenantIsolationTest extends IntegrationTestBase {
     }
 
     /* ==========================
-       ISOLATION
+       TESTE 1 - ISOLAMENTO POR COUNT
        ========================== */
 
     @Test
@@ -59,13 +65,20 @@ class TenantIsolationTest extends IntegrationTestBase {
         // ===== TENANT A =====
         TenantContext.setTenant("tenant_a");
 
-        Role role = roleRepository.save(new Role("USER"));
+        Tenant tenant = tenantRepository.findByNameIgnoreCase("Tenant A")
+                .orElseThrow(() -> new IllegalStateException("Tenant 'Tenant A' não encontrado no seed"));
+
+        Role role = roleRepository.findByNameIgnoreCase("USER")
+                .orElseThrow(() -> new IllegalStateException("Role 'USER' não encontrada no seed"));
 
         User user = userRepository.save(
-                new User("User A",
+                new User(
+                        "User A",
                         "a_" + UUID.randomUUID() + "@mail.com",
                         "pass",
-                        role)
+                        role,
+                        tenant
+                )
         );
 
         Lead leadA = new Lead(
@@ -75,6 +88,7 @@ class TenantIsolationTest extends IntegrationTestBase {
         );
 
         leadA.setUser(user);
+        leadA.setTenant(tenant);
 
         leadRepository.saveAndFlush(leadA);
 
@@ -88,19 +102,30 @@ class TenantIsolationTest extends IntegrationTestBase {
                 .isZero();
     }
 
+    /* ==========================
+       TESTE 2 - ISOLAMENTO POR CONSULTA
+       ========================== */
+
     @Test
     void shouldNotAccessOtherTenantData() {
 
         // ===== TENANT A =====
         TenantContext.setTenant("tenant_a");
 
-        Role role = roleRepository.save(new Role("USER"));
+        Tenant tenant = tenantRepository.findByNameIgnoreCase("Tenant A")
+                .orElseThrow(() -> new IllegalStateException("Tenant 'Tenant A' não encontrado no seed"));
+
+        Role role = roleRepository.findByNameIgnoreCase("USER")
+                .orElseThrow(() -> new IllegalStateException("Role 'USER' não encontrada no seed"));
 
         User user = userRepository.save(
-                new User("User A",
+                new User(
+                        "User B",
                         "b_" + UUID.randomUUID() + "@mail.com",
                         "pass",
-                        role)
+                        role,
+                        tenant
+                )
         );
 
         Lead leadA = new Lead(
@@ -110,6 +135,7 @@ class TenantIsolationTest extends IntegrationTestBase {
         );
 
         leadA.setUser(user);
+        leadA.setTenant(tenant);
 
         leadRepository.saveAndFlush(leadA);
 

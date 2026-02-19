@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -36,10 +37,16 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public User getActiveById(@NonNull Long userId) {
-
+    public User getActiveById(@NonNull UUID userId) {
         return userRepository.findById(userId)
-                .filter(user -> user.getDeletedAt() == null)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("User not found")
+                );
+    }
+
+    @Transactional(readOnly = true)
+    public User getById(@NonNull UUID userId) {
+        return userRepository.findById(userId)
                 .orElseThrow(() ->
                         new IllegalArgumentException("User not found")
                 );
@@ -47,7 +54,6 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public User getActiveByEmail(String email) {
-
         return userRepository
                 .findByEmailIgnoreCaseAndDeletedAtIsNull(email)
                 .orElseThrow(() ->
@@ -61,10 +67,10 @@ public class UserService {
 
     @Transactional
     public User updateUser(
-            @NonNull Long userId,
+            @NonNull UUID userId,
             String name,
             String email,
-            @NonNull Integer roleId
+            @NonNull UUID roleId
     ) {
 
         User user = getActiveById(userId);
@@ -93,8 +99,7 @@ public class UserService {
        ====================================================== */
 
     @Transactional
-    public void softDelete(@NonNull Long userId) {
-
+    public void softDelete(@NonNull UUID userId) {
         User user = getActiveById(userId);
         user.setDeletedAt(LocalDateTime.now());
     }
@@ -104,18 +109,13 @@ public class UserService {
        ====================================================== */
 
     @Transactional
-    public void restore(@NonNull Long userId) {
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("User not found")
-                );
-
+    public void restore(@NonNull UUID userId) {
+        User user = getById(userId);
         user.setDeletedAt(null);
     }
 
-    public Object listActiveUsers() {
+    public User updateUser(UUID id, String name, String email, Integer roleId) {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'listActiveUsers'");
+        throw new UnsupportedOperationException("Unimplemented method 'updateUser'");
     }
 }

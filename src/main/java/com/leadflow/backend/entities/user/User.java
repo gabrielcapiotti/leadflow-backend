@@ -1,32 +1,50 @@
 package com.leadflow.backend.entities.user;
 
+import com.leadflow.backend.entities.Tenant;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(
         name = "users",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_users_email", columnNames = "email")
+                @UniqueConstraint(
+                        name = "uk_users_email_tenant",
+                        columnNames = {"email", "tenant_id"}
+                )
         }
 )
 public class User {
 
+    /* ======================================================
+       ID
+       ====================================================== */
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(nullable = false, updatable = false)
+    private UUID id;
+
+    /* ======================================================
+       FIELDS
+       ====================================================== */
 
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(nullable = false, length = 100, updatable = false)
+    @Column(nullable = false, length = 100)
     private String email;
 
     @Column(nullable = false, length = 255)
     private String password;
+
+    /* ======================================================
+       RELATIONSHIPS
+       ====================================================== */
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
@@ -35,6 +53,18 @@ public class User {
             foreignKey = @ForeignKey(name = "fk_users_role")
     )
     private Role role;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(
+            name = "tenant_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_users_tenant")
+    )
+    private Tenant tenant;
+
+    /* ======================================================
+       AUDIT
+       ====================================================== */
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -48,31 +78,52 @@ public class User {
     private LocalDateTime deletedAt;
 
     /* ======================================================
-       CONSTRUTORES
+       CONSTRUCTORS
        ====================================================== */
 
     protected User() {
         // JPA only
     }
 
-    public User(String name, String email, String encryptedPassword, Role role) {
+    public User(String name,
+                String email,
+                String encryptedPassword,
+                Role role,
+                Tenant tenant) {
 
-        if (name == null || name.isBlank())
-            throw new IllegalArgumentException("Name cannot be null or blank");
-
-        if (email == null || email.isBlank())
-            throw new IllegalArgumentException("Email cannot be null or blank");
-
-        if (encryptedPassword == null || encryptedPassword.isBlank())
-            throw new IllegalArgumentException("Password cannot be null or blank");
-
-        if (role == null)
-            throw new IllegalArgumentException("Role cannot be null");
+        validate(name, email, encryptedPassword, role, tenant);
 
         this.name = name.trim();
         this.email = normalizeEmail(email);
         this.password = encryptedPassword;
         this.role = role;
+        this.tenant = tenant;
+    }
+
+    /* ======================================================
+       VALIDATION
+       ====================================================== */
+
+    private void validate(String name,
+                          String email,
+                          String password,
+                          Role role,
+                          Tenant tenant) {
+
+        if (name == null || name.isBlank())
+            throw new IllegalArgumentException("Name cannot be blank");
+
+        if (email == null || email.isBlank())
+            throw new IllegalArgumentException("Email cannot be blank");
+
+        if (password == null || password.isBlank())
+            throw new IllegalArgumentException("Password cannot be blank");
+
+        if (role == null)
+            throw new IllegalArgumentException("Role cannot be null");
+
+        if (tenant == null)
+            throw new IllegalArgumentException("Tenant cannot be null");
     }
 
     private String normalizeEmail(String email) {
@@ -83,50 +134,26 @@ public class User {
        GETTERS
        ====================================================== */
 
-    public Long getId() {
-        return id;
-    }
+    public UUID getId() { return id; }
 
-    public String getName() {
-        return name;
-    }
+    public String getName() { return name; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getEmail() { return email; }
 
-    public String getPassword() {
-        return password;
-    }
+    public String getPassword() { return password; }
 
-    public Role getRole() {
-        return role;
-    }
+    public Role getRole() { return role; }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public LocalDateTime getDeletedAt() {
-        return deletedAt;
-    }
-
-    /* ======================================================
-       MULTITENANCY
-       ====================================================== */
+    public Tenant getTenant() { return tenant; }
 
     public String getTenantId() {
-        // Caso ainda não use multitenancy real no User,
-        // pode retornar tenant fixo ou null.
-        return "public";
+        return tenant != null ? tenant.getSchemaName() : null;
     }
 
+    public LocalDateTime getDeletedAt() { return deletedAt; }
+
     /* ======================================================
-       REGRAS DE DOMÍNIO
+       DOMAIN METHODS
        ====================================================== */
 
     public void changeName(String newName) {
@@ -136,11 +163,11 @@ public class User {
         this.name = newName.trim();
     }
 
-    public void changePassword(String encryptedPassword) {
-        if (encryptedPassword == null || encryptedPassword.isBlank())
-            throw new IllegalArgumentException("Password cannot be blank");
+    public void changeEmail(String newEmail) {
+        if (newEmail == null || newEmail.isBlank())
+            throw new IllegalArgumentException("Email cannot be blank");
 
-        this.password = encryptedPassword;
+        this.email = normalizeEmail(newEmail);
     }
 
     public void changeRole(Role newRole) {
@@ -148,6 +175,13 @@ public class User {
             throw new IllegalArgumentException("Role cannot be null");
 
         this.role = newRole;
+    }
+
+    public void changePassword(String encryptedPassword) {
+        if (encryptedPassword == null || encryptedPassword.isBlank())
+            throw new IllegalArgumentException("Password cannot be blank");
+
+        this.password = encryptedPassword;
     }
 
     public void softDelete() {
@@ -163,27 +197,30 @@ public class User {
     }
 
     /* ======================================================
-       SETTERS CONTROLADOS (COMPATIBILIDADE)
+       COMPATIBILITY SETTERS (SEM EXCEPTION)
        ====================================================== */
 
     public void setName(String name) {
         changeName(name);
     }
 
+    public void setEmail(String email) {
+        changeEmail(email);
+    }
+
     public void setRole(Role role) {
         changeRole(role);
     }
 
-    public void setDeletedAt(LocalDateTime deletedAt) {
-        this.deletedAt = deletedAt;
+    public void setTenant(Tenant tenant) {
+        if (tenant == null)
+            throw new IllegalArgumentException("Tenant cannot be null");
+
+        this.tenant = tenant;
     }
 
-    /**
-     * ⚠️ Email não deveria ser alterado.
-     * Mantido apenas para compatibilidade.
-     */
-    public void setEmail(String email) {
-        this.email = normalizeEmail(email);
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 
     /* ======================================================
@@ -203,7 +240,7 @@ public class User {
     }
 
     /* ======================================================
-       TO STRING (SEM SENHA)
+       TO STRING
        ====================================================== */
 
     @Override
@@ -212,7 +249,7 @@ public class User {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", email='" + email + '\'' +
-                ", role=" + (role != null ? role.getName() : null) +
+                ", tenant=" + (tenant != null ? tenant.getSchemaName() : null) +
                 '}';
     }
 }

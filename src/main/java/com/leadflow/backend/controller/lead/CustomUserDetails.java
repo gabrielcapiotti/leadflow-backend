@@ -8,10 +8,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 public class CustomUserDetails implements UserDetails {
 
-    private final Long id;
+    private final UUID id;
     private final String email;
     private final String password;
     private final String role;
@@ -30,7 +31,7 @@ public class CustomUserDetails implements UserDetails {
                 : "USER"; // fallback defensivo
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 

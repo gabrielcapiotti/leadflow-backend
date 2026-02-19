@@ -1,28 +1,27 @@
 package com.leadflow.backend.controller.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.leadflow.backend.config.TestSecurityConfig;
 import com.leadflow.backend.dto.auth.LoginRequest;
 import com.leadflow.backend.dto.auth.RegisterRequest;
-import com.leadflow.backend.exception.GlobalExceptionHandler;
 import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.auth.AuthService;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(AuthController.class)
-@Import({GlobalExceptionHandler.class, TestSecurityConfig.class})
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
 class AuthControllerNegativeTest {
 
     @Autowired
@@ -31,10 +30,10 @@ class AuthControllerNegativeTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @Autowired
     private AuthService authService;
 
-    @MockBean
+    @Autowired
     private JwtService jwtService;
 
     /* =========================================================

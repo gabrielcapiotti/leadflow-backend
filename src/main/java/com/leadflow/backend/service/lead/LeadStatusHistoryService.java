@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -80,5 +81,10 @@ public class LeadStatusHistoryService {
                         history.getChangedBy().getEmail()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    public LeadStatusHistory getById(UUID historyId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getById'");
     }
 }

@@ -1,30 +1,30 @@
 package com.leadflow.backend.security;
 
 import com.leadflow.backend.multitenancy.filter.TenantFilter;
+import com.leadflow.backend.security.jwt.JwtService;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+@Profile("!test")
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtFilter;
     private final TenantFilter tenantFilter;
 
-    public SecurityConfig(
-            JwtAuthenticationFilter jwtFilter,
-            TenantFilter tenantFilter
-    ) {
-        this.jwtFilter = jwtFilter;
+    public SecurityConfig(TenantFilter tenantFilter) {
         this.tenantFilter = tenantFilter;
     }
 
@@ -41,8 +41,19 @@ public class SecurityConfig {
     }
 
     @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter(
+            JwtService jwtService,
+            UserDetailsService userDetailsService
+    ) {
+        return new JwtAuthenticationFilter(jwtService, userDetailsService);
+    }
+
+    @Bean
     @ConditionalOnMissingBean(name = "filterChain")
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(
+            HttpSecurity http,
+            JwtAuthenticationFilter jwtAuthenticationFilter
+    ) throws Exception {
 
         http
             .csrf(csrf -> csrf.disable())
@@ -62,7 +73,7 @@ public class SecurityConfig {
 
             // 1️⃣ JWT autentica
             .addFilterBefore(
-                jwtFilter,
+                jwtAuthenticationFilter,
                 UsernamePasswordAuthenticationFilter.class
             )
 

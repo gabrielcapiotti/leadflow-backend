@@ -1,12 +1,15 @@
 package com.leadflow.backend.dto.user;
 
+import java.util.Objects;
+import java.util.UUID;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public final class UserResponse {
 
-    private final Long id;
+    private final UUID id;
     private final String name;
     private final String email;
 
@@ -14,18 +17,18 @@ public final class UserResponse {
     private final String role;
 
     public UserResponse(
-            Long id,
+            UUID id,
             String name,
             String email,
             String role
     ) {
-        this.id = id;
-        this.name = name;
-        this.email = email;
-        this.role = role;
+        this.id = Objects.requireNonNull(id, "id cannot be null");
+        this.name = Objects.requireNonNull(name, "name cannot be null");
+        this.email = Objects.requireNonNull(email, "email cannot be null");
+        this.role = Objects.requireNonNull(role, "role cannot be null");
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 

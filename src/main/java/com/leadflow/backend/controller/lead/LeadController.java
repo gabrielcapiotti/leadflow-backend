@@ -10,6 +10,8 @@ import com.leadflow.backend.service.user.UserService;
 
 import jakarta.validation.Valid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
@@ -18,10 +20,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/leads")
 public class LeadController {
+
+    private static final Logger log = LoggerFactory.getLogger(LeadController.class);
 
     private final LeadService leadService;
     private final UserService userService;
@@ -45,6 +50,8 @@ public class LeadController {
 
         User user = resolveUser(principal);
 
+        log.info("Listando leads para o usuário: {}", user.getEmail());
+
         List<LeadResponse> response = leadService
                 .listActiveLeads(user)
                 .stream()
@@ -66,6 +73,8 @@ public class LeadController {
 
         User user = resolveUser(principal);
 
+        log.info("Criando lead para o usuário: {}", user.getEmail());
+
         Lead lead = leadService.createLead(
                 request.getName(),
                 request.getEmail(),
@@ -79,18 +88,32 @@ public class LeadController {
     }
 
     /* ======================================================
-       GET BY ID
+       GET BY ID (ISOLADO POR USUÁRIO)
        ====================================================== */
 
     @GetMapping("/{id}")
     public ResponseEntity<LeadResponse> getById(
             @AuthenticationPrincipal UserDetails principal,
-            @PathVariable Long id
+            @PathVariable UUID id
     ) {
 
         User user = resolveUser(principal);
 
         Lead lead = leadService.getByIdForUser(id, user);
+
+        return ResponseEntity.ok(toResponse(lead));
+    }
+
+    /* ======================================================
+       GET BY ID (PUBLIC)
+       ====================================================== */
+
+    @GetMapping("/public/{id}")
+    public ResponseEntity<LeadResponse> getLeadById(
+            @PathVariable UUID id
+    ) {
+
+        Lead lead = leadService.getById(id);
 
         return ResponseEntity.ok(toResponse(lead));
     }
@@ -102,11 +125,13 @@ public class LeadController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<LeadResponse> updateStatus(
             @AuthenticationPrincipal UserDetails principal,
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @RequestParam LeadStatus status
     ) {
 
         User user = resolveUser(principal);
+
+        log.info("Atualizando status do lead para o usuário: {}", user.getEmail());
 
         Lead lead = leadService.updateStatus(id, status, user);
 
@@ -120,7 +145,7 @@ public class LeadController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @AuthenticationPrincipal UserDetails principal,
-            @PathVariable Long id
+            @PathVariable UUID id
     ) {
 
         User user = resolveUser(principal);
@@ -137,12 +162,17 @@ public class LeadController {
     private User resolveUser(UserDetails principal) {
 
         if (principal == null) {
-            throw new AuthenticationCredentialsNotFoundException(
-                    "User not authenticated"
-            );
+            log.warn("Authentication attempt without principal.");
+            throw new AuthenticationCredentialsNotFoundException("User not authenticated");
         }
 
-        return userService.getActiveByEmail(principal.getUsername());
+        User user = userService.getActiveByEmail(principal.getUsername());
+
+        if (user == null) {
+            throw new AuthenticationCredentialsNotFoundException("User not authenticated");
+        }
+
+        return user;
     }
 
     /* ======================================================
@@ -156,7 +186,7 @@ public class LeadController {
         }
 
         return new LeadResponse(
-                lead.getId(),
+                lead.getId(),          // UUID
                 lead.getName(),
                 lead.getEmail(),
                 lead.getPhone(),

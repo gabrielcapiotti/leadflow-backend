@@ -5,6 +5,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(
@@ -16,8 +17,9 @@ import java.time.LocalDateTime;
 public class Role {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    @GeneratedValue
+    @Column(columnDefinition = "uuid")
+    private UUID id;
 
     @Column(nullable = false, length = 50, updatable = false)
     private String name;
@@ -59,7 +61,7 @@ public class Role {
        GETTERS (imutável)
        ========================== */
 
-    public Integer getId() {
+    public UUID getId() {
         return id;
     }
 

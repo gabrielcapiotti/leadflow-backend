@@ -9,9 +9,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface LeadRepository extends JpaRepository<Lead, Long> {
+public interface LeadRepository extends JpaRepository<Lead, UUID> {
 
     /* ======================================================
        CONSULTAS ADMINISTRATIVAS (USO INTERNO DO TENANT)
@@ -39,7 +40,7 @@ public interface LeadRepository extends JpaRepository<Lead, Long> {
     );
 
     Optional<Lead> findByIdAndUserAndDeletedAtIsNull(
-            Long id,
+            UUID id,
             User user
     );
 }

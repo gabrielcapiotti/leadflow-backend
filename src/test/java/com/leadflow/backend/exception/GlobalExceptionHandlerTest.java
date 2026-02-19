@@ -1,13 +1,15 @@
 package com.leadflow.backend.exception;
 
-import com.leadflow.backend.config.TestSecurityConfig;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -15,19 +17,21 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import org.springframework.test.context.ActiveProfiles;
-
-@WebMvcTest(controllers = com.leadflow.backend.exception.GlobalExceptionHandlerTest.DummyController.class)
-@Import({GlobalExceptionHandler.class, TestSecurityConfig.class})
+@SpringBootTest
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
 class GlobalExceptionHandlerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @BeforeEach
+    void setUp() {
+        // Inicializar dados de teste ou configurar o banco de dados, se necessário
+    }
 
     /* ==========================
        DUMMY CONTROLLER
@@ -39,8 +43,7 @@ class GlobalExceptionHandlerTest {
     static class DummyController {
 
         @PostMapping("/validation-error")
-        public void validateInput(@Valid @RequestBody DummyRequest request) {
-        }
+        public void validateInput(@Valid @RequestBody DummyRequest request) {}
 
         @GetMapping("/illegal-argument")
         public void throwIllegalArgumentException() {
@@ -66,21 +69,6 @@ class GlobalExceptionHandlerTest {
         public void throwGenericException() {
             throw new RuntimeException("Unexpected error");
         }
-
-        @GetMapping("/illegal")
-        public void illegal() {
-            throw new IllegalArgumentException("Invalid");
-        }
-
-        @GetMapping("/state")
-        public void state() {
-            throw new IllegalStateException("State error");
-        }
-
-        @GetMapping("/generic")
-        public void generic() {
-            throw new RuntimeException("Unexpected");
-        }
     }
 
     static class DummyRequest {
@@ -88,13 +76,8 @@ class GlobalExceptionHandlerTest {
         @NotBlank(message = "name must not be blank")
         private String name;
 
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
     }
 
     /* ==========================
@@ -102,6 +85,7 @@ class GlobalExceptionHandlerTest {
        ========================== */
 
     @Test
+    @WithMockUser
     void shouldHandleValidationError() throws Exception {
 
         mockMvc.perform(
@@ -117,6 +101,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @WithMockUser
     void shouldHandleIllegalArgumentException() throws Exception {
 
         mockMvc.perform(get("/dummy/illegal-argument"))
@@ -128,6 +113,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @WithMockUser
     void shouldHandleIllegalStateException() throws Exception {
 
         mockMvc.perform(get("/dummy/illegal-state"))
@@ -139,6 +125,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @WithMockUser
     void shouldHandleBadCredentialsException() throws Exception {
 
         mockMvc.perform(get("/dummy/bad-credentials"))
@@ -150,6 +137,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @WithMockUser
     void shouldHandleAccessDeniedException() throws Exception {
 
         mockMvc.perform(get("/dummy/access-denied"))
@@ -162,6 +150,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @WithMockUser
     void shouldHandleGenericException() throws Exception {
 
         mockMvc.perform(get("/dummy/generic-error"))

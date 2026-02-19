@@ -3,11 +3,12 @@ package com.leadflow.backend.dto.settings;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.Objects;
+import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public final class SettingResponse {
 
-    private final Long id;
+    private final UUID id;
     private final String vendorName;
     private final String whatsapp;
     private final String companyName;
@@ -15,7 +16,7 @@ public final class SettingResponse {
     private final String welcomeMessage;
 
     public SettingResponse(
-            Long id,
+            UUID id,
             String vendorName,
             String whatsapp,
             String companyName,
@@ -30,7 +31,7 @@ public final class SettingResponse {
         this.welcomeMessage = welcomeMessage;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 

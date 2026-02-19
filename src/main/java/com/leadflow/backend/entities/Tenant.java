@@ -8,20 +8,34 @@ import java.util.UUID;
 
 @Entity
 @Table(
-    name = "tenants",
-    uniqueConstraints = {
-        @UniqueConstraint(name = "uk_tenants_schema_name", columnNames = "schema_name")
-    },
-    indexes = {
-        @Index(name = "idx_tenants_schema_name", columnList = "schema_name")
-    }
+        name = "tenants",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_tenants_schema_name",
+                        columnNames = "schema_name"
+                )
+        },
+        indexes = {
+                @Index(
+                        name = "idx_tenants_schema_name",
+                        columnList = "schema_name"
+                )
+        }
 )
 public class Tenant {
+
+    /* ======================================================
+       ID
+       ====================================================== */
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(updatable = false, nullable = false)
     private UUID id;
+
+    /* ======================================================
+       FIELDS
+       ====================================================== */
 
     @Column(nullable = false, length = 100)
     private String name;
@@ -33,25 +47,22 @@ public class Tenant {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    /* ==========================
+    /* ======================================================
        CONSTRUCTORS
-       ========================== */
+       ====================================================== */
 
     protected Tenant() {
         // JPA only
     }
 
     public Tenant(String name, String schemaName) {
-        validateName(name);
-        validateSchema(schemaName);
-
-        this.name = name.trim();
-        this.schemaName = normalizeSchema(schemaName);
+        setName(name);
+        setSchemaName(schemaName);
     }
 
-    /* ==========================
+    /* ======================================================
        GETTERS
-       ========================== */
+       ====================================================== */
 
     public UUID getId() {
         return id;
@@ -69,13 +80,12 @@ public class Tenant {
         return createdAt;
     }
 
-    /* ==========================
+    /* ======================================================
        DOMAIN RULES
-       ========================== */
+       ====================================================== */
 
     public void rename(String newName) {
-        validateName(newName);
-        this.name = newName.trim();
+        setName(newName);
     }
 
     private void validateName(String name) {
@@ -91,7 +101,7 @@ public class Tenant {
 
         if (!schema.matches("^[a-zA-Z0-9_]+$")) {
             throw new IllegalArgumentException(
-                "Schema name must contain only letters, numbers and underscore"
+                    "Schema name must contain only letters, numbers and underscore"
             );
         }
 
@@ -104,9 +114,23 @@ public class Tenant {
         return schema.trim().toLowerCase();
     }
 
-    /* ==========================
+    /* ======================================================
+       CONTROLLED SETTERS
+       ====================================================== */
+
+    public void setName(String name) {
+        validateName(name);
+        this.name = name.trim();
+    }
+
+    public void setSchemaName(String schema) {
+        validateSchema(schema);
+        this.schemaName = normalizeSchema(schema);
+    }
+
+    /* ======================================================
        EQUALS & HASHCODE (JPA SAFE)
-       ========================== */
+       ====================================================== */
 
     @Override
     public boolean equals(Object o) {
@@ -120,9 +144,9 @@ public class Tenant {
         return getClass().hashCode();
     }
 
-    /* ==========================
+    /* ======================================================
        TO STRING
-       ========================== */
+       ====================================================== */
 
     @Override
     public String toString() {

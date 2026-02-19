@@ -6,11 +6,12 @@ import com.leadflow.backend.entities.enums.LeadStatus;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public final class LeadResponse {
 
-    private final Long id;
+    private final UUID id;
     private final String name;
     private final String email;
     private final String phone;
@@ -20,7 +21,7 @@ public final class LeadResponse {
     private final LocalDateTime createdAt;
 
     public LeadResponse(
-            Long id,
+            UUID id,
             String name,
             String email,
             String phone,
@@ -35,27 +36,10 @@ public final class LeadResponse {
         this.createdAt = Objects.requireNonNull(createdAt, "createdAt cannot be null");
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public LeadStatus getStatus() {
-        return status;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+    public UUID getId() { return id; }
+    public String getName() { return name; }
+    public String getEmail() { return email; }
+    public String getPhone() { return phone; }
+    public LeadStatus getStatus() { return status; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
 }
