@@ -42,6 +42,6 @@ public abstract class PostgreSQLTestContainerConfig {
         registry.add("spring.flyway.locations", () -> "classpath:db/migration");
 
         // Evita conflitos com multi-tenant durante testes
-        registry.add("spring.jpa.properties.hibernate.multiTenancy", () -> "NONE");
+        registry.add("spring.jpa.properties.hibernate.multi_tenancy", () -> "NONE");
     }
 }

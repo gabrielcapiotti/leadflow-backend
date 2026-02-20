@@ -3,8 +3,7 @@ package com.leadflow.backend.controller.user;
 import com.leadflow.backend.dto.user.UpdateUserRequest;
 import com.leadflow.backend.dto.user.UserResponse;
 import com.leadflow.backend.entities.user.User;
-import com.leadflow.backend.service.user.UserService;
-
+import com.leadflow.backend.service.user.UserService; // Added import for UserService
 import jakarta.validation.Valid;
 
 import org.springframework.data.domain.Page;

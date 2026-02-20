@@ -6,6 +6,7 @@ import com.leadflow.backend.entities.lead.LeadStatusHistory;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.repository.lead.LeadRepository;
 import com.leadflow.backend.repository.lead.LeadStatusHistoryRepository;
+import com.leadflow.backend.repository.user.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,13 +18,34 @@ public class LeadService {
 
     private final LeadRepository leadRepository;
     private final LeadStatusHistoryRepository historyRepository;
+    private final UserRepository userRepository;
 
     public LeadService(
             LeadRepository leadRepository,
-            LeadStatusHistoryRepository historyRepository
+            LeadStatusHistoryRepository historyRepository,
+            UserRepository userRepository
     ) {
         this.leadRepository = leadRepository;
         this.historyRepository = historyRepository;
+        this.userRepository = userRepository;
+    }
+
+    /* ======================================================
+       RESOLVE USER (para controller)
+       ====================================================== */
+
+    @Transactional(readOnly = true)
+    public User resolveUser(String email) {
+
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email cannot be null or blank");
+        }
+
+        return userRepository
+                .findByEmailIgnoreCaseAndDeletedAtIsNull(email)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("User not found")
+                );
     }
 
     /* ======================================================
@@ -71,7 +93,7 @@ public class LeadService {
     }
 
     /* ======================================================
-       LIST (ISOLADO POR USUÁRIO)
+       LIST
        ====================================================== */
 
     @Transactional(readOnly = true)
@@ -85,25 +107,7 @@ public class LeadService {
     }
 
     /* ======================================================
-       READ BY ID (ISOLADO)
-       ====================================================== */
-
-    @Transactional(readOnly = true)
-    public Lead getByIdForUser(UUID leadId, User user) {
-
-        if (user == null) {
-            throw new IllegalArgumentException("User cannot be null");
-        }
-
-        return leadRepository
-                .findByIdAndUserAndDeletedAtIsNull(leadId, user)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Lead not found or already deleted")
-                );
-    }
-
-    /* ======================================================
-       UPDATE STATUS (ISOLADO)
+       UPDATE STATUS
        ====================================================== */
 
     @Transactional
@@ -147,7 +151,7 @@ public class LeadService {
     }
 
     /* ======================================================
-       SOFT DELETE (ISOLADO)
+       SOFT DELETE
        ====================================================== */
 
     @Transactional
@@ -168,8 +172,21 @@ public class LeadService {
         leadRepository.save(lead);
     }
 
-    public Lead getById(UUID id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getById'");
+    /* ======================================================
+       GET BY ID (ISOLADO)
+       ====================================================== */
+
+    @Transactional(readOnly = true)
+    public Lead getByIdForUser(UUID leadId, User user) {
+
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+
+        return leadRepository
+                .findByIdAndUserAndDeletedAtIsNull(leadId, user)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Lead not found or already deleted")
+                );
     }
 }

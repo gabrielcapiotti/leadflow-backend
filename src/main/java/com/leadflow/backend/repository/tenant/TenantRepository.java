@@ -14,5 +14,5 @@ public interface TenantRepository extends JpaRepository<Tenant, UUID> {
 
     boolean existsBySchemaName(String schemaName);
 
-    Object findByName(String string);
+    boolean existsBySchemaNameIgnoreCase(String schemaName);
 }

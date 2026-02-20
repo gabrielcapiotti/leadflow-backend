@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -48,20 +50,23 @@ public class TokenService {
        GENERATE TOKEN (com tenant)
        ====================================================== */
 
-    public String generateToken(User user, String tenant) {
+    public String generateToken(User user, String schemaName) {
 
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null");
         }
 
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("tenant", schemaName);
+
         Date now = new Date();
         Date expiresAt = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
+                .setClaims(claims)
                 .setSubject(user.getEmail())
                 .claim("userId", user.getId())
                 .claim("role", user.getRole().getName())
-                .claim("tenant", tenant)
                 .setIssuedAt(now)
                 .setExpiration(expiresAt)
                 .signWith(secretKey, SignatureAlgorithm.HS256)

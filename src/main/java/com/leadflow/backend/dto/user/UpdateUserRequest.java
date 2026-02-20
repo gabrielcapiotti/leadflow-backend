@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.util.UUID;
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public final class UpdateUserRequest {
 
@@ -19,12 +21,12 @@ public final class UpdateUserRequest {
     private final String email;
 
     @NotNull(message = "RoleId é obrigatório")
-    private final Integer roleId;
+    private final UUID roleId;
 
     public UpdateUserRequest(
             String name,
             String email,
-            Integer roleId
+            UUID roleId
     ) {
         this.name = name;
         this.email = email;
@@ -39,7 +41,7 @@ public final class UpdateUserRequest {
         return email;
     }
 
-    public Integer getRoleId() {
+    public UUID getRoleId() {
         return roleId;
     }
 }

@@ -2,16 +2,20 @@ spring:
   datasource:
     url: jdbc:tc:postgresql:15:///testdb
     driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    initialization-mode: never
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        multiTenancy: SCHEMA
+        multi_tenant_connection_provider: com.leadflow.backend.multitenancy.provider.SchemaMultiTenantConnectionProvider
+        tenant_identifier_resolver: com.leadflow.backend.multitenancy.identifier.CurrentTenantIdentifierResolverImpl
 
   flyway:
-    enabled: true
+    enabled: false
     baseline-on-migrate: true
     validate-on-migrate: true
 

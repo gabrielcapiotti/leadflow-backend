@@ -1,65 +1,54 @@
 package com.leadflow.backend.multitenancy.filter;
 
 import com.leadflow.backend.multitenancy.context.TenantContext;
-import com.leadflow.backend.multitenancy.resolver.JwtTenantResolver;
+import com.leadflow.backend.multitenancy.service.TenantService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
 @Component
-@ConditionalOnProperty(
-    name = "multitenancy.enabled",
-    havingValue = "true",
-    matchIfMissing = true
-)
 public class TenantFilter extends OncePerRequestFilter {
 
-    private static final String DEFAULT_TENANT = "public";
+    private final TenantService tenantService;
 
-    private final JwtTenantResolver jwtTenantResolver;
-
-    public TenantFilter(JwtTenantResolver jwtTenantResolver) {
-        this.jwtTenantResolver = jwtTenantResolver;
+    public TenantFilter(TenantService tenantService) {
+        this.tenantService = tenantService;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
+
+        String tenantId = request.getHeader("X-Tenant-ID");
 
         try {
 
-            String tenant = resolveTenantSafely(request);
+            if (tenantId == null || tenantId.isBlank()) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing X-Tenant-ID header");
+                return;
+            }
 
-            TenantContext.setTenant(
-                    tenant != null ? tenant : DEFAULT_TENANT
-            );
+            String schemaName = tenantService.resolveSchemaByTenantId(tenantId);
+
+            if (schemaName == null) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid tenant");
+                return;
+            }
+
+            TenantContext.setTenant(schemaName);
 
             filterChain.doFilter(request, response);
 
         } finally {
             TenantContext.clear();
-        }
-    }
-
-    /**
-     * Resolve o tenant de forma segura.
-     * Nunca deve quebrar o fluxo da requisição.
-     */
-    private String resolveTenantSafely(HttpServletRequest request) {
-
-        try {
-            return jwtTenantResolver.resolveTenant(request);
-        } catch (Exception ex) {
-            return null;
         }
     }
 }

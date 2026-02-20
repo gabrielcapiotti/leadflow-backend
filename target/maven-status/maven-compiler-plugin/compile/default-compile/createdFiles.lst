@@ -27,11 +27,14 @@ com\leadflow\backend\BackendApplication.class
 com\leadflow\backend\service\auth\AuthService.class
 com\leadflow\backend\entities\enums\LeadStatus.class
 com\leadflow\backend\entities\log\Log.class
+com\leadflow\backend\multitenancy\service\TenantProvisioningService.class
 com\leadflow\backend\repository\tenant\TenantRepository.class
 com\leadflow\backend\security\SecurityConfig.class
+com\leadflow\backend\security\filter\JwtAuthenticationFilter.class
 com\leadflow\backend\security\TokenService.class
 com\leadflow\backend\dto\settings\UpdateSettingRequest.class
 com\leadflow\backend\service\lead\LeadStatusHistoryService.class
+com\leadflow\backend\service\TenantProvisioningService.class
 com\leadflow\backend\repository\settings\SettingRepository.class
 com\leadflow\backend\dto\user\UserResponse.class
 com\leadflow\backend\multitenancy\identifier\CurrentTenantIdentifierResolverImpl.class
@@ -51,7 +54,10 @@ com\leadflow\backend\dto\auth\LoginRequest.class
 com\leadflow\backend\repository\user\RoleRepository.class
 com\leadflow\backend\entities\user\User.class
 com\leadflow\backend\entities\Setting.class
+com\leadflow\backend\config\MultiTenantHibernateConfig.class
 com\leadflow\backend\multitenancy\resolver\JwtTenantResolver.class
+com\leadflow\backend\config\PublicEntityManagerConfig.class
 com\leadflow\backend\repository\log\LogRepository.class
+com\leadflow\backend\config\TenantEntityManagerConfig.class
 com\leadflow\backend\repository\user\UserRepository.class
 com\leadflow\backend\dto\lead\LeadStatusHistoryResponse.class

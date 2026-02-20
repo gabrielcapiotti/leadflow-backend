@@ -43,6 +43,6 @@ public abstract class IntegrationTestBase {
         registry.add("spring.test.database.replace", () -> "none");
 
         // 🧠 Evita problema de multi-tenant com pool
-        registry.add("spring.jpa.properties.hibernate.multiTenancy", () -> "SCHEMA");
+        registry.add("spring.jpa.properties.hibernate.multi_tenancy", () -> "SCHEMA");
     }
 }

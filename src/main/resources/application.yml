@@ -15,6 +15,9 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        multiTenancy: SCHEMA
+        multi_tenant_connection_provider: com.leadflow.backend.multitenancy.provider.SchemaMultiTenantConnectionProvider
+        tenant_identifier_resolver: com.leadflow.backend.multitenancy.identifier.CurrentTenantIdentifierResolverImpl
 
   flyway:
     enabled: true
@@ -36,3 +39,6 @@ security:
   jwt:
     secret: "leadflow-super-secret-key-2026-ultra-secure"
     expiration: 3600000
+  filter:
+    order:
+      tenantFilter: BEFORE UsernamePasswordAuthenticationFilter

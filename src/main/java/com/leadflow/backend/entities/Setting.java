@@ -17,19 +17,24 @@ import java.util.UUID;
 )
 public class Setting {
 
+    /* ==========================
+       ID
+       ========================== */
+
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(nullable = false, updatable = false)
     private UUID id;
 
     /* ==========================
        RELACIONAMENTO
        ========================== */
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
-        name = "user_id",
-        nullable = false,
-        foreignKey = @ForeignKey(name = "fk_settings_user")
+            name = "user_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_settings_user")
     )
     private User user;
 
@@ -72,7 +77,7 @@ public class Setting {
        ========================== */
 
     protected Setting() {
-        // JPA only
+        // JPA
     }
 
     public Setting(

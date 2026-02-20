@@ -1,3 +1,4 @@
+C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\BaseIntegrationTest.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\controller\auth\AuthControllerTest.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\integration\ExampleIntegrationTest.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\IntegrationTestBase.java
@@ -13,6 +14,7 @@ C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\lead
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\config\AbstractPostgresContainerTest.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\security\TestSecurityConfig.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\service\user\UserServiceTest.java
+C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\util\TestTenantFactory.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\controller\role\RoleControllerSecurityTest.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\integration\FlywayIntegrationTest.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\multitenancy\TenantFilterIntegrationTest.java

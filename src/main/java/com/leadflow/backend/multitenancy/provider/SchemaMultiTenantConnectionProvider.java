@@ -1,28 +1,32 @@
 package com.leadflow.backend.multitenancy.provider;
 
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
-import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.regex.Pattern;
 
 @Component
 public class SchemaMultiTenantConnectionProvider
-        implements MultiTenantConnectionProvider<String>, Serializable {
+        implements MultiTenantConnectionProvider<String> {
 
-    private static final long serialVersionUID = 1L;
+    private static final Logger logger =
+            LoggerFactory.getLogger(SchemaMultiTenantConnectionProvider.class);
 
     private static final String DEFAULT_SCHEMA = "public";
 
     /**
-     * Permite apenas letras, números e underscore.
-     * Defesa extra contra SQL injection.
+     * Schema permitido:
+     * - letras minúsculas
+     * - números
+     * - underscore
      */
     private static final Pattern VALID_SCHEMA =
-            Pattern.compile("^[a-zA-Z0-9_]+$");
+            Pattern.compile("^[a-z0-9_]+$");
 
     private final DataSource dataSource;
 
@@ -30,38 +34,48 @@ public class SchemaMultiTenantConnectionProvider
         this.dataSource = dataSource;
     }
 
+    /* ======================================================
+       REQUIRED BY HIBERNATE 6
+       ====================================================== */
+
     @Override
     public Connection getAnyConnection() throws SQLException {
         return dataSource.getConnection();
     }
 
     @Override
-    public void releaseAnyConnection(Connection connection) throws SQLException {
+    public void releaseAnyConnection(Connection connection)
+            throws SQLException {
         connection.close();
     }
 
     @Override
-    public Connection getConnection(String tenantIdentifier) throws SQLException {
+    public Connection getConnection(String tenantIdentifier)
+            throws SQLException {
 
-        String schema = resolveSchemaSafely(tenantIdentifier);
+        logger.debug("Getting connection for tenant: {}", tenantIdentifier);
 
         Connection connection = getAnyConnection();
 
         try {
-            connection.setSchema(schema);
-        } catch (SQLException ex) {
-            connection.setSchema(DEFAULT_SCHEMA);
+            connection.createStatement()
+                    .execute("SET search_path TO \"" + tenantIdentifier + "\"");
+        } catch (SQLException e) {
+            connection.close();
+            throw new SQLException("Could not set schema to " + tenantIdentifier, e);
         }
 
         return connection;
     }
 
     @Override
-    public void releaseConnection(String tenantIdentifier, Connection connection)
-            throws SQLException {
+    public void releaseConnection(
+            String tenantIdentifier,
+            Connection connection
+    ) throws SQLException {
 
         try {
-            connection.setSchema(DEFAULT_SCHEMA);
+            connection.createStatement().execute("SET search_path TO public");
         } finally {
             connection.close();
         }
@@ -74,8 +88,8 @@ public class SchemaMultiTenantConnectionProvider
 
     @Override
     public boolean isUnwrappableAs(Class<?> unwrapType) {
-        return unwrapType.isAssignableFrom(getClass()) ||
-               unwrapType.isAssignableFrom(MultiTenantConnectionProvider.class);
+        return MultiTenantConnectionProvider.class
+                .isAssignableFrom(unwrapType);
     }
 
     @Override
@@ -84,22 +98,33 @@ public class SchemaMultiTenantConnectionProvider
         if (isUnwrappableAs(unwrapType)) {
             return (T) this;
         }
-        return null;
+        throw new IllegalArgumentException(
+                "Unknown unwrap type: " + unwrapType
+        );
     }
 
-    /**
-     * Sanitiza e valida schema antes de aplicar.
-     */
-    private String resolveSchemaSafely(String tenantIdentifier) {
+    /* ======================================================
+       INTERNAL
+       ====================================================== */
 
-        if (tenantIdentifier == null || tenantIdentifier.isBlank()) {
+    private String resolveSchema(String tenantIdentifier) {
+
+        if (tenantIdentifier == null) {
             return DEFAULT_SCHEMA;
         }
 
-        String schema = tenantIdentifier.trim().toLowerCase();
+        String schema = tenantIdentifier
+                .trim()
+                .toLowerCase();
+
+        if (schema.isBlank()) {
+            return DEFAULT_SCHEMA;
+        }
 
         if (!VALID_SCHEMA.matcher(schema).matches()) {
-            return DEFAULT_SCHEMA;
+            throw new IllegalArgumentException(
+                    "Invalid tenant schema: " + schema
+            );
         }
 
         return schema;

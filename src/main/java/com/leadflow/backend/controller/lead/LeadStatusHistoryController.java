@@ -7,7 +7,6 @@ import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.service.lead.LeadService;
 import com.leadflow.backend.service.lead.LeadStatusHistoryService;
 import com.leadflow.backend.service.user.UserService;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -56,8 +55,7 @@ public class LeadStatusHistoryController {
     }
 
     /* ======================================================
-       HISTORY BY HISTORY ID
-       (evita conflito com /api/leads/{id})
+       HISTORY BY HISTORY ID (ISOLADO POR USUÁRIO)
        ====================================================== */
 
     @GetMapping("/history/{historyId}")
@@ -70,19 +68,27 @@ public class LeadStatusHistoryController {
 
         LeadStatusHistory history = historyService.getById(historyId);
 
-        // opcional: validar se pertence ao usuário
-        if (!history.getLead().getUser().equals(user)) {
-            throw new IllegalArgumentException("History not found");
+        if (history == null) {
+            return ResponseEntity.notFound().build();
         }
 
-        LeadStatusHistoryResponse response = new LeadStatusHistoryResponse(
-                history.getId(),
-                history.getStatus(),
-                history.getChangedAt(),
-                history.getUpdatedBy() != null
-                        ? history.getUpdatedBy().getEmail()
-                        : "SYSTEM"
-        );
+        // Segurança multi-tenant e multi-user
+        if (history.getLead() == null ||
+            history.getLead().getUser() == null ||
+            !history.getLead().getUser().equals(user)) {
+
+            return ResponseEntity.notFound().build();
+        }
+
+        LeadStatusHistoryResponse response =
+                new LeadStatusHistoryResponse(
+                        history.getId(),
+                        history.getStatus(),
+                        history.getChangedAt(),
+                        history.getUpdatedBy() != null
+                                ? history.getUpdatedBy().getEmail()
+                                : "SYSTEM"
+                );
 
         return ResponseEntity.ok(response);
     }
@@ -99,6 +105,14 @@ public class LeadStatusHistoryController {
             );
         }
 
-        return userService.getActiveByEmail(principal.getUsername());
+        User user = userService.getActiveByEmail(principal.getUsername());
+
+        if (user == null) {
+            throw new AuthenticationCredentialsNotFoundException(
+                    "User not authenticated"
+            );
+        }
+
+        return user;
     }
 }

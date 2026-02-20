@@ -15,15 +15,14 @@ import java.util.UUID;
     name = "leads",
     uniqueConstraints = {
         @UniqueConstraint(
-            name = "uk_leads_email_user_tenant",
-            columnNames = {"email", "user_id", "tenant_id"}
+            name = "uk_leads_email_user",
+            columnNames = {"email", "user_id"}
         )
     },
     indexes = {
         @Index(name = "idx_leads_email", columnList = "email"),
         @Index(name = "idx_leads_user", columnList = "user_id"),
-        @Index(name = "idx_leads_user_email", columnList = "user_id,email"),
-        @Index(name = "idx_leads_tenant", columnList = "tenant_id")
+        @Index(name = "idx_leads_user_email", columnList = "user_id,email")
     }
 )
 public class Lead {
@@ -43,17 +42,17 @@ public class Lead {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(
-        name = "user_id",
-        nullable = false,
-        foreignKey = @ForeignKey(name = "fk_leads_user")
+            name = "user_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_leads_user")
     )
     private User user;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(
-        name = "tenant_id",
-        nullable = false,
-        foreignKey = @ForeignKey(name = "fk_leads_tenant")
+            name = "tenant_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_leads_tenant")
     )
     private Tenant tenant;
 
@@ -125,43 +124,24 @@ public class Lead {
     public LocalDateTime getDeletedAt() { return deletedAt; }
 
     /* ======================================================
-       MULTI-TENANT RULE
+       SETTERS CONTROLADOS
        ====================================================== */
 
     public void setUser(User user) {
         if (user == null)
             throw new IllegalArgumentException("User cannot be null");
-
-        if (user.getTenant() == null)
-            throw new IllegalStateException("User must belong to a tenant");
-
         this.user = user;
-        this.tenant = user.getTenant(); // sincroniza automaticamente
     }
 
     public void setTenant(Tenant tenant) {
         if (tenant == null)
             throw new IllegalArgumentException("Tenant cannot be null");
-
         this.tenant = tenant;
     }
 
     /* ======================================================
        BUSINESS METHODS
        ====================================================== */
-
-    public void updateContact(String name, String email, String phone) {
-
-        if (name == null || name.isBlank())
-            throw new IllegalArgumentException("Name cannot be blank");
-
-        if (email == null || email.isBlank())
-            throw new IllegalArgumentException("Email cannot be blank");
-
-        this.name = name.trim();
-        this.email = email.trim().toLowerCase();
-        this.phone = phone;
-    }
 
     public void changeStatus(LeadStatus newStatus) {
 
@@ -170,8 +150,8 @@ public class Lead {
 
         if (!this.status.canTransitionTo(newStatus))
             throw new IllegalArgumentException(
-                "Invalid status transition from " +
-                this.status + " to " + newStatus
+                    "Invalid status transition from " +
+                            this.status + " to " + newStatus
             );
 
         this.status = newStatus;
@@ -191,7 +171,7 @@ public class Lead {
     }
 
     /* ======================================================
-       JPA SAFE EQUALS / HASHCODE
+       EQUALS / HASHCODE
        ====================================================== */
 
     @Override
@@ -204,15 +184,5 @@ public class Lead {
     @Override
     public int hashCode() {
         return getClass().hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return "Lead{" +
-               "id=" + id +
-               ", name='" + name + '\'' +
-               ", email='" + email + '\'' +
-               ", status=" + status +
-               '}';
     }
 }

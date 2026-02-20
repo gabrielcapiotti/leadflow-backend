@@ -11,11 +11,10 @@ import java.util.UUID;
 @Entity
 @Table(
         name = "users",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_users_email_tenant",
-                        columnNames = {"email", "tenant_id"}
-                )
+        indexes = {
+                @Index(name = "idx_users_email", columnList = "email"),
+                @Index(name = "idx_users_tenant", columnList = "tenant_id"),
+                @Index(name = "idx_users_email_tenant", columnList = "email, tenant_id")
         }
 )
 public class User {
@@ -146,9 +145,9 @@ public class User {
 
     public Tenant getTenant() { return tenant; }
 
-    public String getTenantId() {
-        return tenant != null ? tenant.getSchemaName() : null;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 
     public LocalDateTime getDeletedAt() { return deletedAt; }
 
@@ -184,6 +183,13 @@ public class User {
         this.password = encryptedPassword;
     }
 
+    public void changeTenant(Tenant newTenant) {
+        if (newTenant == null)
+            throw new IllegalArgumentException("Tenant cannot be null");
+
+        this.tenant = newTenant;
+    }
+
     public void softDelete() {
         this.deletedAt = LocalDateTime.now();
     }
@@ -197,7 +203,7 @@ public class User {
     }
 
     /* ======================================================
-       COMPATIBILITY SETTERS (SEM EXCEPTION)
+       SETTERS CONTROLADOS (para Service / JPA)
        ====================================================== */
 
     public void setName(String name) {
@@ -213,10 +219,7 @@ public class User {
     }
 
     public void setTenant(Tenant tenant) {
-        if (tenant == null)
-            throw new IllegalArgumentException("Tenant cannot be null");
-
-        this.tenant = tenant;
+        changeTenant(tenant);
     }
 
     public void setDeletedAt(LocalDateTime deletedAt) {
@@ -224,7 +227,7 @@ public class User {
     }
 
     /* ======================================================
-       EQUALS & HASHCODE
+       EQUALS & HASHCODE (JPA SAFE)
        ====================================================== */
 
     @Override
@@ -247,7 +250,6 @@ public class User {
     public String toString() {
         return "User{" +
                 "id=" + id +
-                ", name='" + name + '\'' +
                 ", email='" + email + '\'' +
                 ", tenant=" + (tenant != null ? tenant.getSchemaName() : null) +
                 '}';

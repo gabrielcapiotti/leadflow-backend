@@ -4,9 +4,9 @@ import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,16 +37,8 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public User getActiveById(@NonNull UUID userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("User not found")
-                );
-    }
-
-    @Transactional(readOnly = true)
-    public User getById(@NonNull UUID userId) {
-        return userRepository.findById(userId)
+    public User getById(UUID id) {
+        return userRepository.findById(id)
                 .orElseThrow(() ->
                         new IllegalArgumentException("User not found")
                 );
@@ -66,21 +58,9 @@ public class UserService {
        ====================================================== */
 
     @Transactional
-    public User updateUser(
-            @NonNull UUID userId,
-            String name,
-            String email,
-            @NonNull UUID roleId
-    ) {
+    public User updateUser(UUID id, String name, String email, UUID roleId) {
 
-        User user = getActiveById(userId);
-
-        String normalizedEmail = email.trim().toLowerCase();
-
-        if (!user.getEmail().equalsIgnoreCase(normalizedEmail)
-                && userRepository.existsByEmailIgnoreCaseAndDeletedAtIsNull(normalizedEmail)) {
-            throw new IllegalArgumentException("Email already in use");
-        }
+        User user = getById(id);
 
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() ->
@@ -88,10 +68,10 @@ public class UserService {
                 );
 
         user.setName(name);
-        user.setEmail(normalizedEmail);
+        user.setEmail(email.toLowerCase());
         user.setRole(role);
 
-        return user;
+        return userRepository.save(user);
     }
 
     /* ======================================================
@@ -99,23 +79,9 @@ public class UserService {
        ====================================================== */
 
     @Transactional
-    public void softDelete(@NonNull UUID userId) {
-        User user = getActiveById(userId);
+    public void softDelete(UUID id) {
+        User user = getById(id);
         user.setDeletedAt(LocalDateTime.now());
-    }
-
-    /* ======================================================
-       RESTORE
-       ====================================================== */
-
-    @Transactional
-    public void restore(@NonNull UUID userId) {
-        User user = getById(userId);
-        user.setDeletedAt(null);
-    }
-
-    public User updateUser(UUID id, String name, String email, Integer roleId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updateUser'");
+        userRepository.save(user);
     }
 }

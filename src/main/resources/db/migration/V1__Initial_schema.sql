@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS tenants (
 
 
 /* ======================================================
-   ROLES (GLOBAL - NÃO MULTI-TENANT)
+   ROLES (GLOBAL)
    ====================================================== */
 
 CREATE TABLE IF NOT EXISTS roles (
@@ -45,12 +45,13 @@ CREATE TABLE IF NOT EXISTS roles (
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 
+    tenant_id UUID NOT NULL,
+
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL,
     password VARCHAR(255) NOT NULL,
 
     role_id UUID NOT NULL,
-    tenant_id UUID NOT NULL,
 
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -73,6 +74,9 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE INDEX IF NOT EXISTS idx_users_tenant
 ON users (tenant_id);
 
+CREATE INDEX IF NOT EXISTS idx_users_email
+ON users (email);
+
 
 /* ======================================================
    LEADS (MULTI-TENANT)
@@ -81,6 +85,8 @@ ON users (tenant_id);
 CREATE TABLE IF NOT EXISTS leads (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 
+    tenant_id UUID NOT NULL,
+
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL,
     phone VARCHAR(20),
@@ -88,7 +94,6 @@ CREATE TABLE IF NOT EXISTS leads (
     status VARCHAR(50) NOT NULL DEFAULT 'NEW',
 
     user_id UUID NOT NULL,
-    tenant_id UUID NOT NULL,
 
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -122,7 +127,7 @@ ON leads (status);
 
 
 /* ======================================================
-   LEAD STATUS HISTORY
+   LEAD STATUS HISTORY (MULTI-TENANT)
    ====================================================== */
 
 CREATE TABLE IF NOT EXISTS lead_status_history (
@@ -163,7 +168,7 @@ ON lead_status_history (tenant_id);
 
 
 /* ======================================================
-   SETTINGS (MULTI-TENANT CORRETO)
+   SETTINGS (MULTI-TENANT)
    ====================================================== */
 
 CREATE TABLE IF NOT EXISTS settings (

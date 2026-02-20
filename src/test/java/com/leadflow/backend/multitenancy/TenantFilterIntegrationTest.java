@@ -2,8 +2,11 @@ package com.leadflow.backend.multitenancy;
 
 import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.multitenancy.resolver.JwtTenantResolver;
+import com.leadflow.backend.util.TestTenantFactory;
+
 import jakarta.servlet.http.HttpServletRequest;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,8 +29,16 @@ class TenantFilterIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private TestTenantFactory testTenantFactory;   // ✅ ADICIONADO
+
     @MockBean
     private JwtTenantResolver jwtTenantResolver;
+
+    @BeforeEach
+    void setup() {
+        testTenantFactory.createTenant("Tenant A");
+    }
 
     @AfterEach
     void cleanup() {
@@ -41,7 +52,7 @@ class TenantFilterIntegrationTest {
                 .thenReturn("tenant_a");
 
         mockMvc.perform(
-                get("/auth/login") // endpoint público (evita bloqueio de auth)
+                get("/auth/login")
         );
 
         verify(jwtTenantResolver, times(1))

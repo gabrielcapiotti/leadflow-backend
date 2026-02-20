@@ -12,23 +12,23 @@ public class CurrentTenantIdentifierResolverImpl
 
     private static final String DEFAULT_TENANT = "public";
 
-    /**
-     * Permite apenas letras, números e underscore.
-     * Evita SQL Injection via schema name.
-     */
     private static final Pattern VALID_SCHEMA =
-            Pattern.compile("^[a-zA-Z0-9_]+$");
+            Pattern.compile("^[a-z0-9_]+$");
 
     @Override
     public String resolveCurrentTenantIdentifier() {
 
         String tenant = TenantContext.getTenant();
 
-        if (tenant == null || tenant.isBlank()) {
+        if (tenant == null) {
             return DEFAULT_TENANT;
         }
 
         tenant = tenant.trim().toLowerCase();
+
+        if (tenant.isBlank()) {
+            return DEFAULT_TENANT;
+        }
 
         if (!VALID_SCHEMA.matcher(tenant).matches()) {
             return DEFAULT_TENANT;
@@ -38,11 +38,14 @@ public class CurrentTenantIdentifierResolverImpl
     }
 
     /**
-     * Indica se o Hibernate deve validar sessões existentes
-     * quando o tenant muda.
+     * Retornando false permite troca de tenant
+     * dentro da mesma transação/session.
+     *
+     * Isso é essencial para testes e para
+     * aplicações que usam ThreadLocal.
      */
     @Override
     public boolean validateExistingCurrentSessions() {
-        return true;
+        return false;
     }
 }

@@ -9,6 +9,8 @@ com\leadflow\backend\multitenancy\TenantIsolationTest.class
 com\leadflow\backend\security\TokenServiceExpirationTest.class
 com\leadflow\backend\security\TestSecurityConfig.class
 com\leadflow\backend\multitenancy\TenantFilterIntegrationTest.class
+com\leadflow\backend\BaseIntegrationTest.class
+com\leadflow\backend\util\TestTenantFactory.class
 com\leadflow\backend\config\AbstractPostgresContainerTest.class
 com\leadflow\backend\controller\role\RoleControllerSecurityTest.class
 com\leadflow\backend\security\TokenServiceTest.class
