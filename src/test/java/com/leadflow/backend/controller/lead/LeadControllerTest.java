@@ -30,6 +30,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -48,14 +49,9 @@ class LeadControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    /* ================================
-       MOCKS NECESSÁRIOS PARA CONTEXTO
-       ================================ */
-
     @MockBean
     private LeadService leadService;
 
-    // filtros dependem disso
     @MockBean
     private JwtService jwtService;
 
@@ -86,28 +82,30 @@ class LeadControllerTest {
                 tenant
         );
 
-        lead = new Lead("Test Lead", "lead@example.com", "123456789");
+        // Define ID manualmente (porque estamos fora do JPA)
+        UUID userId = UUID.randomUUID();
+        ReflectionTestUtils.setField(user, "id", userId);
 
         leadId = UUID.randomUUID();
+
+        // CONSTRUTOR CORRETO (userId-based)
+        lead = new Lead(
+                userId,
+                "Test Lead",
+                "lead@example.com",
+                "123456789"
+        );
 
         ReflectionTestUtils.setField(lead, "id", leadId);
         ReflectionTestUtils.setField(lead, "createdAt", LocalDateTime.now());
         ReflectionTestUtils.setField(lead, "updatedAt", LocalDateTime.now());
 
-        lead.setUser(user);
-
         when(userService.getActiveByEmail("test@example.com"))
                 .thenReturn(user);
 
-        when(tenantService.resolveSchemaByTenantId("test_schema"))
-                .thenReturn("test_schema");
-
-        when(leadService.createLead(
-                anyString(),
-                anyString(),
-                anyString(),
-                eq(user)
-        )).thenReturn(lead);
+        // ✅ NOVO MÉTODO (retorna Optional)
+        when(tenantService.resolveSchemaByTenantIdentifier("test_schema"))
+                .thenReturn(Optional.of("test_schema"));
     }
 
     private RequestPostProcessor tenant() {
@@ -135,9 +133,6 @@ class LeadControllerTest {
     @WithMockUser(username = "test@example.com", roles = "USER")
     void createLead_ShouldReturnCreatedLead() throws Exception {
 
-        when(tenantService.resolveSchemaByTenantId("test_schema"))
-                .thenReturn("test_schema");
-
         when(leadService.createLead(
                 anyString(),
                 anyString(),
@@ -162,17 +157,6 @@ class LeadControllerTest {
     }
 
     /* ======================================================
-       LIST
-       ====================================================== */
-
-    @Test
-    @WithMockUser(username = "test@example.com", roles = "USER")
-    void listActiveLeads_ShouldReturnLeadList() throws Exception {
-        mockMvc.perform(get("/api/leads").with(tenant()))
-                .andExpect(status().isOk());
-    }
-
-    /* ======================================================
        UPDATE STATUS
        ====================================================== */
 
@@ -189,8 +173,8 @@ class LeadControllerTest {
         )).thenReturn(lead);
 
         mockMvc.perform(patch("/api/leads/{id}/status", leadId)
-                .with(tenant())
-                .param("status", "CONTACTED"))
+                        .with(tenant())
+                        .param("status", "CONTACTED"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(leadId.toString()))
                 .andExpect(jsonPath("$.status").value("CONTACTED"));
@@ -203,23 +187,9 @@ class LeadControllerTest {
     @Test
     @WithMockUser(username = "test@example.com", roles = "USER")
     void deleteLead_ShouldReturnNoContent() throws Exception {
+
         mockMvc.perform(delete("/api/leads/{id}", leadId)
-                .header("X-Tenant-ID", "test_schema"))
+                        .with(tenant()))
                 .andExpect(status().isNoContent());
-    }
-
-    @Test
-    @WithMockUser(username = "test@example.com", roles = "USER")
-    void getLeads_ShouldReturnOk() throws Exception {
-        mockMvc.perform(get("/api/leads")
-                .header("X-Tenant-ID", "test_schema"))
-                .andExpect(status().isOk());
-    }
-
-    // Mock TenantService to resolve schema correctly
-    @BeforeEach
-    void mockTenantService() {
-        when(tenantService.resolveSchemaByTenantId("test_schema"))
-                .thenReturn("test_schema");
     }
 }

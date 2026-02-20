@@ -43,6 +43,7 @@ class UserControllerSecurityTest {
     @Test
     @WithMockUser(roles = "USER")
     void shouldReturn403ForUserRole() throws Exception {
+
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isForbidden());
     }
@@ -55,10 +56,10 @@ class UserControllerSecurityTest {
     @WithMockUser(roles = "ADMIN")
     void shouldReturn200ForAdminRole() throws Exception {
 
-        Page<?> emptyPage = new PageImpl<>(Collections.emptyList());
+        Page<User> emptyPage = new PageImpl<>(Collections.emptyList());
 
         when(userService.listActiveUsers(any(Pageable.class)))
-                .thenReturn((Page<User>) emptyPage);
+                .thenReturn(emptyPage);
 
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk());
@@ -70,6 +71,7 @@ class UserControllerSecurityTest {
 
     @Test
     void shouldReturn401WhenNotAuthenticated() throws Exception {
+
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isUnauthorized());
     }

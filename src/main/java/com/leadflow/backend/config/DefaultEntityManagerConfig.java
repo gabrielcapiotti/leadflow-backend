@@ -1,13 +1,11 @@
 package com.leadflow.backend.config;
 
-import com.leadflow.backend.multitenancy.identifier.CurrentTenantIdentifierResolverImpl;
-import com.leadflow.backend.multitenancy.provider.SchemaMultiTenantConnectionProvider;
+import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.FilterType;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
@@ -20,28 +18,24 @@ import java.util.Map;
 
 @Configuration
 @EnableJpaRepositories(
-        basePackages = "com.leadflow.backend.repository",
-        excludeFilters = @ComponentScan.Filter(
-                type = FilterType.REGEX,
-                pattern = "com\\.leadflow\\.backend\\.repository\\.tenant\\..*"
-        ),
+        basePackages = "com.leadflow.backend.repository.tenant",
         entityManagerFactoryRef = "tenantEntityManagerFactory",
         transactionManagerRef = "tenantTransactionManager"
 )
-public class TenantEntityManagerConfig {
+public class DefaultEntityManagerConfig {
 
     private final DataSource dataSource;
-    private final SchemaMultiTenantConnectionProvider connectionProvider;
-    private final CurrentTenantIdentifierResolverImpl tenantResolver;
+    private final MultiTenantConnectionProvider<String> multiTenantConnectionProvider;
+    private final CurrentTenantIdentifierResolver<String> tenantIdentifierResolver;
 
-    public TenantEntityManagerConfig(
+    public DefaultEntityManagerConfig(
             DataSource dataSource,
-            SchemaMultiTenantConnectionProvider connectionProvider,
-            CurrentTenantIdentifierResolverImpl tenantResolver
+            MultiTenantConnectionProvider<String> multiTenantConnectionProvider,
+            CurrentTenantIdentifierResolver<String> tenantIdentifierResolver
     ) {
         this.dataSource = dataSource;
-        this.connectionProvider = connectionProvider;
-        this.tenantResolver = tenantResolver;
+        this.multiTenantConnectionProvider = multiTenantConnectionProvider;
+        this.tenantIdentifierResolver = tenantIdentifierResolver;
     }
 
     @Bean(name = "tenantEntityManagerFactory")
@@ -51,9 +45,10 @@ public class TenantEntityManagerConfig {
 
         Map<String, Object> properties = new HashMap<>();
 
+        properties.put("hibernate.hbm2ddl.auto", "none");
         properties.put("hibernate.multiTenancy", "SCHEMA");
-        properties.put("hibernate.multi_tenant_connection_provider", connectionProvider);
-        properties.put("hibernate.tenant_identifier_resolver", tenantResolver);
+        properties.put("hibernate.multi_tenant_connection_provider", multiTenantConnectionProvider);
+        properties.put("hibernate.tenant_identifier_resolver", tenantIdentifierResolver);
 
         return builder
                 .dataSource(dataSource)

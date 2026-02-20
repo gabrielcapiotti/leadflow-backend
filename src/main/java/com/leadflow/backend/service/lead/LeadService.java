@@ -31,7 +31,7 @@ public class LeadService {
     }
 
     /* ======================================================
-       RESOLVE USER (para controller)
+       RESOLVE USER
        ====================================================== */
 
     @Transactional(readOnly = true)
@@ -69,7 +69,7 @@ public class LeadService {
         }
 
         boolean emailExists = leadRepository
-                .findByUserAndDeletedAtIsNull(createdBy)
+                .findByUserIdAndDeletedAtIsNull(createdBy.getId())
                 .stream()
                 .anyMatch(l ->
                         l.getEmail() != null &&
@@ -80,8 +80,12 @@ public class LeadService {
             throw new IllegalArgumentException("Email already in use");
         }
 
-        Lead lead = new Lead(name, email, phone);
-        lead.setUser(createdBy);
+        Lead lead = new Lead(
+                createdBy.getId(),
+                name,
+                email,
+                phone
+        );
 
         lead = leadRepository.save(lead);
 
@@ -103,7 +107,7 @@ public class LeadService {
             throw new IllegalArgumentException("User cannot be null");
         }
 
-        return leadRepository.findByUserAndDeletedAtIsNull(user);
+        return leadRepository.findByUserIdAndDeletedAtIsNull(user.getId());
     }
 
     /* ======================================================
@@ -126,7 +130,7 @@ public class LeadService {
         }
 
         Lead lead = leadRepository
-                .findByIdAndUserAndDeletedAtIsNull(leadId, user)
+                .findByIdAndUserIdAndDeletedAtIsNull(leadId, user.getId())
                 .orElseThrow(() ->
                         new IllegalArgumentException("Lead not found or already deleted")
                 );
@@ -162,7 +166,7 @@ public class LeadService {
         }
 
         Lead lead = leadRepository
-                .findByIdAndUserAndDeletedAtIsNull(leadId, user)
+                .findByIdAndUserIdAndDeletedAtIsNull(leadId, user.getId())
                 .orElseThrow(() ->
                         new IllegalArgumentException("Lead not found or already deleted")
                 );
@@ -177,14 +181,14 @@ public class LeadService {
        ====================================================== */
 
     @Transactional(readOnly = true)
-    public Lead getByIdForUser(UUID leadId, User user) {
+    public Lead getByIdForUser(UUID leadId, UUID userId) {
 
-        if (user == null) {
-            throw new IllegalArgumentException("User cannot be null");
+        if (userId == null) {
+            throw new IllegalArgumentException("UserId cannot be null");
         }
 
         return leadRepository
-                .findByIdAndUserAndDeletedAtIsNull(leadId, user)
+                .findByIdAndUserIdAndDeletedAtIsNull(leadId, userId)
                 .orElseThrow(() ->
                         new IllegalArgumentException("Lead not found or already deleted")
                 );

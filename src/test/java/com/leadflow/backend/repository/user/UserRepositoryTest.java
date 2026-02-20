@@ -40,10 +40,16 @@ class UserRepositoryTest {
 
         TenantContext.setTenant("public");
 
+        tenantRepository.deleteAll();
+        roleRepository.deleteAll();
+        userRepository.deleteAll();
+
         tenant = tenantRepository.saveAndFlush(
                 new Tenant(
-                        "Test Tenant " + UUID.randomUUID(),
-                        "test_schema_" + UUID.randomUUID().toString().replace("-", "")
+                        "Test Tenant",
+                        "test_schema_" + UUID.randomUUID()
+                                .toString()
+                                .replace("-", "")
                 )
         );
 
@@ -62,16 +68,21 @@ class UserRepositoryTest {
         userRepository.saveAndFlush(user);
     }
 
+    @AfterEach
+    void cleanup() {
+        TenantContext.clear();
+    }
+
     /* ==========================
-       FIND BY EMAIL
+       FIND ACTIVE BY EMAIL
        ========================== */
 
     @Test
-    @DisplayName("Should return user when email exists")
-    void findByEmail_ShouldReturnUser() {
+    @DisplayName("Should return user when active email exists")
+    void findByEmailIgnoreCaseAndDeletedAtIsNull_ShouldReturnUser() {
 
         Optional<User> found =
-                userRepository.findByEmail("test@example.com");
+                userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com");
 
         assertThat(found).isPresent();
         assertThat(found.get().getName()).isEqualTo("Test User");
@@ -79,10 +90,10 @@ class UserRepositoryTest {
 
     @Test
     @DisplayName("Should return empty when email does not exist")
-    void findByEmail_ShouldReturnEmpty() {
+    void findByEmailIgnoreCaseAndDeletedAtIsNull_ShouldReturnEmpty() {
 
         Optional<User> found =
-                userRepository.findByEmail("nonexistent@example.com");
+                userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("nonexistent@example.com");
 
         assertThat(found).isEmpty();
     }
@@ -106,7 +117,9 @@ class UserRepositoryTest {
     void shouldNotReturnDeletedUser() {
 
         User user =
-                userRepository.findByEmail("test@example.com").orElseThrow();
+                userRepository
+                        .findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com")
+                        .orElseThrow();
 
         user.softDelete();
         userRepository.saveAndFlush(user);

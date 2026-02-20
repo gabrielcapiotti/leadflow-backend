@@ -1,13 +1,12 @@
 package com.leadflow.backend.security;
 
+import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.security.jwt.JwtService;
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,6 +15,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.UUID;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -32,53 +32,78 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
     ) throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
+        String token = extractToken(request);
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        final String token = authHeader.substring(7);
-
-        try {
-
-            final String email = jwtService.extractEmail(token);
-
-            if (email != null &&
+        if (token != null &&
                 SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                UserDetails userDetails =
-                        userDetailsService.loadUserByUsername(email);
+            try {
 
-                if (jwtService.isTokenValid(token, userDetails)) {
+                String email = jwtService.extractEmail(token);
 
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities()
-                            );
+                if (email != null) {
 
-                    authentication.setDetails(
-                            new WebAuthenticationDetailsSource()
-                                    .buildDetails(request)
+                    UserDetails userDetails =
+                            userDetailsService.loadUserByUsername(email);
+
+                    if (!(userDetails instanceof CustomUserDetails customUser)) {
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+
+                    UUID expectedUserId = customUser.getId();
+                    String headerTenant = TenantContext.getTenant();
+                    String tokenTenant = jwtService.extractTenant(token);
+
+                    boolean valid = jwtService.isTokenValid(
+                            token,
+                            userDetails,
+                            expectedUserId,
+                            headerTenant
                     );
 
-                    SecurityContextHolder.getContext()
-                            .setAuthentication(authentication);
-                }
-            }
+                    // 🔒 Bloqueia mismatch entre header e token
+                    if (valid && headerTenant.equals(tokenTenant)) {
 
-        } catch (Exception ex) {
-            SecurityContextHolder.clearContext();
+                        UsernamePasswordAuthenticationToken authToken =
+                                new UsernamePasswordAuthenticationToken(
+                                        userDetails,
+                                        null,
+                                        userDetails.getAuthorities()
+                                );
+
+                        authToken.setDetails(
+                                new WebAuthenticationDetailsSource()
+                                        .buildDetails(request)
+                        );
+
+                        SecurityContextHolder.getContext()
+                                .setAuthentication(authToken);
+                    }
+                }
+
+            } catch (Exception ignored) {
+                // Token inválido → não autentica
+                // Não lança erro para permitir fluxo do Spring Security
+            }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String extractToken(HttpServletRequest request) {
+
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return null;
+        }
+
+        return authHeader.substring(7);
     }
 }

@@ -6,13 +6,16 @@ import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
 import com.leadflow.backend.repository.tenant.TenantRepository;
+import com.leadflow.backend.multitenancy.context.TenantContext;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -20,8 +23,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
-
-import com.leadflow.backend.multitenancy.context.TenantContext;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -41,8 +42,11 @@ class AuthServiceTest {
     private Role userRole;
     private Tenant tenant;
 
+    private static final String SCHEMA = "tenant_test";
+
     @BeforeEach
     void setUp() {
+
         passwordEncoder = new BCryptPasswordEncoder();
 
         authService = new AuthService(
@@ -53,9 +57,9 @@ class AuthServiceTest {
         );
 
         userRole = new Role("ROLE_USER");
-        tenant = new Tenant("Default Tenant", "tenant_test");
+        tenant = new Tenant("Default Tenant", SCHEMA);
 
-        TenantContext.setTenant("tenant_test");
+        TenantContext.setTenant(SCHEMA);
     }
 
     @AfterEach
@@ -63,17 +67,19 @@ class AuthServiceTest {
         TenantContext.clear();
     }
 
-    /* ==========================
+    /* ======================================================
        REGISTER
-       ========================== */
+       ====================================================== */
 
     @Test
     void shouldRegisterUserSuccessfully() {
 
-        when(tenantRepository.findBySchemaName("tenant_test"))
+        when(tenantRepository
+                .findBySchemaNameIgnoreCaseAndDeletedAtIsNull(SCHEMA))
                 .thenReturn(Optional.of(tenant));
 
-        when(userRepository.existsByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
+        when(userRepository
+                .existsByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
                 .thenReturn(false);
 
         when(roleRepository.findByNameIgnoreCase("ROLE_USER"))
@@ -96,12 +102,28 @@ class AuthServiceTest {
     }
 
     @Test
+    void shouldThrowWhenTenantNotFound() {
+
+        when(tenantRepository
+                .findBySchemaNameIgnoreCaseAndDeletedAtIsNull(SCHEMA))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() ->
+                authService.registerUser("Test", "test@example.com", "password")
+        )
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("Tenant not found");
+    }
+
+    @Test
     void shouldThrowWhenEmailAlreadyExists() {
 
-        when(tenantRepository.findBySchemaName("tenant_test"))
+        when(tenantRepository
+                .findBySchemaNameIgnoreCaseAndDeletedAtIsNull(SCHEMA))
                 .thenReturn(Optional.of(tenant));
 
-        when(userRepository.existsByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
+        when(userRepository
+                .existsByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
                 .thenReturn(true);
 
         assertThatThrownBy(() ->
@@ -116,10 +138,12 @@ class AuthServiceTest {
     @Test
     void shouldThrowWhenRoleNotFound() {
 
-        when(tenantRepository.findBySchemaName("tenant_test"))
+        when(tenantRepository
+                .findBySchemaNameIgnoreCaseAndDeletedAtIsNull(SCHEMA))
                 .thenReturn(Optional.of(tenant));
 
-        when(userRepository.existsByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
+        when(userRepository
+                .existsByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
                 .thenReturn(false);
 
         when(roleRepository.findByNameIgnoreCase("ROLE_USER"))
@@ -132,9 +156,9 @@ class AuthServiceTest {
         .hasMessageContaining("ROLE_USER");
     }
 
-    /* ==========================
+    /* ======================================================
        AUTHENTICATE
-       ========================== */
+       ====================================================== */
 
     @Test
     void shouldAuthenticateSuccessfully() {
@@ -150,7 +174,8 @@ class AuthServiceTest {
                 tenant
         );
 
-        when(userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
+        when(userRepository
+                .findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
                 .thenReturn(Optional.of(user));
 
         User result = authService.authenticateUser(
@@ -164,7 +189,8 @@ class AuthServiceTest {
     @Test
     void shouldThrowWhenUserNotFound() {
 
-        when(userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
+        when(userRepository
+                .findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() ->
@@ -187,7 +213,8 @@ class AuthServiceTest {
                 tenant
         );
 
-        when(userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
+        when(userRepository
+                .findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
                 .thenReturn(Optional.of(user));
 
         assertThatThrownBy(() ->

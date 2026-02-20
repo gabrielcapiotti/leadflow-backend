@@ -1,12 +1,5 @@
 package com.leadflow.backend.config;
 
-import jakarta.persistence.EntityManagerFactory;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.sql.DataSource;
-
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
@@ -16,9 +9,14 @@ import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import javax.sql.DataSource;
+import jakarta.persistence.EntityManagerFactory;
+import java.util.HashMap;
+import java.util.Map;
+
 @Configuration
 @EnableJpaRepositories(
-        basePackages = "com.leadflow.backend.repository.tenant", // Repositórios do schema public
+        basePackages = "com.leadflow.backend.repository.public",
         entityManagerFactoryRef = "publicEntityManagerFactory",
         transactionManagerRef = "publicTransactionManager"
 )
@@ -36,11 +34,16 @@ public class PublicEntityManagerConfig {
     ) {
 
         Map<String, Object> properties = new HashMap<>();
+
+        // ⚠️ Flyway controla schema
+        properties.put("hibernate.hbm2ddl.auto", "none");
+
+        // 🔒 Garante que sempre use o schema public
         properties.put("hibernate.default_schema", "public");
 
         return builder
                 .dataSource(dataSource)
-                .packages("com.leadflow.backend.entities") // Entidades que vivem no public
+                .packages("com.leadflow.backend.repository.public") // SOMENTE entidades globais
                 .persistenceUnit("public")
                 .properties(properties)
                 .build();
@@ -48,7 +51,8 @@ public class PublicEntityManagerConfig {
 
     @Bean(name = "publicTransactionManager")
     public PlatformTransactionManager publicTransactionManager(
-            @Qualifier("publicEntityManagerFactory") EntityManagerFactory publicEntityManagerFactory
+            @Qualifier("publicEntityManagerFactory")
+            EntityManagerFactory publicEntityManagerFactory
     ) {
         return new JpaTransactionManager(publicEntityManagerFactory);
     }

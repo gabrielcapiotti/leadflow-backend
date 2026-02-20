@@ -2,8 +2,6 @@ package com.leadflow.backend.repository.lead;
 
 import com.leadflow.backend.entities.enums.LeadStatus;
 import com.leadflow.backend.entities.lead.Lead;
-import com.leadflow.backend.entities.user.User;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,13 +13,11 @@ import java.util.UUID;
 public interface LeadRepository extends JpaRepository<Lead, UUID> {
 
     /* ======================================================
-       CONSULTAS ADMINISTRATIVAS (USO INTERNO DO TENANT)
+       CONSULTAS ADMINISTRATIVAS (TENANT CONTEXT)
        ====================================================== */
 
-    @EntityGraph(attributePaths = {"user"})
     List<Lead> findByDeletedAtIsNull();
 
-    @EntityGraph(attributePaths = {"user"})
     List<Lead> findByStatusAndDeletedAtIsNull(LeadStatus status);
 
     Optional<Lead> findByEmailAndDeletedAtIsNull(String email);
@@ -29,18 +25,18 @@ public interface LeadRepository extends JpaRepository<Lead, UUID> {
     long countByStatusAndDeletedAtIsNull(LeadStatus status);
 
     /* ======================================================
-       ISOLAMENTO POR USUÁRIO (PROTEÇÃO CONTRA IDOR)
+       ISOLAMENTO POR USER ID (PROTEÇÃO CONTRA IDOR)
        ====================================================== */
 
-    List<Lead> findByUserAndDeletedAtIsNull(User user);
+    List<Lead> findByUserIdAndDeletedAtIsNull(UUID userId);
 
-    List<Lead> findByUserAndStatusAndDeletedAtIsNull(
-            User user,
+    List<Lead> findByUserIdAndStatusAndDeletedAtIsNull(
+            UUID userId,
             LeadStatus status
     );
 
-    Optional<Lead> findByIdAndUserAndDeletedAtIsNull(
+    Optional<Lead> findByIdAndUserIdAndDeletedAtIsNull(
             UUID id,
-            User user
+            UUID userId
     );
 }

@@ -86,14 +86,14 @@ class FlywayIntegrationTest {
                 )
         );
 
+        // NOVO CONSTRUTOR COMPATÍVEL
         Lead lead = new Lead(
+                user.getId(),
                 "Lead Test",
                 "lead@email.com",
                 "123456"
         );
 
-        lead.setUser(user);
-        lead.setTenant(tenant);
         lead.changeStatus(LeadStatus.QUALIFIED);
 
         Lead saved = leadRepository.saveAndFlush(lead);
@@ -108,10 +108,8 @@ class FlywayIntegrationTest {
 
         String tenantSchema = "test_schema";
 
-        // Garante que o schema existe
         jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS " + tenantSchema);
 
-        // Configura Flyway dinamicamente para o tenant
         Flyway tenantFlyway = Flyway.configure()
                 .dataSource(flyway.getConfiguration().getDataSource())
                 .locations("classpath:db/migration")

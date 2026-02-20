@@ -3,6 +3,7 @@ package com.leadflow.backend.service.settings;
 import com.leadflow.backend.dto.settings.SettingResponse;
 import com.leadflow.backend.dto.settings.UpdateSettingRequest;
 import com.leadflow.backend.entities.Setting;
+
 import org.springframework.stereotype.Component;
 
 @Component
@@ -29,7 +30,7 @@ public class SettingMapper {
     }
 
     /* ======================================================
-       REQUEST → ENTITY (UPDATE SEGURO)
+       REQUEST → ENTITY (UPDATE PARCIAL SEGURO)
        ====================================================== */
 
     public void updateEntity(
@@ -45,34 +46,32 @@ public class SettingMapper {
             throw new IllegalArgumentException("Update request cannot be null");
         }
 
-        // Usa valores atuais se campo vier null (update parcial)
-        String vendorName = request.getVendorName() != null
-                ? request.getVendorName()
-                : setting.getVendorName();
-
-        String whatsapp = request.getWhatsapp() != null
-                ? request.getWhatsapp()
-                : setting.getWhatsapp();
-
-        String companyName = request.getCompanyName() != null
-                ? request.getCompanyName()
-                : setting.getCompanyName();
-
-        String logo = request.getLogo() != null
-                ? request.getLogo()
-                : setting.getLogo();
-
-        String welcomeMessage = request.getWelcomeMessage() != null
-                ? request.getWelcomeMessage()
-                : setting.getWelcomeMessage();
-
-        // Delegação correta para regra de domínio
         setting.update(
-                vendorName,
-                whatsapp,
-                companyName,
-                logo,
-                welcomeMessage
+                resolve(request.getVendorName(), setting.getVendorName()),
+                resolve(request.getWhatsapp(), setting.getWhatsapp()),
+                resolve(request.getCompanyName(), setting.getCompanyName()),
+                resolve(request.getLogo(), setting.getLogo()),
+                resolve(request.getWelcomeMessage(), setting.getWelcomeMessage())
         );
+    }
+
+    /* ======================================================
+       INTERNAL UTIL
+       ====================================================== */
+
+    private String resolve(String incoming, String current) {
+
+        if (incoming == null) {
+            return current;
+        }
+
+        String trimmed = incoming.trim();
+
+        // Evita sobrescrever com string vazia
+        if (trimmed.isBlank()) {
+            return current;
+        }
+
+        return trimmed;
     }
 }

@@ -2,15 +2,9 @@ package com.leadflow.backend.security;
 
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.repository.user.UserRepository;
-
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collection;
-import java.util.List;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
@@ -22,6 +16,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     ) {
         this.userRepository = userRepository;
     }
+
+    /* ======================================================
+       LOAD USER
+       ====================================================== */
 
     @Override
     @Transactional(readOnly = true)
@@ -38,26 +36,28 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                         new UsernameNotFoundException("User not found")
                 );
 
-        return new org.springframework.security.core.userdetails.User(
-                user.getEmail(),
-                user.getPassword(),
-                mapAuthorities(user)
-        );
+        validateUser(user);
+
+        // 🔐 Retorna seu próprio UserDetails customizado
+        return new CustomUserDetails(user);
     }
 
-    private Collection<? extends GrantedAuthority> mapAuthorities(User user) {
+    /* ======================================================
+       VALIDATION
+       ====================================================== */
+
+    private void validateUser(User user) {
+
+        if (user.getDeletedAt() != null) {
+            throw new UsernameNotFoundException("User not active");
+        }
+
+        if (user.getPassword() == null || user.getPassword().isBlank()) {
+            throw new IllegalStateException("User password not configured");
+        }
 
         if (user.getRole() == null || user.getRole().getName() == null) {
             throw new IllegalStateException("User role not configured properly");
         }
-
-        // Spring Security espera ROLE_ prefixado
-        String roleName = user.getRole().getName().toUpperCase();
-
-        if (!roleName.startsWith("ROLE_")) {
-            roleName = "ROLE_" + roleName;
-        }
-
-        return List.of(new SimpleGrantedAuthority(roleName));
     }
 }

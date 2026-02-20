@@ -11,37 +11,41 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  *
  * ✔ Lifecycle gerenciado pelo JUnit
  * ✔ Integra automaticamente com Spring
- * ✔ Evita múltiplas inicializações
  * ✔ Compatível com Flyway
+ * ✔ Compatível com multi-tenant SCHEMA
  */
 @Testcontainers
 public abstract class PostgreSQLTestContainerConfig {
 
+    private static final String IMAGE = "postgres:16-alpine";
+
     @SuppressWarnings("resource")
     @Container
     static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgres:16-alpine")
+            new PostgreSQLContainer<>(IMAGE)
                     .withDatabaseName("leadflow_test")
                     .withUsername("postgres")
                     .withPassword("postgres")
-                    .withReuse(true); // melhora performance
+                    .withReuse(true);
 
     @DynamicPropertySource
     static void configureDatasource(DynamicPropertyRegistry registry) {
 
+        // ================= DATASOURCE =================
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.datasource.driver-class-name", postgres::getDriverClassName);
 
-        // Hibernate
+        // ================= HIBERNATE =================
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "none");
 
-        // Flyway
+        // Multi-tenant por SCHEMA (Hibernate 6)
+        registry.add("spring.jpa.properties.hibernate.multiTenancy", () -> "SCHEMA");
+
+        // ================= FLYWAY =================
         registry.add("spring.flyway.enabled", () -> "true");
         registry.add("spring.flyway.locations", () -> "classpath:db/migration");
-
-        // Evita conflitos com multi-tenant durante testes
-        registry.add("spring.jpa.properties.hibernate.multi_tenancy", () -> "NONE");
+        registry.add("spring.flyway.baseline-on-migrate", () -> "true");
     }
 }

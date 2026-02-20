@@ -4,6 +4,7 @@ import com.leadflow.backend.multitenancy.context.TenantContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 @Component
@@ -20,29 +21,28 @@ public class CurrentTenantIdentifierResolverImpl
 
         String tenant = TenantContext.getTenant();
 
-        if (tenant == null) {
+        // Nenhum tenant definido → usar public (ex: auth, tenants, etc.)
+        if (Objects.isNull(tenant) || tenant.isBlank()) {
             return DEFAULT_TENANT;
         }
 
         tenant = tenant.trim().toLowerCase();
 
-        if (tenant.isBlank()) {
-            return DEFAULT_TENANT;
-        }
-
+        // Segurança contra schema injection
         if (!VALID_SCHEMA.matcher(tenant).matches()) {
-            return DEFAULT_TENANT;
+            throw new IllegalArgumentException(
+                    "Invalid tenant identifier: " + tenant
+            );
         }
 
         return tenant;
     }
 
     /**
-     * Retornando false permite troca de tenant
-     * dentro da mesma transação/session.
+     * false permite que o Hibernate reutilize a mesma Session
+     * mesmo que o tenant mude no ThreadLocal.
      *
-     * Isso é essencial para testes e para
-     * aplicações que usam ThreadLocal.
+     * Isso é necessário para aplicações web com ThreadLocal.
      */
     @Override
     public boolean validateExistingCurrentSessions() {

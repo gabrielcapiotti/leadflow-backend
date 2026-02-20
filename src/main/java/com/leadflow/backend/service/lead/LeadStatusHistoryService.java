@@ -6,6 +6,7 @@ import com.leadflow.backend.entities.lead.Lead;
 import com.leadflow.backend.entities.lead.LeadStatusHistory;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.repository.lead.LeadStatusHistoryRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +37,22 @@ public class LeadStatusHistoryService {
             User changedBy
     ) {
 
+        if (lead == null) {
+            throw new IllegalArgumentException("Lead cannot be null");
+        }
+
+        if (newStatus == null) {
+            throw new IllegalArgumentException("Status cannot be null");
+        }
+
+        // 🔒 Evita duplicação consecutiva de status
+        Optional<LeadStatusHistory> last =
+                historyRepository.findFirstByLeadOrderByChangedAtDesc(lead);
+
+        if (last.isPresent() && last.get().getStatus() == newStatus) {
+            return last.get();
+        }
+
         LeadStatusHistory history = new LeadStatusHistory(
                 lead,
                 newStatus,
@@ -51,16 +68,31 @@ public class LeadStatusHistoryService {
 
     @Transactional(readOnly = true)
     public List<LeadStatusHistory> getHistoryEntitiesByLead(Lead lead) {
+
+        if (lead == null) {
+            throw new IllegalArgumentException("Lead cannot be null");
+        }
+
         return historyRepository.findByLeadOrderByChangedAtDesc(lead);
     }
 
     @Transactional(readOnly = true)
     public Optional<LeadStatusHistory> getLastStatus(Lead lead) {
+
+        if (lead == null) {
+            throw new IllegalArgumentException("Lead cannot be null");
+        }
+
         return historyRepository.findFirstByLeadOrderByChangedAtDesc(lead);
     }
 
     @Transactional(readOnly = true)
     public List<LeadStatusHistory> getHistoryByStatus(LeadStatus status) {
+
+        if (status == null) {
+            throw new IllegalArgumentException("Status cannot be null");
+        }
+
         return historyRepository.findByStatus(status);
     }
 
@@ -71,6 +103,10 @@ public class LeadStatusHistoryService {
     @Transactional(readOnly = true)
     public List<LeadStatusHistoryResponse> getHistoryByLead(Lead lead) {
 
+        if (lead == null) {
+            throw new IllegalArgumentException("Lead cannot be null");
+        }
+
         return historyRepository
                 .findByLeadOrderByChangedAtDesc(lead)
                 .stream()
@@ -78,13 +114,27 @@ public class LeadStatusHistoryService {
                         history.getId(),
                         history.getStatus(),
                         history.getChangedAt(),
-                        history.getChangedBy().getEmail()
+                        history.getChangedBy() != null
+                                ? history.getChangedBy().getEmail()
+                                : "SYSTEM"
                 ))
                 .collect(Collectors.toList());
     }
 
+    /* ======================================================
+       GET BY ID
+       ====================================================== */
+
+    @Transactional(readOnly = true)
     public LeadStatusHistory getById(UUID historyId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getById'");
+
+        if (historyId == null) {
+            throw new IllegalArgumentException("History id cannot be null");
+        }
+
+        return historyRepository.findById(historyId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("History not found")
+                );
     }
 }

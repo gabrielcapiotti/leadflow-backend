@@ -17,9 +17,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.leadflow.backend.multitenancy.service.TenantService;
+import com.leadflow.backend.security.JwtAuthenticationFilter;
 import com.leadflow.backend.security.jwt.JwtService;
-import com.leadflow.backend.security.filter.JwtAuthenticationFilter;
-
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 

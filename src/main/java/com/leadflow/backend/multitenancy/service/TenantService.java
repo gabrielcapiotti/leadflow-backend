@@ -3,9 +3,8 @@ package com.leadflow.backend.multitenancy.service;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
-
-import org.flywaydb.core.Flyway;
 
 @Service
 public class TenantService {
@@ -13,89 +12,59 @@ public class TenantService {
     private static final String DEFAULT_SCHEMA = "public";
 
     private static final Pattern VALID_SCHEMA =
-            Pattern.compile("^[a-zA-Z0-9_]+$");
+            Pattern.compile("^[a-z0-9_]{3,50}$");
 
     private final JdbcTemplate jdbcTemplate;
-    private final Flyway flyway;
 
-    public TenantService(JdbcTemplate jdbcTemplate, Flyway flyway) {
+    public TenantService(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-        this.flyway = flyway;
     }
 
     /* ======================================================
        RESOLVE TENANT → SCHEMA
        ====================================================== */
 
-    public String resolveSchemaByTenantId(String tenantId) {
+    public Optional<String> resolveSchemaByTenantIdentifier(String identifier) {
 
-        if (tenantId == null || tenantId.isBlank()) {
-            return null;
+        if (identifier == null || identifier.isBlank()) {
+            return Optional.empty();
         }
 
-        String normalized = tenantId.trim().toLowerCase();
+        String normalized = identifier.trim().toLowerCase();
 
         try {
-            return jdbcTemplate.queryForObject(
-                    """
-                    SELECT schema_name
-                    FROM tenants
-                    WHERE LOWER(name) = LOWER(?)
-                      AND deleted_at IS NULL
-                    """,
-                    String.class,
-                    normalized
+            return Optional.ofNullable(
+                    jdbcTemplate.queryForObject(
+                            """
+                            SELECT schema_name
+                            FROM tenants
+                            WHERE LOWER(schema_name) = LOWER(?)
+                              AND deleted_at IS NULL
+                            """,
+                            String.class,
+                            normalized
+                    )
             );
         } catch (Exception ex) {
-            return null;
+            return Optional.empty();
         }
     }
 
     /* ======================================================
-       CREATE SCHEMA
+       VALIDATE SCHEMA NAME
        ====================================================== */
 
-    public void createTenantSchema(String schemaName) {
+    public void validateSchemaName(String schema) {
 
-        if (schemaName == null || schemaName.isBlank()) {
-            throw new IllegalArgumentException("Schema name cannot be null or blank");
+        if (schema == null || schema.isBlank()) {
+            throw new IllegalArgumentException("Schema cannot be blank");
         }
 
-        String schema = schemaName.trim().toLowerCase();
+        String normalized = schema.trim().toLowerCase();
 
-        if (!VALID_SCHEMA.matcher(schema).matches()) {
-            throw new IllegalArgumentException("Invalid schema name");
+        if (!VALID_SCHEMA.matcher(normalized).matches()) {
+            throw new IllegalArgumentException("Invalid schema format");
         }
-
-        jdbcTemplate.execute(
-                "CREATE SCHEMA IF NOT EXISTS \"" + schema + "\""
-        );
-
-        // Configure Flyway for the new schema and apply migrations
-        flyway.configure().schemas(schema).load().migrate();
-    }
-
-    /* ======================================================
-       CREATE TENANT (REGISTRO + SCHEMA)
-       ====================================================== */
-
-    public void createTenant(String name, String schemaName) {
-
-        if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("Tenant name cannot be blank");
-        }
-
-        createTenantSchema(schemaName);
-
-        jdbcTemplate.update(
-                """
-                INSERT INTO tenants (name, schema_name, created_at, updated_at)
-                VALUES (?, ?, NOW(), NOW())
-                ON CONFLICT (schema_name) DO NOTHING
-                """,
-                name.trim(),
-                schemaName.trim().toLowerCase()
-        );
     }
 
     /* ======================================================

@@ -46,7 +46,7 @@ public class LeadStatusHistoryController {
 
         User user = resolveUser(principal);
 
-        Lead lead = leadService.getByIdForUser(leadId, user);
+        Lead lead = leadService.getByIdForUser(leadId, user.getId());
 
         List<LeadStatusHistoryResponse> response =
                 historyService.getHistoryByLead(lead);
@@ -68,14 +68,9 @@ public class LeadStatusHistoryController {
 
         LeadStatusHistory history = historyService.getById(historyId);
 
-        if (history == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        // Segurança multi-tenant e multi-user
-        if (history.getLead() == null ||
-            history.getLead().getUser() == null ||
-            !history.getLead().getUser().equals(user)) {
+        if (history == null ||
+            history.getLead() == null ||
+            !history.getLead().getUserId().equals(user.getId())) {
 
             return ResponseEntity.notFound().build();
         }

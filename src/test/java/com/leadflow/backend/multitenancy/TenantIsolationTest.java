@@ -7,7 +7,6 @@ import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.repository.lead.LeadRepository;
-import com.leadflow.backend.repository.tenant.TenantRepository;
 import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
 import com.leadflow.backend.util.TestTenantFactory;
@@ -31,9 +30,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 class TenantIsolationTest extends IntegrationTestBase {
 
     @Autowired
-    private TenantRepository tenantRepository;
-
-    @Autowired
     private LeadRepository leadRepository;
 
     @Autowired
@@ -45,11 +41,16 @@ class TenantIsolationTest extends IntegrationTestBase {
     @Autowired
     private TestTenantFactory testTenantFactory;
 
+    private Tenant tenantA;
+    private Tenant tenantB;
+
     @BeforeEach
     void setup() {
+
         TenantContext.clear();
-        testTenantFactory.createTenant("Tenant A");
-        testTenantFactory.createTenant("Tenant B");
+
+        tenantA = testTenantFactory.createTenant("Tenant A");
+        tenantB = testTenantFactory.createTenant("Tenant B");
     }
 
     @AfterEach
@@ -65,17 +66,13 @@ class TenantIsolationTest extends IntegrationTestBase {
     void shouldIsolateDataBetweenSchemas() {
 
         // ---------- TENANT A ----------
-        TenantContext.setTenant("tenant_a");
-
-        Tenant tenantA = tenantRepository.findByNameIgnoreCase("Tenant A")
-                .orElseThrow(() ->
-                        new IllegalStateException("Tenant 'Tenant A' not found"));
+        TenantContext.setTenant(tenantA.getSchemaName());
 
         Role role = roleRepository.findByNameIgnoreCase("USER")
                 .orElseThrow(() ->
                         new IllegalStateException("Role 'USER' not found"));
 
-        User userA = userRepository.save(
+        User userA = userRepository.saveAndFlush(
                 new User(
                         "User A",
                         "a_" + UUID.randomUUID() + "@mail.com",
@@ -86,15 +83,15 @@ class TenantIsolationTest extends IntegrationTestBase {
         );
 
         Lead leadA = new Lead(
+                userA.getId(),
                 "Lead A",
                 "lead_a_" + UUID.randomUUID() + "@mail.com",
                 "111"
         );
 
-        leadA.setUser(userA);
-        leadA.setTenant(tenantA);
+        Lead savedLead = leadRepository.saveAndFlush(leadA);
 
-        leadRepository.saveAndFlush(leadA);
+        assertThat(savedLead.getId()).isNotNull();
 
         assertThat(leadRepository.count())
                 .as("Tenant A must contain exactly 1 lead")
@@ -102,7 +99,7 @@ class TenantIsolationTest extends IntegrationTestBase {
 
         // ---------- TENANT B ----------
         TenantContext.clear();
-        TenantContext.setTenant("tenant_b");
+        TenantContext.setTenant(tenantB.getSchemaName());
 
         assertThat(leadRepository.count())
                 .as("Tenant B must not see Tenant A data")
@@ -117,17 +114,13 @@ class TenantIsolationTest extends IntegrationTestBase {
     void shouldNotAccessOtherTenantData() {
 
         // ---------- TENANT A ----------
-        TenantContext.setTenant("tenant_a");
-
-        Tenant tenantA = tenantRepository.findByNameIgnoreCase("Tenant A")
-                .orElseThrow(() ->
-                        new IllegalStateException("Tenant 'Tenant A' not found"));
+        TenantContext.setTenant(tenantA.getSchemaName());
 
         Role role = roleRepository.findByNameIgnoreCase("USER")
                 .orElseThrow(() ->
                         new IllegalStateException("Role 'USER' not found"));
 
-        User userA = userRepository.save(
+        User userA = userRepository.saveAndFlush(
                 new User(
                         "User B",
                         "b_" + UUID.randomUUID() + "@mail.com",
@@ -138,23 +131,23 @@ class TenantIsolationTest extends IntegrationTestBase {
         );
 
         Lead leadA = new Lead(
+                userA.getId(),
                 "Lead A",
                 "lead_b_" + UUID.randomUUID() + "@mail.com",
                 "111"
         );
 
-        leadA.setUser(userA);
-        leadA.setTenant(tenantA);
+        Lead savedLead = leadRepository.saveAndFlush(leadA);
 
-        leadRepository.saveAndFlush(leadA);
+        UUID savedLeadId = savedLead.getId();
 
         // ---------- TENANT B ----------
         TenantContext.clear();
-        TenantContext.setTenant("tenant_b");
+        TenantContext.setTenant(tenantB.getSchemaName());
 
         boolean exists = leadRepository.findAll()
                 .stream()
-                .anyMatch(l -> l.getName().equals("Lead A"));
+                .anyMatch(l -> l.getId().equals(savedLeadId));
 
         assertThat(exists)
                 .as("Tenant B must not access Tenant A data")

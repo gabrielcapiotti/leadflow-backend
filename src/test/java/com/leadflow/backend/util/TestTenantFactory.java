@@ -1,16 +1,25 @@
 package com.leadflow.backend.util;
 
+import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.multitenancy.service.TenantProvisioningService;
+import com.leadflow.backend.repository.tenant.TenantRepository;
+
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class TestTenantFactory {
 
     private final TenantProvisioningService tenantProvisioningService;
+    private final TenantRepository tenantRepository;
 
-    public TestTenantFactory(TenantProvisioningService tenantProvisioningService) {
+    public TestTenantFactory(
+            TenantProvisioningService tenantProvisioningService,
+            TenantRepository tenantRepository
+    ) {
         this.tenantProvisioningService = tenantProvisioningService;
+        this.tenantRepository = tenantRepository;
     }
 
     /* ======================================================
@@ -18,23 +27,31 @@ public class TestTenantFactory {
        ====================================================== */
 
     /**
-     * Cria um tenant (schema físico) e retorna o nome normalizado
-     * do schema gerado.
+     * Cria o tenant fisicamente (schema + registro no public)
+     * e retorna a entidade persistida.
      *
      * NÃO altera o TenantContext automaticamente.
      */
-    public String createTenant(String tenantName) {
+    @Transactional(transactionManager = "publicTransactionManager")
+    public Tenant createTenant(String tenantName) {
 
         if (tenantName == null || tenantName.isBlank()) {
             throw new IllegalArgumentException("Tenant name cannot be blank");
         }
 
-        String schemaName = normalizeSchema(tenantName);
+        String normalizedName = tenantName.trim();
 
-        // Provisionamento deve ocorrer fora de transação multi-tenant
-        tenantProvisioningService.provisionTenant(tenantName);
+        // Provisiona schema + executa flyway
+        tenantProvisioningService.provisionTenant(normalizedName);
 
-        return schemaName;
+        // Recupera tenant persistido respeitando soft delete
+        return tenantRepository
+                .findByNameIgnoreCaseAndDeletedAtIsNull(normalizedName)
+                .orElseThrow(() ->
+                        new IllegalStateException(
+                                "Tenant was not persisted after provisioning: " + normalizedName
+                        )
+                );
     }
 
     /* ======================================================
@@ -45,13 +62,14 @@ public class TestTenantFactory {
      * Cria o tenant e já ativa o schema no TenantContext.
      * Ideal para testes de isolamento.
      */
-    public String createAndActivate(String tenantName) {
+    @Transactional(transactionManager = "publicTransactionManager")
+    public Tenant createAndActivate(String tenantName) {
 
-        String schema = createTenant(tenantName);
+        Tenant tenant = createTenant(tenantName);
 
-        TenantContext.setTenant(schema);
+        TenantContext.setTenant(tenant.getSchemaName());
 
-        return schema;
+        return tenant;
     }
 
     /* ======================================================
@@ -69,16 +87,5 @@ public class TestTenantFactory {
 
     public void clear() {
         TenantContext.clear();
-    }
-
-    /* ======================================================
-       INTERNAL
-       ====================================================== */
-
-    private String normalizeSchema(String name) {
-        return name
-                .trim()
-                .toLowerCase()
-                .replace(" ", "_");
     }
 }

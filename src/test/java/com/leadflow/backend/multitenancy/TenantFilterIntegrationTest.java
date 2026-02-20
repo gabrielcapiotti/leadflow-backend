@@ -1,10 +1,8 @@
 package com.leadflow.backend.multitenancy;
 
 import com.leadflow.backend.multitenancy.context.TenantContext;
-import com.leadflow.backend.multitenancy.resolver.JwtTenantResolver;
+import com.leadflow.backend.multitenancy.service.TenantService;
 import com.leadflow.backend.util.TestTenantFactory;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
@@ -16,6 +14,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.test.context.ActiveProfiles;
+
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -30,14 +30,19 @@ class TenantFilterIntegrationTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private TestTenantFactory testTenantFactory;   // ✅ ADICIONADO
+    private TestTenantFactory testTenantFactory;
 
     @MockBean
-    private JwtTenantResolver jwtTenantResolver;
+    private TenantService tenantService;
+
+    private static final String SCHEMA = "tenant_a";
 
     @BeforeEach
     void setup() {
         testTenantFactory.createTenant("Tenant A");
+
+        when(tenantService.resolveSchemaByTenantIdentifier("tenant_a"))
+                .thenReturn(Optional.of(SCHEMA));
     }
 
     @AfterEach
@@ -48,15 +53,13 @@ class TenantFilterIntegrationTest {
     @Test
     void shouldResolveTenantAndClearContextAfterRequest() throws Exception {
 
-        when(jwtTenantResolver.resolveTenant(any(HttpServletRequest.class)))
-                .thenReturn("tenant_a");
-
         mockMvc.perform(
                 get("/auth/login")
+                        .header("X-Tenant-ID", "tenant_a")
         );
 
-        verify(jwtTenantResolver, times(1))
-                .resolveTenant(any(HttpServletRequest.class));
+        verify(tenantService, times(1))
+                .resolveSchemaByTenantIdentifier("tenant_a");
 
         assertThat(TenantContext.getTenant())
                 .as("TenantContext deve estar limpo após o request")

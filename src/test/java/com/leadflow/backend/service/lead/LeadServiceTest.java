@@ -48,10 +48,7 @@ class LeadServiceTest {
         Role role = new Role("USER");
         ReflectionTestUtils.setField(role, "id", UUID.randomUUID());
 
-        Tenant tenant = new Tenant(
-                "Test Tenant",
-                "test_schema"
-        );
+        Tenant tenant = new Tenant("Test Tenant", "test_schema");
 
         user = new User(
                 "Test User",
@@ -81,7 +78,7 @@ class LeadServiceTest {
     @DisplayName("Should create lead and register history")
     void shouldCreateLead() {
 
-        when(leadRepository.findByUserAndDeletedAtIsNull(user))
+        when(leadRepository.findByUserIdAndDeletedAtIsNull(user.getId()))
                 .thenReturn(List.of());
 
         Lead created = leadService.createLead(
@@ -93,7 +90,7 @@ class LeadServiceTest {
 
         assertThat(created.getId()).isEqualTo(leadId);
         assertThat(created.getStatus()).isEqualTo(LeadStatus.NEW);
-        assertThat(created.getUser()).isEqualTo(user);
+        assertThat(created.getUserId()).isEqualTo(user.getId());
 
         verify(leadRepository).save(any(Lead.class));
         verify(historyRepository).save(any(LeadStatusHistory.class));
@@ -111,10 +108,14 @@ class LeadServiceTest {
     @Test
     void shouldNotAllowDuplicateEmail() {
 
-        Lead existing = new Lead("Existing", "duplicate@example.com", "123");
-        existing.setUser(user);
+        Lead existing = new Lead(
+                user.getId(),
+                "Existing",
+                "duplicate@example.com",
+                "123"
+        );
 
-        when(leadRepository.findByUserAndDeletedAtIsNull(user))
+        when(leadRepository.findByUserIdAndDeletedAtIsNull(user.getId()))
                 .thenReturn(List.of(existing));
 
         assertThatThrownBy(() ->
@@ -131,16 +132,21 @@ class LeadServiceTest {
     @Test
     void shouldListActiveLeads() {
 
-        Lead lead = new Lead("Lead", "lead@example.com", "123");
-        lead.setUser(user);
+        Lead lead = new Lead(
+                user.getId(),
+                "Lead",
+                "lead@example.com",
+                "123"
+        );
 
-        when(leadRepository.findByUserAndDeletedAtIsNull(user))
+        when(leadRepository.findByUserIdAndDeletedAtIsNull(user.getId()))
                 .thenReturn(List.of(lead));
 
         List<Lead> result = leadService.listActiveLeads(user);
 
         assertThat(result).hasSize(1);
-        verify(leadRepository).findByUserAndDeletedAtIsNull(user);
+        verify(leadRepository)
+                .findByUserIdAndDeletedAtIsNull(user.getId());
     }
 
     /* ==========================
@@ -150,13 +156,21 @@ class LeadServiceTest {
     @Test
     void shouldReturnLeadByIdForUser() {
 
-        Lead lead = new Lead("Lead", "lead@example.com", "123");
+        Lead lead = new Lead(
+                user.getId(),
+                "Lead",
+                "lead@example.com",
+                "123"
+        );
+
         ReflectionTestUtils.setField(lead, "id", leadId);
 
-        when(leadRepository.findByIdAndUserAndDeletedAtIsNull(leadId, user))
+        when(leadRepository
+                .findByIdAndUserIdAndDeletedAtIsNull(leadId, user.getId()))
                 .thenReturn(Optional.of(lead));
 
-        Lead result = leadService.getByIdForUser(leadId, user);
+        Lead result =
+                leadService.getByIdForUser(leadId, user.getId());
 
         assertThat(result).isEqualTo(lead);
     }
@@ -164,11 +178,12 @@ class LeadServiceTest {
     @Test
     void shouldThrowIfLeadNotFound() {
 
-        when(leadRepository.findByIdAndUserAndDeletedAtIsNull(leadId, user))
+        when(leadRepository
+                .findByIdAndUserIdAndDeletedAtIsNull(leadId, user.getId()))
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() ->
-                leadService.getByIdForUser(leadId, user)
+                leadService.getByIdForUser(leadId, user.getId())
         )
         .isInstanceOf(IllegalArgumentException.class);
     }
@@ -180,17 +195,25 @@ class LeadServiceTest {
     @Test
     void shouldFollowValidLifecycle() {
 
-        Lead lead = new Lead("Lead", "lead@example.com", "123");
+        Lead lead = new Lead(
+                user.getId(),
+                "Lead",
+                "lead@example.com",
+                "123"
+        );
+
         ReflectionTestUtils.setField(lead, "id", leadId);
 
-        when(leadRepository.findByIdAndUserAndDeletedAtIsNull(leadId, user))
+        when(leadRepository
+                .findByIdAndUserIdAndDeletedAtIsNull(leadId, user.getId()))
                 .thenReturn(Optional.of(lead));
 
         leadService.updateStatus(leadId, LeadStatus.CONTACTED, user);
         leadService.updateStatus(leadId, LeadStatus.QUALIFIED, user);
         leadService.updateStatus(leadId, LeadStatus.CLOSED, user);
 
-        assertThat(lead.getStatus()).isEqualTo(LeadStatus.CLOSED);
+        assertThat(lead.getStatus())
+                .isEqualTo(LeadStatus.CLOSED);
 
         verify(historyRepository, times(3))
                 .save(any(LeadStatusHistory.class));
@@ -199,10 +222,17 @@ class LeadServiceTest {
     @Test
     void shouldBlockInvalidTransition() {
 
-        Lead lead = new Lead("Lead", "lead@example.com", "123");
+        Lead lead = new Lead(
+                user.getId(),
+                "Lead",
+                "lead@example.com",
+                "123"
+        );
+
         lead.changeStatus(LeadStatus.CONTACTED);
 
-        when(leadRepository.findByIdAndUserAndDeletedAtIsNull(leadId, user))
+        when(leadRepository
+                .findByIdAndUserIdAndDeletedAtIsNull(leadId, user.getId()))
                 .thenReturn(Optional.of(lead));
 
         assertThatThrownBy(() ->
@@ -215,9 +245,15 @@ class LeadServiceTest {
     @Test
     void shouldNotSaveHistoryIfStatusIsSame() {
 
-        Lead lead = new Lead("Lead", "lead@example.com", "123");
+        Lead lead = new Lead(
+                user.getId(),
+                "Lead",
+                "lead@example.com",
+                "123"
+        );
 
-        when(leadRepository.findByIdAndUserAndDeletedAtIsNull(leadId, user))
+        when(leadRepository
+                .findByIdAndUserIdAndDeletedAtIsNull(leadId, user.getId()))
                 .thenReturn(Optional.of(lead));
 
         leadService.updateStatus(leadId, LeadStatus.NEW, user);
@@ -232,9 +268,15 @@ class LeadServiceTest {
     @Test
     void shouldSoftDeleteLead() {
 
-        Lead lead = new Lead("Lead", "lead@example.com", "123");
+        Lead lead = new Lead(
+                user.getId(),
+                "Lead",
+                "lead@example.com",
+                "123"
+        );
 
-        when(leadRepository.findByIdAndUserAndDeletedAtIsNull(leadId, user))
+        when(leadRepository
+                .findByIdAndUserIdAndDeletedAtIsNull(leadId, user.getId()))
                 .thenReturn(Optional.of(lead));
 
         leadService.softDelete(leadId, user);
@@ -246,7 +288,8 @@ class LeadServiceTest {
     @Test
     void shouldThrowWhenDeletingLeadNotFound() {
 
-        when(leadRepository.findByIdAndUserAndDeletedAtIsNull(leadId, user))
+        when(leadRepository
+                .findByIdAndUserIdAndDeletedAtIsNull(leadId, user.getId()))
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() ->

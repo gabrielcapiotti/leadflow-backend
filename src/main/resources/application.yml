@@ -16,12 +16,15 @@ spring:
       hibernate:
         format_sql: true
         multiTenancy: SCHEMA
-        multi_tenant_connection_provider: com.leadflow.backend.multitenancy.provider.SchemaMultiTenantConnectionProvider
-        tenant_identifier_resolver: com.leadflow.backend.multitenancy.identifier.CurrentTenantIdentifierResolverImpl
 
   flyway:
     enabled: true
-    locations: classpath:db/migration
+    locations:
+      - classpath:db/migration/global
+      - classpath:db/migration/tenants
+    schemas:
+      - public
+      - tenant_x
 
 server:
   port: 8081
@@ -31,9 +34,9 @@ server:
 logging:
   level:
     root: INFO
-    '[com.leadflow]': INFO
-    '[org.hibernate.SQL]': DEBUG
-    '[org.hibernate.orm.jdbc.bind]': TRACE
+    "[com.leadflow]": INFO
+    "[org.hibernate.SQL]": DEBUG
+    "[org.hibernate.orm.jdbc.bind]": TRACE
 
 security:
   jwt:

@@ -1,13 +1,14 @@
-package com.leadflow.backend.config;
+package com.leadflow.backend.multitenancy.config;
+
+import lombok.RequiredArgsConstructor;
 
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+
 import org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomizer;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.Map;
-
-import lombok.RequiredArgsConstructor;
 
 @Configuration
 @RequiredArgsConstructor
@@ -19,8 +20,9 @@ public class MultiTenantHibernateConfig implements HibernatePropertiesCustomizer
     @Override
     public void customize(Map<String, Object> hibernateProperties) {
 
+        // Hibernate 6 → propriedade correta
         hibernateProperties.put(
-                "hibernate.multi_tenancy",
+                "hibernate.multiTenancy",
                 "SCHEMA"
         );
 

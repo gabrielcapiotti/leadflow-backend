@@ -1,8 +1,6 @@
 package com.leadflow.backend.entities.lead;
 
-import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.enums.LeadStatus;
-import com.leadflow.backend.entities.user.User;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -12,18 +10,18 @@ import java.util.UUID;
 
 @Entity
 @Table(
-    name = "leads",
-    uniqueConstraints = {
-        @UniqueConstraint(
-            name = "uk_leads_email_user",
-            columnNames = {"email", "user_id"}
-        )
-    },
-    indexes = {
-        @Index(name = "idx_leads_email", columnList = "email"),
-        @Index(name = "idx_leads_user", columnList = "user_id"),
-        @Index(name = "idx_leads_user_email", columnList = "user_id,email")
-    }
+        name = "leads",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_leads_email_user",
+                        columnNames = {"email", "user_id"}
+                )
+        },
+        indexes = {
+                @Index(name = "idx_leads_email", columnList = "email"),
+                @Index(name = "idx_leads_user", columnList = "user_id"),
+                @Index(name = "idx_leads_user_email", columnList = "user_id,email")
+        }
 )
 public class Lead {
 
@@ -33,44 +31,36 @@ public class Lead {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(nullable = false, updatable = false)
+    @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
     /* ======================================================
-       RELATIONSHIPS
+       RELATIONSHIPS (SCHEMA-BASED MULTI-TENANT)
        ====================================================== */
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "user_id",
-            nullable = false,
-            foreignKey = @ForeignKey(name = "fk_leads_user")
-    )
-    private User user;
-
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "tenant_id",
-            nullable = false,
-            foreignKey = @ForeignKey(name = "fk_leads_tenant")
-    )
-    private Tenant tenant;
+    /**
+     * Referência apenas por ID.
+     * Não existe relacionamento JPA com User
+     * para evitar dependência cross-schema.
+     */
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
 
     /* ======================================================
        FIELDS
        ====================================================== */
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "email", nullable = false, length = 100)
     private String email;
 
-    @Column(length = 15)
+    @Column(name = "phone", length = 15)
     private String phone;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false, length = 30)
     private LeadStatus status = LeadStatus.NEW;
 
     /* ======================================================
@@ -92,18 +82,14 @@ public class Lead {
        CONSTRUCTORS
        ====================================================== */
 
-    protected Lead() {}
+    protected Lead() {
+        // JPA only
+    }
 
-    public Lead(String name, String email, String phone) {
-
-        if (name == null || name.isBlank())
-            throw new IllegalArgumentException("Name cannot be blank");
-
-        if (email == null || email.isBlank())
-            throw new IllegalArgumentException("Email cannot be blank");
-
-        this.name = name.trim();
-        this.email = email.trim().toLowerCase();
+    public Lead(UUID userId, String name, String email, String phone) {
+        setUserId(userId);
+        setName(name);
+        setEmail(email);
         this.phone = phone;
         this.status = LeadStatus.NEW;
     }
@@ -113,8 +99,7 @@ public class Lead {
        ====================================================== */
 
     public UUID getId() { return id; }
-    public User getUser() { return user; }
-    public Tenant getTenant() { return tenant; }
+    public UUID getUserId() { return userId; }
     public String getName() { return name; }
     public String getEmail() { return email; }
     public String getPhone() { return phone; }
@@ -124,19 +109,26 @@ public class Lead {
     public LocalDateTime getDeletedAt() { return deletedAt; }
 
     /* ======================================================
-       SETTERS CONTROLADOS
+       CONTROLLED SETTERS
        ====================================================== */
 
-    public void setUser(User user) {
-        if (user == null)
-            throw new IllegalArgumentException("User cannot be null");
-        this.user = user;
+    private void setUserId(UUID userId) {
+        if (userId == null)
+            throw new IllegalArgumentException("UserId cannot be null");
+        this.userId = userId;
     }
 
-    public void setTenant(Tenant tenant) {
-        if (tenant == null)
-            throw new IllegalArgumentException("Tenant cannot be null");
-        this.tenant = tenant;
+    private void setName(String name) {
+        if (name == null || name.isBlank())
+            throw new IllegalArgumentException("Name cannot be blank");
+        this.name = name.trim();
+    }
+
+    private void setEmail(String email) {
+        if (email == null || email.isBlank())
+            throw new IllegalArgumentException("Email cannot be blank");
+
+        this.email = email.trim().toLowerCase();
     }
 
     /* ======================================================
@@ -158,8 +150,9 @@ public class Lead {
     }
 
     public void softDelete() {
-        if (deletedAt == null)
+        if (deletedAt == null) {
             this.deletedAt = LocalDateTime.now();
+        }
     }
 
     public void restore() {
@@ -171,7 +164,7 @@ public class Lead {
     }
 
     /* ======================================================
-       EQUALS / HASHCODE
+       EQUALS & HASHCODE (JPA SAFE)
        ====================================================== */
 
     @Override

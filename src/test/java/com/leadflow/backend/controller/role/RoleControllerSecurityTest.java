@@ -1,13 +1,15 @@
 package com.leadflow.backend.controller.role;
 
 import com.leadflow.backend.service.RoleService;
+import com.leadflow.backend.security.TestSecurityConfig;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -17,21 +19,17 @@ import static java.util.Collections.emptyList;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@WebMvcTest(RoleController.class)
 @AutoConfigureMockMvc
+@Import(TestSecurityConfig.class)
 @ActiveProfiles("test")
 class RoleControllerSecurityTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
+    @MockBean
     private RoleService roleService;
-
-    @BeforeEach
-    void setUp() {
-        // Initialize mock data or database setup if needed
-    }
 
     /* ==========================
        NOT AUTHENTICATED
@@ -39,6 +37,7 @@ class RoleControllerSecurityTest {
 
     @Test
     void shouldReturn401WhenNotAuthenticated() throws Exception {
+
         mockMvc.perform(get("/api/roles"))
                 .andExpect(status().isUnauthorized());
     }
@@ -50,6 +49,7 @@ class RoleControllerSecurityTest {
     @Test
     @WithMockUser(roles = "USER")
     void shouldReturn403ForUserRole() throws Exception {
+
         mockMvc.perform(get("/api/roles"))
                 .andExpect(status().isForbidden());
     }

@@ -27,12 +27,17 @@ public record RegisterRequest(
 
     @JsonCreator
     public RegisterRequest {
+
         if (name != null) {
             name = name.trim();
         }
 
         if (email != null) {
             email = email.trim().toLowerCase();
+        }
+
+        if (password != null) {
+            password = password.trim();
         }
     }
 }

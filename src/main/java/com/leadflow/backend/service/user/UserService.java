@@ -33,12 +33,23 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public Page<User> listActiveUsers(Pageable pageable) {
+
+        if (pageable == null) {
+            throw new IllegalArgumentException("Pageable cannot be null");
+        }
+
         return userRepository.findByDeletedAtIsNull(pageable);
     }
 
     @Transactional(readOnly = true)
     public User getById(UUID id) {
+
+        if (id == null) {
+            throw new IllegalArgumentException("User id cannot be null");
+        }
+
         return userRepository.findById(id)
+                .filter(user -> user.getDeletedAt() == null)
                 .orElseThrow(() ->
                         new IllegalArgumentException("User not found")
                 );
@@ -46,8 +57,13 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public User getActiveByEmail(String email) {
+
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email cannot be blank");
+        }
+
         return userRepository
-                .findByEmailIgnoreCaseAndDeletedAtIsNull(email)
+                .findByEmailIgnoreCaseAndDeletedAtIsNull(email.trim())
                 .orElseThrow(() ->
                         new IllegalArgumentException("User not found")
                 );
@@ -60,6 +76,18 @@ public class UserService {
     @Transactional
     public User updateUser(UUID id, String name, String email, UUID roleId) {
 
+        if (id == null || roleId == null) {
+            throw new IllegalArgumentException("Id and roleId cannot be null");
+        }
+
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Name cannot be blank");
+        }
+
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email cannot be blank");
+        }
+
         User user = getById(id);
 
         Role role = roleRepository.findById(roleId)
@@ -67,8 +95,18 @@ public class UserService {
                         new IllegalArgumentException("Role not found")
                 );
 
-        user.setName(name);
-        user.setEmail(email.toLowerCase());
+        String normalizedEmail = email.trim().toLowerCase();
+
+        // 🔒 Evita duplicação de email
+        boolean emailExists = userRepository
+                .existsByEmailIgnoreCaseAndDeletedAtIsNull(normalizedEmail);
+
+        if (!user.getEmail().equalsIgnoreCase(normalizedEmail) && emailExists) {
+            throw new IllegalArgumentException("Email already in use");
+        }
+
+        user.setName(name.trim());
+        user.setEmail(normalizedEmail);
         user.setRole(role);
 
         return userRepository.save(user);
@@ -80,7 +118,13 @@ public class UserService {
 
     @Transactional
     public void softDelete(UUID id) {
+
         User user = getById(id);
+
+        if (user.getDeletedAt() != null) {
+            return; // idempotência
+        }
+
         user.setDeletedAt(LocalDateTime.now());
         userRepository.save(user);
     }

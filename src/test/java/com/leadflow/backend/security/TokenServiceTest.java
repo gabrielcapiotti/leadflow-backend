@@ -3,8 +3,10 @@ package com.leadflow.backend.security;
 import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.UUID;
 
@@ -20,12 +22,14 @@ class TokenServiceTest {
     private static final String SECRET =
             "test-secret-key-for-jwt-token-generation-minimum-256-bits-required";
 
+    private static final String TENANT = "test_schema";
+
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
 
         tokenService = new TokenService(
                 SECRET,
-                3600000L // 1 hora
+                3_600_000L // 1 hora
         );
 
         roleId = UUID.randomUUID();
@@ -34,12 +38,12 @@ class TokenServiceTest {
         // ===== TENANT =====
         Tenant tenant = new Tenant(
                 "Test Tenant",
-                "test_schema"
+                TENANT
         );
 
         // ===== ROLE =====
         Role role = new Role("USER");
-        setField(role, "id", roleId);
+        ReflectionTestUtils.setField(role, "id", roleId);
 
         // ===== USER =====
         user = new User(
@@ -50,13 +54,7 @@ class TokenServiceTest {
                 tenant
         );
 
-        setField(user, "id", userId);
-    }
-
-    private void setField(Object target, String fieldName, Object value) throws Exception {
-        var field = target.getClass().getDeclaredField(fieldName);
-        field.setAccessible(true);
-        field.set(target, value);
+        ReflectionTestUtils.setField(user, "id", userId);
     }
 
     /* ==========================
@@ -66,7 +64,7 @@ class TokenServiceTest {
     @Test
     void generateToken_ShouldReturnValidJwtStructure() {
 
-        String token = tokenService.generateToken(user, "test_tenant");
+        String token = tokenService.generateToken(user, TENANT);
 
         assertThat(token)
                 .isNotNull()
@@ -84,7 +82,7 @@ class TokenServiceTest {
     @Test
     void isValid_ShouldReturnTrue_ForValidToken() {
 
-        String token = tokenService.generateToken(user, "test_tenant");
+        String token = tokenService.generateToken(user, TENANT);
 
         boolean isValid = tokenService.isValid(token);
 
@@ -103,11 +101,11 @@ class TokenServiceTest {
     void isValid_ShouldReturnFalse_WhenTokenExpired() throws InterruptedException {
 
         TokenService shortLivedService =
-                new TokenService(SECRET, 50L);
+                new TokenService(SECRET, 1L);
 
-        String token = shortLivedService.generateToken(user, "test_tenant");
+        String token = shortLivedService.generateToken(user, TENANT);
 
-        Thread.sleep(100);
+        Thread.sleep(5); // tempo mínimo necessário
 
         boolean isValid = shortLivedService.isValid(token);
 
@@ -121,7 +119,7 @@ class TokenServiceTest {
     @Test
     void getEmail_ShouldReturnCorrectEmail() {
 
-        String token = tokenService.generateToken(user, "test_tenant");
+        String token = tokenService.generateToken(user, TENANT);
 
         String email = tokenService.getEmail(token);
 
@@ -131,7 +129,7 @@ class TokenServiceTest {
     @Test
     void getUserId_ShouldReturnCorrectUserId() {
 
-        String token = tokenService.generateToken(user, "test_tenant");
+        String token = tokenService.generateToken(user, TENANT);
 
         UUID extractedUserId = tokenService.getUserId(token);
 
@@ -141,7 +139,7 @@ class TokenServiceTest {
     @Test
     void getRole_ShouldReturnCorrectRole() {
 
-        String token = tokenService.generateToken(user, "test_tenant");
+        String token = tokenService.generateToken(user, TENANT);
 
         String role = tokenService.getRole(token);
 

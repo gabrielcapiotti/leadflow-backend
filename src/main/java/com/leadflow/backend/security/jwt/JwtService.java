@@ -2,8 +2,7 @@ package com.leadflow.backend.security.jwt;
 
 import com.leadflow.backend.entities.user.User;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -12,9 +11,8 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.time.Instant;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -23,10 +21,12 @@ public class JwtService {
 
     private final Key signingKey;
     private final long expirationMillis;
+    private final String issuer;
 
     public JwtService(
             @Value("${security.jwt.secret}") String secret,
-            @Value("${security.jwt.expiration}") long expirationMillis
+            @Value("${security.jwt.expiration}") long expirationMillis,
+            @Value("${security.jwt.issuer:leadflow}") String issuer
     ) {
 
         if (secret == null || secret.length() < 32) {
@@ -40,64 +40,57 @@ public class JwtService {
         );
 
         this.expirationMillis = expirationMillis;
+        this.issuer = issuer;
     }
 
     /* ======================================================
-       GERAÇÃO DE TOKEN
+       TOKEN GENERATION
        ====================================================== */
 
     public String generateToken(User user) {
 
-        Map<String, Object> claims = new HashMap<>();
-
-        claims.put("userId", user.getId().toString());
-        claims.put("role", user.getRole().getName());
-        claims.put("tenant", user.getTenant().getSchemaName());
+        Instant now = Instant.now();
 
         return Jwts.builder()
-                .setClaims(claims)
                 .setSubject(user.getEmail())
-                .setIssuedAt(new Date())
+                .setIssuer(issuer)
+                .setId(UUID.randomUUID().toString()) // jti
+                .setIssuedAt(Date.from(now))
                 .setExpiration(
-                        new Date(System.currentTimeMillis() + expirationMillis)
+                        Date.from(now.plusMillis(expirationMillis))
                 )
-                .signWith(signingKey)
+                .claim("userId", user.getId().toString())
+                .claim("role", user.getRole().getName())
+                .claim("tenant", user.getTenant().getSchemaName())
+                .signWith(signingKey, SignatureAlgorithm.HS256)
                 .compact();
     }
 
     /* ======================================================
-       VALIDAÇÃO
+       VALIDATION
        ====================================================== */
 
-    /**
-     * Validação padrão baseada em email + expiração
-     */
-    public boolean isTokenValid(
-            String token,
-            UserDetails userDetails
-    ) {
-
-        final String email = extractEmail(token);
-
-        return email.equals(userDetails.getUsername())
-                && !isTokenExpired(token);
-    }
-
-    /**
-     * Validação completa (email + userId + expiração)
-     */
     public boolean isTokenValid(
             String token,
             UserDetails userDetails,
-            UUID expectedUserId
+            UUID expectedUserId,
+            String expectedTenant
     ) {
 
-        final String email = extractEmail(token);
-        final UUID tokenUserId = extractUserId(token);
+        try {
 
-        return email.equals(userDetails.getUsername())
-                && tokenUserId.equals(expectedUserId)
-                && !isTokenExpired(token);
+            final String email = extractEmail(token);
+            final UUID tokenUserId = extractUserId(token);
+            final String tokenTenant = extractTenant(token);
+
+            return email.equals(userDetails.getUsername())
+                    && tokenUserId.equals(expectedUserId)
+                    && tokenTenant.equals(expectedTenant)
+                    && !isTokenExpired(token);
+
+        } catch (JwtException | IllegalArgumentException ex) {
+            return false;
+        }
     }
 
     private boolean isTokenExpired(String token) {
@@ -105,7 +98,7 @@ public class JwtService {
     }
 
     /* ======================================================
-       EXTRAÇÃO DE CLAIMS
+       CLAIM EXTRACTION
        ====================================================== */
 
     public <T> T extractClaim(
@@ -120,21 +113,23 @@ public class JwtService {
     }
 
     public UUID extractUserId(String token) {
-        return UUID.fromString(
-                extractClaim(token,
-                        claims -> claims.get("userId", String.class)
-                )
+        String value = extractClaim(
+                token,
+                claims -> claims.get("userId", String.class)
         );
+        return UUID.fromString(value);
     }
 
     public String extractRole(String token) {
-        return extractClaim(token,
+        return extractClaim(
+                token,
                 claims -> claims.get("role", String.class)
         );
     }
 
     public String extractTenant(String token) {
-        return extractClaim(token,
+        return extractClaim(
+                token,
                 claims -> claims.get("tenant", String.class)
         );
     }
@@ -143,10 +138,16 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
+    /* ======================================================
+       INTERNAL
+       ====================================================== */
+
     private Claims extractAllClaims(String token) {
 
         return Jwts.parserBuilder()
                 .setSigningKey(signingKey)
+                .requireIssuer(issuer)
+                .setAllowedClockSkewSeconds(30)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();

@@ -4,10 +4,10 @@ import com.leadflow.backend.entities.Setting;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.repository.settings.SettingRepository;
 
-import java.util.UUID;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Service
 public class SettingService {
@@ -41,7 +41,8 @@ public class SettingService {
                 .orElse(null);
 
         if (setting == null) {
-            // Criação correta usando construtor completo
+
+            // 🆕 Criação
             setting = new Setting(
                     user,
                     vendorName,
@@ -50,29 +51,22 @@ public class SettingService {
                     logo,
                     welcomeMessage
             );
+
         } else {
 
-            // Se estava soft deleted, reativa implicitamente
+            // 🔄 Reativação segura (sem recriar entidade)
             if (setting.isDeleted()) {
-                setting = new Setting(
-                        user,
-                        vendorName != null ? vendorName : setting.getVendorName(),
-                        whatsapp != null ? whatsapp : setting.getWhatsapp(),
-                        companyName != null ? companyName : setting.getCompanyName(),
-                        logo != null ? logo : setting.getLogo(),
-                        welcomeMessage != null ? welcomeMessage : setting.getWelcomeMessage()
-                );
-            } else {
-
-                // Update seguro usando método de domínio
-                setting.update(
-                        vendorName != null ? vendorName : setting.getVendorName(),
-                        whatsapp != null ? whatsapp : setting.getWhatsapp(),
-                        companyName != null ? companyName : setting.getCompanyName(),
-                        logo != null ? logo : setting.getLogo(),
-                        welcomeMessage != null ? welcomeMessage : setting.getWelcomeMessage()
-                );
+                setting.restore();
             }
+
+            // 🔄 Atualização parcial segura
+            setting.update(
+                    vendorName != null ? vendorName : setting.getVendorName(),
+                    whatsapp != null ? whatsapp : setting.getWhatsapp(),
+                    companyName != null ? companyName : setting.getCompanyName(),
+                    logo != null ? logo : setting.getLogo(),
+                    welcomeMessage != null ? welcomeMessage : setting.getWelcomeMessage()
+            );
         }
 
         return settingRepository.save(setting);
@@ -90,12 +84,25 @@ public class SettingService {
         }
 
         return settingRepository.findByUser(user)
-                .filter(s -> !s.isDeleted())
+                .filter(setting -> !setting.isDeleted())
                 .orElseThrow(() ->
                         new IllegalStateException(
                                 "Settings not found for user id=" + user.getId()
                         )
                 );
+    }
+
+    @Transactional(readOnly = true)
+    public Setting getById(UUID id) {
+
+        if (id == null) {
+            throw new IllegalArgumentException("Setting id cannot be null");
+        }
+
+        return settingRepository.findById(id)
+                .filter(setting -> !setting.isDeleted())
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Setting not found"));
     }
 
     /* ======================================================
@@ -107,11 +114,9 @@ public class SettingService {
 
         Setting setting = getByUser(user);
 
-        setting.softDelete();
-    }
-
-    public Setting getById(UUID id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getById'");
+        if (!setting.isDeleted()) {
+            setting.softDelete();
+            settingRepository.save(setting);
+        }
     }
 }

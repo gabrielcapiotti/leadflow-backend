@@ -3,6 +3,8 @@ package com.leadflow.backend.multitenancy.service;
 import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.repository.tenant.TenantRepository;
 import org.flywaydb.core.Flyway;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,8 +16,11 @@ import java.util.regex.Pattern;
 @Transactional(transactionManager = "publicTransactionManager")
 public class TenantProvisioningService {
 
+    private static final Logger logger =
+            LoggerFactory.getLogger(TenantProvisioningService.class);
+
     private static final Pattern VALID_SCHEMA =
-            Pattern.compile("^[a-z0-9_]+$");
+            Pattern.compile("^[a-z0-9_]{3,50}$");
 
     private final JdbcTemplate jdbcTemplate;
     private final DataSource dataSource;
@@ -32,24 +37,39 @@ public class TenantProvisioningService {
     }
 
     @Transactional("publicTransactionManager")
-    public void provisionTenant(String tenantName) {
+    public synchronized void provisionTenant(String tenantName) {
 
         validateTenantName(tenantName);
 
         String schemaName = normalizeSchema(tenantName);
 
         if (!VALID_SCHEMA.matcher(schemaName).matches()) {
-            throw new IllegalArgumentException("Invalid schema name");
+            throw new IllegalArgumentException("Invalid schema name format");
         }
 
-        // 🔥 Idempotência
         if (tenantRepository.existsBySchemaNameIgnoreCase(schemaName)) {
+            logger.info("Tenant already provisioned: {}", schemaName);
             return;
         }
 
-        createSchema(schemaName);
-        runMigrations(schemaName);
-        registerTenant(tenantName, schemaName);
+        try {
+            createSchema(schemaName);
+            runMigrations(schemaName);
+            registerTenant(tenantName, schemaName);
+
+            logger.info("Tenant successfully provisioned: {}", schemaName);
+
+        } catch (Exception e) {
+
+            logger.error("Tenant provisioning failed for schema {}",
+                    schemaName, e);
+
+            cleanupSchema(schemaName);
+
+            throw new IllegalStateException(
+                    "Tenant provisioning failed", e
+            );
+        }
     }
 
     /* ================= SCHEMA ================= */
@@ -57,8 +77,20 @@ public class TenantProvisioningService {
     private void createSchema(String schemaName) {
 
         jdbcTemplate.execute(
-                "CREATE SCHEMA IF NOT EXISTS \"" + schemaName + "\""
+                "CREATE SCHEMA IF NOT EXISTS " + schemaName
         );
+    }
+
+    private void cleanupSchema(String schemaName) {
+
+        try {
+            jdbcTemplate.execute(
+                    "DROP SCHEMA IF EXISTS " + schemaName + " CASCADE"
+            );
+            logger.warn("Rolled back schema {}", schemaName);
+        } catch (Exception ex) {
+            logger.error("Failed to cleanup schema {}", schemaName, ex);
+        }
     }
 
     /* ================= FLYWAY ================= */

@@ -60,12 +60,8 @@ class LeadRepositoryTest extends IntegrationTestBase {
 
     private User createUser() {
 
-        Optional<Role> existingRole =
-                roleRepository.findByNameIgnoreCase("USER");
-
-        Role role = existingRole.orElseGet(() ->
-                roleRepository.saveAndFlush(new Role("USER"))
-        );
+        Role role = roleRepository.findByNameIgnoreCase("USER")
+                .orElseGet(() -> roleRepository.saveAndFlush(new Role("USER")));
 
         Tenant tenant = tenantRepository.saveAndFlush(
                 new Tenant(
@@ -98,13 +94,11 @@ class LeadRepositoryTest extends IntegrationTestBase {
         User savedUser = createUser();
 
         Lead lead = new Lead(
+                savedUser.getId(),
                 "Test Lead",
                 "lead_" + UUID.randomUUID() + "@example.com",
                 "123456789"
         );
-
-        lead.setUser(savedUser);
-        lead.setTenant(savedUser.getTenant());
 
         Lead savedLead = leadRepository.saveAndFlush(lead);
 
@@ -114,7 +108,7 @@ class LeadRepositoryTest extends IntegrationTestBase {
         assertThat(retrievedLead).isPresent();
         assertThat(retrievedLead.get().getName())
                 .isEqualTo("Test Lead");
-        assertThat(retrievedLead.get().getUser().getId())
+        assertThat(retrievedLead.get().getUserId())
                 .isEqualTo(savedUser.getId());
     }
 
@@ -130,14 +124,10 @@ class LeadRepositoryTest extends IntegrationTestBase {
         String email =
                 "duplicate_" + UUID.randomUUID() + "@example.com";
 
-        Lead lead1 = new Lead("Lead 1", email, "111");
-        lead1.setUser(user);
-        lead1.setTenant(user.getTenant());
+        Lead lead1 = new Lead(user.getId(), "Lead 1", email, "111");
         leadRepository.saveAndFlush(lead1);
 
-        Lead lead2 = new Lead("Lead 2", email, "222");
-        lead2.setUser(user);
-        lead2.setTenant(user.getTenant());
+        Lead lead2 = new Lead(user.getId(), "Lead 2", email, "222");
 
         assertThatThrownBy(() ->
                 leadRepository.saveAndFlush(lead2)
@@ -149,30 +139,28 @@ class LeadRepositoryTest extends IntegrationTestBase {
        ========================== */
 
     @Test
-    void shouldFindByUserAndDeletedAtIsNull() {
+    void shouldFindByUserIdAndDeletedAtIsNull() {
 
         User user = createUser();
 
         Lead lead1 = new Lead(
+                user.getId(),
                 "Lead 1",
                 "lead1_" + UUID.randomUUID() + "@example.com",
                 "123"
         );
-        lead1.setUser(user);
-        lead1.setTenant(user.getTenant());
 
         Lead lead2 = new Lead(
+                user.getId(),
                 "Lead 2",
                 "lead2_" + UUID.randomUUID() + "@example.com",
                 "456"
         );
-        lead2.setUser(user);
-        lead2.setTenant(user.getTenant());
 
         leadRepository.saveAllAndFlush(List.of(lead1, lead2));
 
         List<Lead> leads =
-                leadRepository.findByUserAndDeletedAtIsNull(user);
+                leadRepository.findByUserIdAndDeletedAtIsNull(user.getId());
 
         assertThat(leads).hasSize(2);
     }
@@ -183,13 +171,11 @@ class LeadRepositoryTest extends IntegrationTestBase {
         User user = createUser();
 
         Lead lead = new Lead(
+                user.getId(),
                 "Lead",
                 "soft_" + UUID.randomUUID() + "@example.com",
                 "123456789"
         );
-
-        lead.setUser(user);
-        lead.setTenant(user.getTenant());
 
         Lead savedLead = leadRepository.saveAndFlush(lead);
 
@@ -197,7 +183,7 @@ class LeadRepositoryTest extends IntegrationTestBase {
         leadRepository.saveAndFlush(savedLead);
 
         List<Lead> leads =
-                leadRepository.findByUserAndDeletedAtIsNull(user);
+                leadRepository.findByUserIdAndDeletedAtIsNull(user.getId());
 
         assertThat(leads).isEmpty();
     }
@@ -211,29 +197,14 @@ class LeadRepositoryTest extends IntegrationTestBase {
 
         User user = createUser();
 
-        Lead lead1 = new Lead(
-                "Lead 1",
-                "c1_" + UUID.randomUUID() + "@example.com",
-                "123"
-        );
-        lead1.setUser(user);
-        lead1.setTenant(user.getTenant());
+        Lead lead1 = new Lead(user.getId(), "Lead 1",
+                "c1_" + UUID.randomUUID() + "@example.com", "123");
 
-        Lead lead2 = new Lead(
-                "Lead 2",
-                "c2_" + UUID.randomUUID() + "@example.com",
-                "456"
-        );
-        lead2.setUser(user);
-        lead2.setTenant(user.getTenant());
+        Lead lead2 = new Lead(user.getId(), "Lead 2",
+                "c2_" + UUID.randomUUID() + "@example.com", "456");
 
-        Lead lead3 = new Lead(
-                "Lead 3",
-                "c3_" + UUID.randomUUID() + "@example.com",
-                "789"
-        );
-        lead3.setUser(user);
-        lead3.setTenant(user.getTenant());
+        Lead lead3 = new Lead(user.getId(), "Lead 3",
+                "c3_" + UUID.randomUUID() + "@example.com", "789");
 
         lead2.changeStatus(LeadStatus.CONTACTED);
         lead3.changeStatus(LeadStatus.CONTACTED);

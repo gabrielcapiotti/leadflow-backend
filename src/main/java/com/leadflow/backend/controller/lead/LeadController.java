@@ -8,6 +8,9 @@ import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.service.lead.LeadService;
 import com.leadflow.backend.service.user.UserService;
 
+import jakarta.validation.Valid;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -38,14 +41,10 @@ public class LeadController {
     @PostMapping
     public ResponseEntity<LeadResponse> createLead(
             @AuthenticationPrincipal UserDetails principal,
-            @RequestBody CreateLeadRequest request
+            @Valid @RequestBody CreateLeadRequest request
     ) {
 
-        if (principal == null) {
-            return ResponseEntity.status(401).build();
-        }
-
-        User user = userService.getActiveByEmail(principal.getUsername());
+        User user = resolveAuthenticatedUser(principal);
 
         Lead lead = leadService.createLead(
                 request.getName(),
@@ -55,7 +54,7 @@ public class LeadController {
         );
 
         return ResponseEntity
-                .status(201)
+                .status(HttpStatus.CREATED)
                 .body(new LeadResponse(lead));
     }
 
@@ -68,15 +67,10 @@ public class LeadController {
             @AuthenticationPrincipal UserDetails principal
     ) {
 
-        if (principal == null) {
-            return ResponseEntity.status(401).build();
-        }
+        User user = resolveAuthenticatedUser(principal);
 
-        User user = userService.getActiveByEmail(principal.getUsername());
-
-        List<Lead> leads = leadService.listActiveLeads(user);
-
-        List<LeadResponse> response = leads
+        List<LeadResponse> response = leadService
+                .listActiveLeads(user)
                 .stream()
                 .map(LeadResponse::new)
                 .toList();
@@ -95,11 +89,7 @@ public class LeadController {
             @RequestParam LeadStatus status
     ) {
 
-        if (principal == null) {
-            return ResponseEntity.status(401).build();
-        }
-
-        User user = userService.getActiveByEmail(principal.getUsername());
+        User user = resolveAuthenticatedUser(principal);
 
         Lead lead = leadService.updateStatus(id, status, user);
 
@@ -107,7 +97,7 @@ public class LeadController {
     }
 
     /* ======================================================
-       DELETE (ISOLADO POR USUÁRIO)
+       DELETE
        ====================================================== */
 
     @DeleteMapping("/{id}")
@@ -116,14 +106,23 @@ public class LeadController {
             @PathVariable UUID id
     ) {
 
-        if (principal == null) {
-            return ResponseEntity.status(401).build();
-        }
-
-        User user = userService.getActiveByEmail(principal.getUsername());
+        User user = resolveAuthenticatedUser(principal);
 
         leadService.softDelete(id, user);
 
         return ResponseEntity.noContent().build();
+    }
+
+    /* ======================================================
+       INTERNAL
+       ====================================================== */
+
+    private User resolveAuthenticatedUser(UserDetails principal) {
+
+        if (principal == null || !principal.isEnabled()) {
+            throw new IllegalStateException("User not authenticated");
+        }
+
+        return userService.getActiveByEmail(principal.getUsername());
     }
 }

@@ -8,6 +8,7 @@ import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.exception.GlobalExceptionHandler;
+import com.leadflow.backend.multitenancy.service.TenantService;
 import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.auth.AuthService;
 
@@ -23,12 +24,14 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
+import java.util.Optional;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -51,6 +54,9 @@ class AuthControllerTest {
     @MockBean
     private JwtService jwtService;
 
+    @MockBean
+    private TenantService tenantService;
+
     private User mockUser;
 
     @BeforeEach
@@ -67,6 +73,12 @@ class AuthControllerTest {
                 tenant
         );
 
+        ReflectionTestUtils.setField(mockUser, "id", UUID.randomUUID());
+
+        // Multi-tenant mock
+        when(tenantService.resolveSchemaByTenantIdentifier("test_schema"))
+                .thenReturn(Optional.of("test_schema"));
+
         when(authService.findByEmail("metest@test.com"))
                 .thenReturn(mockUser);
 
@@ -78,6 +90,13 @@ class AuthControllerTest {
 
         when(jwtService.generateToken(any(User.class)))
                 .thenReturn("mocked-jwt-token");
+    }
+
+    private RequestPostProcessor tenant() {
+        return request -> {
+            request.addHeader("X-Tenant-ID", "test_schema");
+            return request;
+        };
     }
 
     /* =========================================================
@@ -97,6 +116,7 @@ class AuthControllerTest {
 
         mockMvc.perform(
                 post("/auth/register")
+                        .with(tenant())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
         )
@@ -120,6 +140,7 @@ class AuthControllerTest {
 
         mockMvc.perform(
                 post("/auth/login")
+                        .with(tenant())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
         )
@@ -136,7 +157,7 @@ class AuthControllerTest {
     @DisplayName("Should return authenticated user")
     void shouldReturnAuthenticatedUser() throws Exception {
 
-        mockMvc.perform(get("/auth/me"))
+        mockMvc.perform(get("/auth/me").with(tenant()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("metest@test.com"));
     }
@@ -149,7 +170,7 @@ class AuthControllerTest {
     @DisplayName("Should return 401 when not authenticated")
     void shouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
 
-        mockMvc.perform(get("/auth/me"))
+        mockMvc.perform(get("/auth/me").with(tenant()))
                 .andExpect(status().isUnauthorized());
     }
 }

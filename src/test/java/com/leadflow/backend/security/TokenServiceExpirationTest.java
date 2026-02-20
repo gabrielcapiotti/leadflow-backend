@@ -3,9 +3,12 @@ package com.leadflow.backend.security;
 import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
+
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.UUID;
 
 class TokenServiceExpirationTest {
 
@@ -15,8 +18,8 @@ class TokenServiceExpirationTest {
         // Secret válido (>= 32 chars)
         String secret = "test-secret-key-with-at-least-32-characters-long";
 
-        // Expiração curta
-        long expirationMillis = 50L;
+        // Expiração extremamente curta
+        long expirationMillis = 1L;
 
         TokenService tokenService =
                 new TokenService(secret, expirationMillis);
@@ -38,14 +41,18 @@ class TokenServiceExpirationTest {
                 role,
                 tenant
         );
+        user.setId(UUID.randomUUID());
 
-        String token = tokenService.generateToken(user, tenant.getSchemaName());
+        String token =
+                tokenService.generateToken(user, tenant.getSchemaName());
 
-        // Aguarda expiração
-        Thread.sleep(100);
+        // Aguarda expiração garantida
+        Thread.sleep(5);
 
         boolean isValid = tokenService.isValid(token);
 
-        assertThat(isValid).isFalse();
+        assertThat(isValid)
+                .as("Token expirado deve ser inválido")
+                .isFalse();
     }
 }

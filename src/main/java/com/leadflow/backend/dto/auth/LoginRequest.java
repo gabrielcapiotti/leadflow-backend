@@ -19,21 +19,12 @@ public record LoginRequest(
         String password
 
 ) {
+
     @JsonCreator
     public LoginRequest {
         // Normalização defensiva
         if (email != null) {
             email = email.trim().toLowerCase();
         }
-    }
-
-    public String getEmail() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getEmail'");
-    }
-
-    public String getPassword() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getPassword'");
     }
 }

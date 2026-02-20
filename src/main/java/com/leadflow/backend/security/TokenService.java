@@ -1,8 +1,10 @@
 package com.leadflow.backend.security;
 
 import com.leadflow.backend.entities.user.User;
+
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +27,7 @@ public class TokenService {
     private final long expiration;
 
     /* ======================================================
-       CONSTRUTOR SPRING (produção)
+       CONSTRUCTOR
        ====================================================== */
 
     public TokenService(
@@ -37,6 +39,7 @@ public class TokenService {
     }
 
     private SecretKey buildKey(String secret) {
+
         if (secret == null || secret.length() < 32) {
             throw new IllegalArgumentException(
                     "JWT secret must be at least 32 characters"
@@ -47,7 +50,7 @@ public class TokenService {
     }
 
     /* ======================================================
-       GENERATE TOKEN (com tenant)
+       GENERATE TOKEN (MULTI-TENANT SAFE)
        ====================================================== */
 
     public String generateToken(User user, String schemaName) {
@@ -56,8 +59,16 @@ public class TokenService {
             throw new IllegalArgumentException("User cannot be null");
         }
 
+        if (schemaName == null || schemaName.isBlank()) {
+            throw new IllegalArgumentException("Tenant schema cannot be blank");
+        }
+
+        if (user.getRole() == null) {
+            throw new IllegalStateException("User role cannot be null");
+        }
+
         Map<String, Object> claims = new HashMap<>();
-        claims.put("tenant", schemaName);
+        claims.put("tenant", schemaName.trim().toLowerCase());
 
         Date now = new Date();
         Date expiresAt = new Date(now.getTime() + expiration);
@@ -65,7 +76,7 @@ public class TokenService {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(user.getEmail())
-                .claim("userId", user.getId())
+                .claim("userId", user.getId().toString())
                 .claim("role", user.getRole().getName())
                 .setIssuedAt(now)
                 .setExpiration(expiresAt)
@@ -73,12 +84,22 @@ public class TokenService {
                 .compact();
     }
 
-    /* ======================================================
-       OVERLOAD (caso produção use user.getTenantId())
-       ====================================================== */
-
+    /**
+     * Overload seguro — usa tenant do usuário
+     */
     public String generateToken(User user) {
-        return generateToken(user, "public");
+
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+
+        if (user.getTenant() == null ||
+                user.getTenant().getSchemaName() == null) {
+
+            throw new IllegalStateException("User tenant is not defined");
+        }
+
+        return generateToken(user, user.getTenant().getSchemaName());
     }
 
     /* ======================================================
@@ -86,13 +107,21 @@ public class TokenService {
        ====================================================== */
 
     public boolean isValid(String token) {
+
+        if (token == null || token.isBlank()) {
+            return false;
+        }
+
         try {
             parseToken(token);
             return true;
+        } catch (ExpiredJwtException e) {
+            logger.warn("JWT expired: {}", e.getMessage());
         } catch (JwtException | IllegalArgumentException e) {
-            logger.warn("Invalid JWT token: {}", e.getMessage());
-            return false;
+            logger.warn("Invalid JWT: {}", e.getMessage());
         }
+
+        return false;
     }
 
     /* ======================================================
@@ -104,22 +133,34 @@ public class TokenService {
     }
 
     public UUID getUserId(String token) {
-        Object claim = parseToken(token).getBody().get("userId");
+
+        String claim = parseToken(token)
+                .getBody()
+                .get("userId", String.class);
 
         if (claim == null) {
-            throw new IllegalArgumentException("userId claim not found in token");
+            throw new IllegalArgumentException("userId claim missing");
         }
 
-        return UUID.fromString(claim.toString());
+        return UUID.fromString(claim);
     }
 
-
     public String getRole(String token) {
-        return parseToken(token).getBody().get("role", String.class);
+        return parseToken(token)
+                .getBody()
+                .get("role", String.class);
     }
 
     public String getTenant(String token) {
-        return parseToken(token).getBody().get("tenant", String.class);
+        return parseToken(token)
+                .getBody()
+                .get("tenant", String.class);
+    }
+
+    public Date getExpiration(String token) {
+        return parseToken(token)
+                .getBody()
+                .getExpiration();
     }
 
     /* ======================================================
@@ -127,6 +168,11 @@ public class TokenService {
        ====================================================== */
 
     private Jws<Claims> parseToken(String token) {
+
+        if (token == null || token.isBlank()) {
+            throw new IllegalArgumentException("Token cannot be null or blank");
+        }
+
         return Jwts.parserBuilder()
                 .setSigningKey(secretKey)
                 .build()

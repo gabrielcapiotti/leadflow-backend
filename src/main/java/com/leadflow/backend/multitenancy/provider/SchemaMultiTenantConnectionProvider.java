@@ -8,7 +8,8 @@ import org.springframework.stereotype.Component;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.regex.Pattern;
+import java.sql.Statement;
+import java.util.Objects;
 
 @Component
 public class SchemaMultiTenantConnectionProvider
@@ -19,15 +20,6 @@ public class SchemaMultiTenantConnectionProvider
 
     private static final String DEFAULT_SCHEMA = "public";
 
-    /**
-     * Schema permitido:
-     * - letras minúsculas
-     * - números
-     * - underscore
-     */
-    private static final Pattern VALID_SCHEMA =
-            Pattern.compile("^[a-z0-9_]+$");
-
     private final DataSource dataSource;
 
     public SchemaMultiTenantConnectionProvider(DataSource dataSource) {
@@ -35,7 +27,7 @@ public class SchemaMultiTenantConnectionProvider
     }
 
     /* ======================================================
-       REQUIRED BY HIBERNATE 6
+       HIBERNATE REQUIRED METHODS
        ====================================================== */
 
     @Override
@@ -53,16 +45,24 @@ public class SchemaMultiTenantConnectionProvider
     public Connection getConnection(String tenantIdentifier)
             throws SQLException {
 
-        logger.debug("Getting connection for tenant: {}", tenantIdentifier);
-
         Connection connection = getAnyConnection();
+        String schema = resolveSchema(tenantIdentifier);
 
-        try {
-            connection.createStatement()
-                    .execute("SET search_path TO \"" + tenantIdentifier + "\"");
+        logger.debug("Switching connection to schema: {}", schema);
+
+        try (Statement statement = connection.createStatement()) {
+
+            // Mais seguro que setSchema() no PostgreSQL
+            statement.execute("SET search_path TO \"" + schema + "\"");
+
         } catch (SQLException e) {
+
             connection.close();
-            throw new SQLException("Could not set schema to " + tenantIdentifier, e);
+
+            throw new SQLException(
+                    "Failed to switch to schema: " + schema,
+                    e
+            );
         }
 
         return connection;
@@ -74,8 +74,15 @@ public class SchemaMultiTenantConnectionProvider
             Connection connection
     ) throws SQLException {
 
-        try {
-            connection.createStatement().execute("SET search_path TO public");
+        try (Statement statement = connection.createStatement()) {
+
+            // Sempre resetar antes de devolver ao pool
+            statement.execute("SET search_path TO \"" + DEFAULT_SCHEMA + "\"");
+
+        } catch (SQLException e) {
+
+            logger.error("Failed to reset schema to public", e);
+
         } finally {
             connection.close();
         }
@@ -83,50 +90,51 @@ public class SchemaMultiTenantConnectionProvider
 
     @Override
     public boolean supportsAggressiveRelease() {
-        return false;
+        return false; // importante para evitar problemas com pool
     }
 
     @Override
     public boolean isUnwrappableAs(Class<?> unwrapType) {
         return MultiTenantConnectionProvider.class
+                .isAssignableFrom(unwrapType)
+                || SchemaMultiTenantConnectionProvider.class
                 .isAssignableFrom(unwrapType);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <T> T unwrap(Class<T> unwrapType) {
+
         if (isUnwrappableAs(unwrapType)) {
             return (T) this;
         }
+
         throw new IllegalArgumentException(
-                "Unknown unwrap type: " + unwrapType
+                "Cannot unwrap to: " + unwrapType
         );
     }
 
     /* ======================================================
-       INTERNAL
+       INTERNAL VALIDATION
        ====================================================== */
 
     private String resolveSchema(String tenantIdentifier) {
 
-        if (tenantIdentifier == null) {
+        if (Objects.isNull(tenantIdentifier) ||
+                tenantIdentifier.isBlank()) {
+
+            logger.debug("No tenant identifier provided. Using public schema.");
             return DEFAULT_SCHEMA;
         }
 
-        String schema = tenantIdentifier
-                .trim()
-                .toLowerCase();
+        // Proteção contra schema injection
+        if (!tenantIdentifier.matches("^[a-zA-Z0-9_]+$")) {
 
-        if (schema.isBlank()) {
-            return DEFAULT_SCHEMA;
-        }
-
-        if (!VALID_SCHEMA.matcher(schema).matches()) {
             throw new IllegalArgumentException(
-                    "Invalid tenant schema: " + schema
+                    "Invalid tenant identifier: " + tenantIdentifier
             );
         }
 
-        return schema;
+        return tenantIdentifier.toLowerCase();
     }
 }

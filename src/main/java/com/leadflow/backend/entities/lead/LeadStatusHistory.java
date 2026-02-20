@@ -10,56 +10,60 @@ import java.util.UUID;
 
 @Entity
 @Table(
-    name = "lead_status_history",
-    indexes = {
-        @Index(name = "idx_lsh_lead_id", columnList = "lead_id")
-    }
+        name = "lead_status_history",
+        indexes = {
+                @Index(name = "idx_lsh_lead_id", columnList = "lead_id")
+        }
 )
 public class LeadStatusHistory {
 
+    /* ======================================================
+       ID
+       ====================================================== */
+
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(nullable = false, updatable = false)
     private UUID id;
 
-    /* ==========================
-       RELACIONAMENTOS
-       ========================== */
+    /* ======================================================
+       RELATIONSHIPS
+       ====================================================== */
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
-        name = "lead_id",
-        nullable = false,
-        foreignKey = @ForeignKey(name = "fk_lsh_lead")
+            name = "lead_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_lsh_lead")
     )
     private Lead lead;
 
+    /**
+     * Referência ao usuário que alterou o status.
+     * Pode ser null (SYSTEM).
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
-        name = "changed_by",
-        foreignKey = @ForeignKey(name = "fk_lsh_user")
+            name = "changed_by",
+            foreignKey = @ForeignKey(name = "fk_lsh_user")
     )
     private User changedBy;
 
-    /* ==========================
-       CAMPOS
-       ========================== */
+    /* ======================================================
+       FIELDS
+       ====================================================== */
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 30)
     private LeadStatus status;
 
     @CreationTimestamp
     @Column(name = "changed_at", nullable = false, updatable = false)
     private LocalDateTime changedAt;
 
-    /*
-     * Histórico NÃO deve ser mutável.
-     * Removido updated_at — não faz sentido versionar histórico.
-     */
-
-    /* ==========================
-       CONSTRUTORES
-       ========================== */
+    /* ======================================================
+       CONSTRUCTORS
+       ====================================================== */
 
     protected LeadStatusHistory() {
         // JPA only
@@ -80,9 +84,9 @@ public class LeadStatusHistory {
         this.changedBy = changedBy;
     }
 
-    /* ==========================
+    /* ======================================================
        GETTERS
-       ========================== */
+       ====================================================== */
 
     public UUID getId() {
         return id;
@@ -111,20 +115,9 @@ public class LeadStatusHistory {
         return changedBy;
     }
 
-    /* ==========================
-       IMUTABILIDADE
-       ========================== */
-
-    // Histórico não deve ser alterado após criação.
-    // Nenhum setter público.
-
-    protected void setLead(Lead lead) {
-        this.lead = lead;
-    }
-
-    /* ==========================
+    /* ======================================================
        EQUALS & HASHCODE (JPA SAFE)
-       ========================== */
+       ====================================================== */
 
     @Override
     public boolean equals(Object o) {
@@ -138,16 +131,16 @@ public class LeadStatusHistory {
         return getClass().hashCode();
     }
 
-    /* ==========================
+    /* ======================================================
        TO STRING
-       ========================== */
+       ====================================================== */
 
     @Override
     public String toString() {
         return "LeadStatusHistory{" +
-               "id=" + id +
-               ", status=" + status +
-               ", changedAt=" + changedAt +
-               '}';
+                "id=" + id +
+                ", status=" + status +
+                ", changedAt=" + changedAt +
+                '}';
     }
 }

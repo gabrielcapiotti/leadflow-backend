@@ -2,6 +2,7 @@ package com.leadflow.backend.entities;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -9,6 +10,7 @@ import java.util.UUID;
 @Entity
 @Table(
         name = "tenants",
+        schema = "public",
         uniqueConstraints = {
                 @UniqueConstraint(
                         name = "uk_tenants_schema_name",
@@ -30,14 +32,14 @@ public class Tenant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(updatable = false, nullable = false)
+    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
     /* ======================================================
        FIELDS
        ====================================================== */
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
     @Column(name = "schema_name", nullable = false, length = 100)
@@ -47,12 +49,19 @@ public class Tenant {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     /* ======================================================
        CONSTRUCTORS
        ====================================================== */
 
     protected Tenant() {
-        // JPA only
+        // Required by JPA
     }
 
     public Tenant(String name, String schemaName) {
@@ -80,13 +89,33 @@ public class Tenant {
         return createdAt;
     }
 
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
     /* ======================================================
-       DOMAIN RULES
+       DOMAIN BEHAVIOR
        ====================================================== */
 
     public void rename(String newName) {
         setName(newName);
     }
+
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
+
+    /* ======================================================
+       VALIDATION
+       ====================================================== */
 
     private void validateName(String name) {
         if (name == null || name.isBlank()) {
@@ -95,6 +124,7 @@ public class Tenant {
     }
 
     private void validateSchema(String schema) {
+
         if (schema == null || schema.isBlank()) {
             throw new IllegalArgumentException("Schema name cannot be blank");
         }
@@ -106,7 +136,9 @@ public class Tenant {
         }
 
         if (schema.equalsIgnoreCase("public")) {
-            throw new IllegalArgumentException("Schema 'public' is reserved");
+            throw new IllegalArgumentException(
+                    "Schema 'public' is reserved"
+            );
         }
     }
 
@@ -118,12 +150,12 @@ public class Tenant {
        CONTROLLED SETTERS
        ====================================================== */
 
-    public void setName(String name) {
+    private void setName(String name) {
         validateName(name);
         this.name = name.trim();
     }
 
-    public void setSchemaName(String schema) {
+    private void setSchemaName(String schema) {
         validateSchema(schema);
         this.schemaName = normalizeSchema(schema);
     }
@@ -154,6 +186,7 @@ public class Tenant {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", schemaName='" + schemaName + '\'' +
+                ", deletedAt=" + deletedAt +
                 '}';
     }
 }

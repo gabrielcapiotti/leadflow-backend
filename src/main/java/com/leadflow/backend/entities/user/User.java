@@ -203,7 +203,7 @@ public class User {
     }
 
     /* ======================================================
-       SETTERS CONTROLADOS (para Service / JPA)
+       SETTERS CONTROLADOS
        ====================================================== */
 
     public void setName(String name) {
@@ -224,6 +224,16 @@ public class User {
 
     public void setDeletedAt(LocalDateTime deletedAt) {
         this.deletedAt = deletedAt;
+    }
+
+    /**
+     * Intended for testing or controlled persistence scenarios only.
+     */
+    public void setId(UUID id) {
+        if (this.id != null) {
+            throw new IllegalStateException("ID already set");
+        }
+        this.id = id;
     }
 
     /* ======================================================
