@@ -34,7 +34,6 @@ com\leadflow\backend\security\filter\JwtAuthenticationFilter.class
 com\leadflow\backend\security\TokenService.class
 com\leadflow\backend\dto\settings\UpdateSettingRequest.class
 com\leadflow\backend\service\lead\LeadStatusHistoryService.class
-com\leadflow\backend\service\TenantProvisioningService.class
 com\leadflow\backend\repository\settings\SettingRepository.class
 com\leadflow\backend\dto\user\UserResponse.class
 com\leadflow\backend\multitenancy\identifier\CurrentTenantIdentifierResolverImpl.class
