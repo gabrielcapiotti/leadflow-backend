@@ -36,7 +36,6 @@ public class TenantProvisioningService {
         this.tenantRepository = tenantRepository;
     }
 
-    @Transactional("publicTransactionManager")
     public synchronized void provisionTenant(String tenantName) {
 
         validateTenantName(tenantName);
@@ -53,8 +52,11 @@ public class TenantProvisioningService {
         }
 
         try {
+
             createSchema(schemaName);
-            runMigrations(schemaName);
+
+            runTenantMigrations(schemaName);
+
             registerTenant(tenantName, schemaName);
 
             logger.info("Tenant successfully provisioned: {}", schemaName);
@@ -75,14 +77,10 @@ public class TenantProvisioningService {
     /* ================= SCHEMA ================= */
 
     private void createSchema(String schemaName) {
-
-        jdbcTemplate.execute(
-                "CREATE SCHEMA IF NOT EXISTS " + schemaName
-        );
+        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS " + schemaName);
     }
 
     private void cleanupSchema(String schemaName) {
-
         try {
             jdbcTemplate.execute(
                     "DROP SCHEMA IF EXISTS " + schemaName + " CASCADE"
@@ -93,15 +91,15 @@ public class TenantProvisioningService {
         }
     }
 
-    /* ================= FLYWAY ================= */
+    /* ================= FLYWAY (TENANT ONLY) ================= */
 
-    private void runMigrations(String schemaName) {
+    private void runTenantMigrations(String schemaName) {
 
         Flyway flyway = Flyway.configure()
                 .dataSource(dataSource)
                 .schemas(schemaName)
                 .defaultSchema(schemaName)
-                .locations("classpath:db/migration")
+                .locations("classpath:db/migration/tenant")
                 .baselineOnMigrate(true)
                 .load();
 

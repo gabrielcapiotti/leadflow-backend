@@ -5,6 +5,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 @Entity
@@ -32,7 +33,7 @@ public class Tenant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(updatable = false, nullable = false)
+    @Column(nullable = false, updatable = false)
     private UUID id;
 
     /* ======================================================
@@ -53,7 +54,7 @@ public class Tenant {
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @Column(name = "deleted_at")
@@ -64,7 +65,7 @@ public class Tenant {
        ====================================================== */
 
     protected Tenant() {
-        // JPA only
+        // Required by JPA
     }
 
     public Tenant(String name, String schemaName) {
@@ -122,14 +123,13 @@ public class Tenant {
             throw new IllegalArgumentException("Schema name cannot be blank");
         }
 
-        // 🔒 Consistente com connection provider
         if (!schema.matches("^[a-z0-9_]+$")) {
             throw new IllegalArgumentException(
                     "Schema name must contain only lowercase letters, numbers and underscore"
             );
         }
 
-        if (schema.equals("public")) {
+        if ("public".equals(schema)) {
             throw new IllegalArgumentException(
                     "Schema 'public' is reserved and cannot be registered as a tenant"
             );
@@ -156,14 +156,14 @@ public class Tenant {
     }
 
     /* ======================================================
-       EQUALS & HASHCODE (JPA SAFE)
+       EQUALS & HASHCODE (Hibernate-safe)
        ====================================================== */
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Tenant other)) return false;
-        return id != null && id.equals(other.id);
+        return id != null && Objects.equals(id, other.id);
     }
 
     @Override

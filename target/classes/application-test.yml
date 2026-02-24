@@ -11,7 +11,7 @@ spring:
   jpa:
     open-in-view: false  
     hibernate:
-      ddl-auto: create-drop  
+      ddl-auto: validate  
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect 
@@ -21,11 +21,11 @@ spring:
           time_zone: UTC  
 
   flyway:
-    enabled: false  
+    enabled: true  
 
   h2:
     console:
-      enabled: false 
+      enabled: true 
 
 logging:
   level:
@@ -39,7 +39,7 @@ security:
     expiration: 3600000  
 
 multitenancy:
-  enabled: false 
+  enabled: true
 
 server:
   port: 0 

@@ -3,6 +3,7 @@ package com.leadflow.backend.multitenancy.provider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -11,6 +12,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Objects;
 
+@Primary
 @Component
 public class MultiTenantConnectionProviderImpl
         implements MultiTenantConnectionProvider<String> {

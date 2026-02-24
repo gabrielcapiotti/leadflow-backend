@@ -3,48 +3,49 @@ spring:
     name: leadflow-backend
 
   datasource:
-    url: jdbc:postgresql://localhost:2411/leadflow
-    username: postgres
-    password: venusia
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 5
+      auto-commit: false
 
   jpa:
-    hibernate:
-      ddl-auto: validate
     open-in-view: false
+    hibernate:
+      ddl-auto: validate  
     properties:
       hibernate:
-        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
         multiTenancy: SCHEMA
-        # Para Hibernate 6, não é necessário ter "multi_tenancy" como propriedade extra.
-        multiTenantConnectionProviderClass: com.leadflow.backend.multitenancy.config.MultiTenantConnectionProvider
-        currentTenantIdentifierResolverClass: com.leadflow.backend.multitenancy.context.TenantContextResolver
+        jdbc:
+          time_zone: UTC
 
   flyway:
     enabled: true
+    baseline-on-migrate: true
+    validate-on-migrate: true
     locations:
-      - classpath:db/migration/global
+      - classpath:db/migration/global  
       - classpath:db/migration/tenants
-    schemas:
-      - public
-      # Apenas o schema do tenant específico que será usado na migração
-      # Você pode incluir outros schemas dos tenants conforme necessário
 
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}  
   servlet:
-    context-path: /api
+    context-path: /api  
 
 logging:
   level:
     root: INFO
-    com.leadflow: INFO
-    org.hibernate.SQL: DEBUG
-    org.hibernate.orm.jdbc.bind: TRACE
+    com.leadflow: INFO  
 
 security:
   jwt:
-    secret: integration-secret-key
-    expiration: 3600000
+    secret: ${JWT_SECRET}  
+    expiration: ${JWT_EXPIRATION:3600000}  
 
 multitenancy:
-  enabled: true
+  enabled: true  
