@@ -1,5 +1,5 @@
 -- V1__Public_schema.sql
--- Public schema bootstrap (executado apenas uma vez)
+-- Executado apenas uma vez
 
 ----------------------------------------------------------
 -- EXTENSIONS
@@ -23,11 +23,21 @@ CREATE TABLE IF NOT EXISTS public.tenants (
     deleted_at TIMESTAMP,
 
     CONSTRAINT uq_tenants_name UNIQUE (name),
-    CONSTRAINT uq_tenants_schema_name UNIQUE (schema_name)
+    CONSTRAINT uq_tenants_schema_name UNIQUE (schema_name),
+
+    -- Segurança adicional contra schema injection
+    CONSTRAINT chk_tenants_schema_name
+        CHECK (schema_name ~ '^[a-z0-9_]+$')
 );
 
 CREATE INDEX IF NOT EXISTS idx_tenants_schema_name
 ON public.tenants(schema_name);
+
+-- Índice parcial para soft delete
+CREATE INDEX IF NOT EXISTS idx_tenants_active
+ON public.tenants(schema_name)
+WHERE deleted_at IS NULL;
+
 
 
 ----------------------------------------------------------
@@ -42,3 +52,15 @@ CREATE TABLE IF NOT EXISTS public.roles (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+----------------------------------------------------------
+-- SEED ROLES (IDEMPOTENTE)
+----------------------------------------------------------
+
+INSERT INTO public.roles (name)
+VALUES ('ROLE_ADMIN')
+ON CONFLICT (name) DO NOTHING;
+
+INSERT INTO public.roles (name)
+VALUES ('ROLE_USER')
+ON CONFLICT (name) DO NOTHING;

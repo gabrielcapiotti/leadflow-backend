@@ -1,11 +1,9 @@
 package com.leadflow.backend.service.auth;
 
-import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
-import com.leadflow.backend.repository.tenant.TenantRepository;
 import com.leadflow.backend.multitenancy.context.TenantContext;
 
 import org.junit.jupiter.api.AfterEach;
@@ -33,14 +31,10 @@ class AuthServiceTest {
     @Mock
     private RoleRepository roleRepository;
 
-    @Mock
-    private TenantRepository tenantRepository;
-
     private PasswordEncoder passwordEncoder;
     private AuthService authService;
 
     private Role userRole;
-    private Tenant tenant;
 
     private static final String SCHEMA = "tenant_test";
 
@@ -52,12 +46,10 @@ class AuthServiceTest {
         authService = new AuthService(
                 userRepository,
                 roleRepository,
-                tenantRepository,
                 passwordEncoder
         );
 
         userRole = new Role("ROLE_USER");
-        tenant = new Tenant("Default Tenant", SCHEMA);
 
         TenantContext.setTenant(SCHEMA);
     }
@@ -73,10 +65,6 @@ class AuthServiceTest {
 
     @Test
     void shouldRegisterUserSuccessfully() {
-
-        when(tenantRepository
-                .findBySchemaNameIgnoreCaseAndDeletedAtIsNull(SCHEMA))
-                .thenReturn(Optional.of(tenant));
 
         when(userRepository
                 .existsByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
@@ -102,25 +90,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void shouldThrowWhenTenantNotFound() {
-
-        when(tenantRepository
-                .findBySchemaNameIgnoreCaseAndDeletedAtIsNull(SCHEMA))
-                .thenReturn(Optional.empty());
-
-        assertThatThrownBy(() ->
-                authService.registerUser("Test", "test@example.com", "password")
-        )
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessageContaining("Tenant not found");
-    }
-
-    @Test
     void shouldThrowWhenEmailAlreadyExists() {
-
-        when(tenantRepository
-                .findBySchemaNameIgnoreCaseAndDeletedAtIsNull(SCHEMA))
-                .thenReturn(Optional.of(tenant));
 
         when(userRepository
                 .existsByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
@@ -137,10 +107,6 @@ class AuthServiceTest {
 
     @Test
     void shouldThrowWhenRoleNotFound() {
-
-        when(tenantRepository
-                .findBySchemaNameIgnoreCaseAndDeletedAtIsNull(SCHEMA))
-                .thenReturn(Optional.of(tenant));
 
         when(userRepository
                 .existsByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
@@ -170,8 +136,7 @@ class AuthServiceTest {
                 "Test",
                 "test@example.com",
                 encodedPassword,
-                userRole,
-                tenant
+                userRole
         );
 
         when(userRepository
@@ -209,8 +174,7 @@ class AuthServiceTest {
                 "Test",
                 "test@example.com",
                 encodedPassword,
-                userRole,
-                tenant
+                userRole
         );
 
         when(userRepository

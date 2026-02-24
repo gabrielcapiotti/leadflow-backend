@@ -11,7 +11,7 @@ import java.util.UUID;
 public interface RoleRepository extends JpaRepository<Role, UUID> {
 
     /* ======================================================
-       CONSULTA PRINCIPAL (RBAC / AUTH)
+       AUTH / RBAC
        ====================================================== */
 
     Optional<Role> findByNameIgnoreCase(String name);

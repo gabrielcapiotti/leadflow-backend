@@ -1,12 +1,10 @@
 package com.leadflow.backend.service.auth;
 
-import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
-import com.leadflow.backend.repository.tenant.TenantRepository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,18 +20,15 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final TenantRepository tenantRepository;
     private final PasswordEncoder passwordEncoder;
 
     public AuthService(
             UserRepository userRepository,
             RoleRepository roleRepository,
-            TenantRepository tenantRepository,
             PasswordEncoder passwordEncoder
     ) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
-        this.tenantRepository = tenantRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -49,14 +44,9 @@ public class AuthService {
         String schema = resolveCurrentTenantSchema();
         String normalizedEmail = email.trim().toLowerCase();
 
-        Tenant tenant = tenantRepository
-                .findBySchemaNameIgnoreCaseAndDeletedAtIsNull(schema)
-                .orElseThrow(() ->
-                        new IllegalStateException("Tenant not found: " + schema)
-                );
-
         if (userRepository
                 .existsByEmailIgnoreCaseAndDeletedAtIsNull(normalizedEmail)) {
+
             throw new IllegalArgumentException("Email already in use");
         }
 
@@ -70,11 +60,10 @@ public class AuthService {
                 name.trim(),
                 normalizedEmail,
                 passwordEncoder.encode(password),
-                userRole,
-                tenant
+                userRole
         );
 
-        logger.info("User registered for tenant {} with email {}",
+        logger.info("User registered in schema {} with email {}",
                 schema, normalizedEmail);
 
         return userRepository.save(user);
@@ -101,13 +90,11 @@ public class AuthService {
                         new IllegalArgumentException("Invalid credentials")
                 );
 
-        validateTenantAccess(user, schema);
-
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new IllegalArgumentException("Invalid credentials");
         }
 
-        logger.info("User authenticated for tenant {}: {}",
+        logger.info("User authenticated in schema {}: {}",
                 schema, normalizedEmail);
 
         return user;
@@ -124,18 +111,13 @@ public class AuthService {
             throw new IllegalArgumentException("Email cannot be blank");
         }
 
-        String schema = resolveCurrentTenantSchema();
         String normalizedEmail = email.trim().toLowerCase();
 
-        User user = userRepository
+        return userRepository
                 .findByEmailIgnoreCaseAndDeletedAtIsNull(normalizedEmail)
                 .orElseThrow(() ->
                         new IllegalArgumentException("User not found")
                 );
-
-        validateTenantAccess(user, schema);
-
-        return user;
     }
 
     /* ======================================================
@@ -153,16 +135,6 @@ public class AuthService {
         }
 
         return schema.trim().toLowerCase();
-    }
-
-    private void validateTenantAccess(User user, String schema) {
-
-        if (user.getTenant() == null ||
-                user.getTenant().getSchemaName() == null ||
-                !user.getTenant().getSchemaName().equalsIgnoreCase(schema)) {
-
-            throw new IllegalArgumentException("Invalid credentials");
-        }
     }
 
     private void validateInput(String name, String email, String password) {

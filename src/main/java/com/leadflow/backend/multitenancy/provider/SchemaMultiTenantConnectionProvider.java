@@ -48,24 +48,26 @@ public class SchemaMultiTenantConnectionProvider
         Connection connection = getAnyConnection();
         String schema = resolveSchema(tenantIdentifier);
 
-        logger.debug("Switching connection to schema: {}", schema);
+        try {
 
-        try (Statement statement = connection.createStatement()) {
+            ensureSchemaExists(connection, schema);
 
-            // Mais seguro que setSchema() no PostgreSQL
-            statement.execute("SET search_path TO \"" + schema + "\"");
+            // 🔥 Hibernate 6 compatible approach
+            connection.setSchema(schema);
 
-        } catch (SQLException e) {
+            logger.trace("Connection switched to schema: {}", schema);
+
+            return connection;
+
+        } catch (SQLException ex) {
 
             connection.close();
 
             throw new SQLException(
-                    "Failed to switch to schema: " + schema,
-                    e
+                    "Failed to obtain connection for schema: " + schema,
+                    ex
             );
         }
-
-        return connection;
     }
 
     @Override
@@ -74,14 +76,14 @@ public class SchemaMultiTenantConnectionProvider
             Connection connection
     ) throws SQLException {
 
-        try (Statement statement = connection.createStatement()) {
+        try {
 
-            // Sempre resetar antes de devolver ao pool
-            statement.execute("SET search_path TO \"" + DEFAULT_SCHEMA + "\"");
+            // Reset before returning to pool
+            connection.setSchema(DEFAULT_SCHEMA);
 
-        } catch (SQLException e) {
+        } catch (SQLException ex) {
 
-            logger.error("Failed to reset schema to public", e);
+            logger.error("Failed to reset schema to default", ex);
 
         } finally {
             connection.close();
@@ -90,32 +92,28 @@ public class SchemaMultiTenantConnectionProvider
 
     @Override
     public boolean supportsAggressiveRelease() {
-        return false; // importante para evitar problemas com pool
+        return false;
     }
 
     @Override
     public boolean isUnwrappableAs(Class<?> unwrapType) {
-        return MultiTenantConnectionProvider.class
-                .isAssignableFrom(unwrapType)
-                || SchemaMultiTenantConnectionProvider.class
-                .isAssignableFrom(unwrapType);
+        return MultiTenantConnectionProvider.class.isAssignableFrom(unwrapType)
+                || SchemaMultiTenantConnectionProvider.class.isAssignableFrom(unwrapType);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <T> T unwrap(Class<T> unwrapType) {
-
         if (isUnwrappableAs(unwrapType)) {
             return (T) this;
         }
-
         throw new IllegalArgumentException(
                 "Cannot unwrap to: " + unwrapType
         );
     }
 
     /* ======================================================
-       INTERNAL VALIDATION
+       INTERNAL LOGIC
        ====================================================== */
 
     private String resolveSchema(String tenantIdentifier) {
@@ -123,12 +121,10 @@ public class SchemaMultiTenantConnectionProvider
         if (Objects.isNull(tenantIdentifier) ||
                 tenantIdentifier.isBlank()) {
 
-            logger.debug("No tenant identifier provided. Using public schema.");
             return DEFAULT_SCHEMA;
         }
 
-        // Proteção contra schema injection
-        if (!tenantIdentifier.matches("^[a-zA-Z0-9_]+$")) {
+        if (!tenantIdentifier.matches("^[a-z0-9_]+$")) {
 
             throw new IllegalArgumentException(
                     "Invalid tenant identifier: " + tenantIdentifier
@@ -136,5 +132,21 @@ public class SchemaMultiTenantConnectionProvider
         }
 
         return tenantIdentifier.toLowerCase();
+    }
+
+    /**
+     * Garante que o schema exista.
+     * Necessário para Testcontainers e DataJpaTest.
+     */
+    private void ensureSchemaExists(Connection connection, String schema)
+            throws SQLException {
+
+        if (DEFAULT_SCHEMA.equals(schema)) {
+            return;
+        }
+
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute("CREATE SCHEMA IF NOT EXISTS " + schema);
+        }
     }
 }

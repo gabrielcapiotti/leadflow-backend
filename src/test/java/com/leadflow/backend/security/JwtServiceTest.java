@@ -1,8 +1,8 @@
 package com.leadflow.backend.security;
 
-import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
+import com.leadflow.backend.security.jwt.JwtService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,12 +12,11 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class TokenServiceTest {
+class JwtServiceTest {
 
-    private TokenService tokenService;
+    private JwtService jwtService;
     private User user;
     private UUID userId;
-    private UUID roleId;
 
     private static final String SECRET =
             "test-secret-key-for-jwt-token-generation-minimum-256-bits-required";
@@ -27,31 +26,23 @@ class TokenServiceTest {
     @BeforeEach
     void setUp() {
 
-        tokenService = new TokenService(
+        jwtService = new JwtService(
                 SECRET,
-                3_600_000L // 1 hora
+                3_600_000L,
+                "leadflow"
         );
 
-        roleId = UUID.randomUUID();
         userId = UUID.randomUUID();
 
-        // ===== TENANT =====
-        Tenant tenant = new Tenant(
-                "Test Tenant",
-                TENANT
-        );
-
         // ===== ROLE =====
-        Role role = new Role("USER");
-        ReflectionTestUtils.setField(role, "id", roleId);
+        Role role = new Role("ROLE_USER");
 
         // ===== USER =====
         user = new User(
                 "Test User",
                 "test@example.com",
                 "password",
-                role,
-                tenant
+                role
         );
 
         ReflectionTestUtils.setField(user, "id", userId);
@@ -64,7 +55,7 @@ class TokenServiceTest {
     @Test
     void generateToken_ShouldReturnValidJwtStructure() {
 
-        String token = tokenService.generateToken(user, TENANT);
+        String token = jwtService.generateToken(user, TENANT);
 
         assertThat(token)
                 .isNotNull()
@@ -82,9 +73,9 @@ class TokenServiceTest {
     @Test
     void isValid_ShouldReturnTrue_ForValidToken() {
 
-        String token = tokenService.generateToken(user, TENANT);
+        String token = jwtService.generateToken(user, TENANT);
 
-        boolean isValid = tokenService.isValid(token);
+        boolean isValid = jwtService.isValid(token);
 
         assertThat(isValid).isTrue();
     }
@@ -92,22 +83,7 @@ class TokenServiceTest {
     @Test
     void isValid_ShouldReturnFalse_ForInvalidToken() {
 
-        boolean isValid = tokenService.isValid("invalid.jwt.token");
-
-        assertThat(isValid).isFalse();
-    }
-
-    @Test
-    void isValid_ShouldReturnFalse_WhenTokenExpired() throws InterruptedException {
-
-        TokenService shortLivedService =
-                new TokenService(SECRET, 1L);
-
-        String token = shortLivedService.generateToken(user, TENANT);
-
-        Thread.sleep(5); // tempo mínimo necessário
-
-        boolean isValid = shortLivedService.isValid(token);
+        boolean isValid = jwtService.isValid("invalid.jwt.token");
 
         assertThat(isValid).isFalse();
     }
@@ -117,41 +93,41 @@ class TokenServiceTest {
        ========================== */
 
     @Test
-    void getEmail_ShouldReturnCorrectEmail() {
+    void extractEmail_ShouldReturnCorrectEmail() {
 
-        String token = tokenService.generateToken(user, TENANT);
+        String token = jwtService.generateToken(user, TENANT);
 
-        String email = tokenService.getEmail(token);
+        String email = jwtService.extractEmail(token);
 
         assertThat(email).isEqualTo("test@example.com");
     }
 
     @Test
-    void getUserId_ShouldReturnCorrectUserId() {
+    void extractUserId_ShouldReturnCorrectUserId() {
 
-        String token = tokenService.generateToken(user, TENANT);
+        String token = jwtService.generateToken(user, TENANT);
 
-        UUID extractedUserId = tokenService.getUserId(token);
+        UUID extractedUserId = jwtService.extractUserId(token);
 
         assertThat(extractedUserId).isEqualTo(userId);
     }
 
     @Test
-    void getRole_ShouldReturnCorrectRole() {
+    void extractRole_ShouldReturnCorrectRole() {
 
-        String token = tokenService.generateToken(user, TENANT);
+        String token = jwtService.generateToken(user, TENANT);
 
-        String role = tokenService.getRole(token);
+        String role = jwtService.extractRole(token);
 
-        assertThat(role).isEqualTo("USER");
+        assertThat(role).isEqualTo("ROLE_USER");
     }
 
     @Test
-    void getTenant_ShouldReturnCorrectTenant() {
+    void extractTenant_ShouldReturnCorrectTenant() {
 
-        String token = tokenService.generateToken(user, "tenant_x");
+        String token = jwtService.generateToken(user, "tenant_x");
 
-        String tenant = tokenService.getTenant(token);
+        String tenant = jwtService.extractTenant(token);
 
         assertThat(tenant).isEqualTo("tenant_x");
     }

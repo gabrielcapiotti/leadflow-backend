@@ -5,25 +5,37 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 @Entity
 @Table(
-    name = "roles",
-    schema = "public",
-    uniqueConstraints = {
-        @UniqueConstraint(name = "uk_roles_name", columnNames = "name")
-    }
+        name = "roles",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_roles_name", columnNames = "name")
+        }
 )
 public class Role {
 
+    /* ======================================================
+       ID
+       ====================================================== */
+
     @Id
-    @GeneratedValue
-    @Column(columnDefinition = "uuid")
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(nullable = false, updatable = false)
     private UUID id;
+
+    /* ======================================================
+       FIELDS
+       ====================================================== */
 
     @Column(nullable = false, length = 50, updatable = false)
     private String name;
+
+    /* ======================================================
+       AUDIT
+       ====================================================== */
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -33,34 +45,40 @@ public class Role {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    /* ==========================
-       CONSTRUTORES
-       ========================== */
+    /* ======================================================
+       CONSTRUCTORS
+       ====================================================== */
 
     protected Role() {
-        // JPA only
+        // Required by JPA
     }
 
     public Role(String name) {
+        this.name = normalizeAndValidate(name);
+    }
 
-        if (name == null || name.isBlank()) {
+    /* ======================================================
+       NORMALIZATION & VALIDATION
+       ====================================================== */
+
+    private String normalizeAndValidate(String value) {
+
+        if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("Role name cannot be null or blank");
         }
 
-        this.name = normalize(name);
+        String normalized = value.trim().toUpperCase();
+
+        if (normalized.length() > 50) {
+            throw new IllegalArgumentException("Role name exceeds 50 characters");
+        }
+
+        return normalized;
     }
 
-    /* ==========================
-       NORMALIZAÇÃO
-       ========================== */
-
-    private String normalize(String value) {
-        return value.trim().toUpperCase();
-    }
-
-    /* ==========================
-       GETTERS (imutável)
-       ========================== */
+    /* ======================================================
+       GETTERS
+       ====================================================== */
 
     public UUID getId() {
         return id;
@@ -78,15 +96,15 @@ public class Role {
         return updatedAt;
     }
 
-    /* ==========================
-       EQUALS & HASHCODE (JPA SAFE)
-       ========================== */
+    /* ======================================================
+       EQUALS & HASHCODE (Hibernate-safe)
+       ====================================================== */
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Role other)) return false;
-        return id != null && id.equals(other.id);
+        return id != null && Objects.equals(id, other.id);
     }
 
     @Override
@@ -94,15 +112,15 @@ public class Role {
         return getClass().hashCode();
     }
 
-    /* ==========================
+    /* ======================================================
        TO STRING
-       ========================== */
+       ====================================================== */
 
     @Override
     public String toString() {
         return "Role{" +
-               "id=" + id +
-               ", name='" + name + '\'' +
-               '}';
+                "id=" + id +
+                ", name='" + name + '\'' +
+                '}';
     }
 }

@@ -5,6 +5,7 @@ import com.leadflow.backend.dto.auth.LoginRequest;
 import com.leadflow.backend.dto.auth.RegisterRequest;
 import com.leadflow.backend.dto.user.UserResponse;
 import com.leadflow.backend.entities.user.User;
+import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.auth.AuthService;
 
@@ -41,13 +42,15 @@ public class AuthController {
             @Valid @RequestBody RegisterRequest request
     ) {
 
+        String schemaName = requireTenant();
+
         User user = authService.registerUser(
                 request.name(),
                 request.email(),
                 request.password()
         );
 
-        String token = jwtService.generateToken(user);
+        String token = jwtService.generateToken(user, schemaName);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -63,12 +66,14 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request
     ) {
 
+        String schemaName = requireTenant();
+
         User user = authService.authenticateUser(
-                request.email(),     // ✔ CORRETO para record
-                request.password()   // ✔ CORRETO para record
+                request.email(),
+                request.password()
         );
 
-        String token = jwtService.generateToken(user);
+        String token = jwtService.generateToken(user, schemaName);
 
         return ResponseEntity.ok(new AuthResponse(token));
     }
@@ -102,5 +107,20 @@ public class AuthController {
         );
 
         return ResponseEntity.ok(response);
+    }
+
+    /* ======================================================
+       INTERNAL
+       ====================================================== */
+
+    private String requireTenant() {
+
+        String schema = TenantContext.getTenant();
+
+        if (schema == null || schema.isBlank()) {
+            throw new IllegalStateException("Tenant schema not set");
+        }
+
+        return schema;
     }
 }

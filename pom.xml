@@ -65,7 +65,6 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Flyway (versão controlada pelo Spring Boot BOM) -->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
@@ -104,14 +103,24 @@
         <!-- TESTS -->
         <!-- ========================= -->
 
-        <!-- H2 (necessário para @DataJpaTest) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
 
-        <!-- Testcontainers Core -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
@@ -119,7 +128,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- PostgreSQL Module -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>postgresql</artifactId>
@@ -127,25 +135,10 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- JUnit Integration -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>${testcontainers.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Spring Boot Test -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Spring Security Test -->
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
 

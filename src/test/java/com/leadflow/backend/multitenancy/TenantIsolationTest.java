@@ -68,17 +68,16 @@ class TenantIsolationTest extends IntegrationTestBase {
         // ---------- TENANT A ----------
         TenantContext.setTenant(tenantA.getSchemaName());
 
-        Role role = roleRepository.findByNameIgnoreCase("USER")
+        Role role = roleRepository.findByNameIgnoreCase("ROLE_USER")
                 .orElseThrow(() ->
-                        new IllegalStateException("Role 'USER' not found"));
+                        new IllegalStateException("Role 'ROLE_USER' not found"));
 
         User userA = userRepository.saveAndFlush(
                 new User(
                         "User A",
                         "a_" + UUID.randomUUID() + "@mail.com",
                         "pass",
-                        role,
-                        tenantA
+                        role
                 )
         );
 
@@ -116,17 +115,16 @@ class TenantIsolationTest extends IntegrationTestBase {
         // ---------- TENANT A ----------
         TenantContext.setTenant(tenantA.getSchemaName());
 
-        Role role = roleRepository.findByNameIgnoreCase("USER")
+        Role role = roleRepository.findByNameIgnoreCase("ROLE_USER")
                 .orElseThrow(() ->
-                        new IllegalStateException("Role 'USER' not found"));
+                        new IllegalStateException("Role 'ROLE_USER' not found"));
 
         User userA = userRepository.saveAndFlush(
                 new User(
                         "User B",
                         "b_" + UUID.randomUUID() + "@mail.com",
                         "pass",
-                        role,
-                        tenantA
+                        role
                 )
         );
 

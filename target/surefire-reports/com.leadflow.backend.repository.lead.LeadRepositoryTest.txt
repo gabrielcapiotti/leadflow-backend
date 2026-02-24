@@ -1,13 +1,13 @@
 -------------------------------------------------------------------------------
 Test set: com.leadflow.backend.repository.lead.LeadRepositoryTest
 -------------------------------------------------------------------------------
-Tests run: 5, Failures: 0, Errors: 5, Skipped: 0, Time elapsed: 8.217 s <<< FAILURE! -- in com.leadflow.backend.repository.lead.LeadRepositoryTest
-com.leadflow.backend.repository.lead.LeadRepositoryTest.shouldFindByUserIdAndDeletedAtIsNull -- Time elapsed: 0.008 s <<< ERROR!
-java.lang.IllegalStateException: Failed to load ApplicationContext for [WebMergedContextConfiguration@56554365 testClass = com.leadflow.backend.repository.lead.LeadRepositoryTest, locations = [], classes = [com.leadflow.backend.BackendApplication], contextInitializerClasses = [], activeProfiles = ["integration"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true"], contextCustomizers = [[ImportsContextCustomizer@666b1244 key = [org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration, org.springframework.boot.test.autoconfigure.jdbc.TestDatabaseAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@16c8b7bd, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@576c5536, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@3bb8aabc, org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@59546cfe, org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@7baf6acf, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@3559ba37, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@5da7cee2, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@74b3a85f, org.springframework.boot.test.context.SpringBootTestAnnotation@5c4c751a], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+Tests run: 5, Failures: 0, Errors: 5, Skipped: 0, Time elapsed: 0.363 s <<< FAILURE! -- in com.leadflow.backend.repository.lead.LeadRepositoryTest
+com.leadflow.backend.repository.lead.LeadRepositoryTest.shouldFindByUserIdAndDeletedAtIsNull -- Time elapsed: 0 s <<< ERROR!
+java.lang.IllegalStateException: Failed to load ApplicationContext for [MergedContextConfiguration@ee46bef testClass = com.leadflow.backend.repository.lead.LeadRepositoryTest, locations = [], classes = [com.leadflow.backend.BackendApplication], contextInitializerClasses = [], activeProfiles = ["integration"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTestContextBootstrapper=true"], contextCustomizers = [[ImportsContextCustomizer@62c462e key = [org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration, org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration, org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManagerAutoConfiguration, org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration, org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration, org.springframework.boot.autoconfigure.sql.init.SqlInitializationAutoConfiguration, org.springframework.boot.test.autoconfigure.jdbc.TestDatabaseAutoConfiguration, org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration, org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration, org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration, org.springframework.boot.autoconfigure.jdbc.JdbcClientAutoConfiguration, org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration, org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@27d4a09, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@740d2e78, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@561868a0, org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@2dcd168a, org.springframework.boot.test.autoconfigure.OverrideAutoConfigurationContextCustomizerFactory$DisableAutoConfigurationContextCustomizer@7803bfd, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.filter.TypeExcludeFiltersContextCustomizer@34be3d80, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@6e6c6a9a, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@530712d, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@44b27187], contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
 	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:180)
 	at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130)
-	at org.springframework.test.context.web.ServletTestExecutionListener.setUpRequestContextIfNecessary(ServletTestExecutionListener.java:200)
-	at org.springframework.test.context.web.ServletTestExecutionListener.prepareTestInstance(ServletTestExecutionListener.java:139)
+	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:155)
+	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:111)
 	at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
 	at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:159)
 	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:183)
@@ -24,192 +24,24 @@ java.lang.IllegalStateException: Failed to load ApplicationContext for [WebMerge
 	at java.base/java.util.Optional.orElseGet(Optional.java:364)
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
-Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'tenantEntityManagerFactory' defined in class path resource [com/leadflow/backend/config/DefaultEntityManagerConfig.class]: Failed to initialize dependency 'flywayInitializer' of LoadTimeWeaverAware bean 'tenantEntityManagerFactory': Error creating bean with name 'flywayInitializer' defined in class path resource [org/springframework/boot/autoconfigure/flyway/FlywayAutoConfiguration$FlywayConfiguration.class]: Script V1__Initial_schema.sql failed
-------------------------------------
-SQL State  : 42601
-Error Code : 0
-Message    : ERROR: unterminated dollar-quoted string at or near "$$
-BEGIN
-
-    EXECUTE format('CREATE SCHEMA IF NOT EXISTS %I', schema_name);
-
-    /* ======================================================
-       USERS
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.users (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            name VARCHAR(100) NOT NULL,
-            email VARCHAR(100) NOT NULL,
-            password VARCHAR(255) NOT NULL,
-
-            role_id UUID NOT NULL,
-
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            deleted_at TIMESTAMP,
-
-            CONSTRAINT fk_users_role
-                FOREIGN KEY (role_id)
-                REFERENCES public.roles(id)
-                ON DELETE RESTRICT,
-
-            CONSTRAINT uq_users_email UNIQUE (email)
-        )
-    ', schema_name);
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_users_email ON %I.users (email);',
-        schema_name,
-        schema_name
-    );
-
-
-    /* ======================================================
-       LEADS
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.leads (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            name VARCHAR(100) NOT NULL,
-            email VARCHAR(100) NOT NULL,
-            phone VARCHAR(20),
-
-            status VARCHAR(50) NOT NULL DEFAULT ''NEW'',
-
-            user_id UUID NOT NULL,
-
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            deleted_at TIMESTAMP,
-
-            CONSTRAINT chk_lead_status
-                CHECK (status IN (''NEW'', ''CONTACTED'', ''QUALIFIED'', ''CLOSED'')),
-
-            CONSTRAINT fk_leads_user
-                FOREIGN KEY (user_id)
-                REFERENCES %I.users(id)
-                ON DELETE CASCADE
-        )
-    ', schema_name, schema_name);
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_leads_user ON %I.leads (user_id);',
-        schema_name,
-        schema_name
-    );
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_leads_status ON %I.leads (status);',
-        schema_name,
-        schema_name
-    );
-
-
-    /* ======================================================
-       LEAD STATUS HISTORY
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.lead_status_history (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            lead_id UUID NOT NULL,
-            status VARCHAR(50) NOT NULL,
-
-            changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            changed_by UUID,
-
-            CONSTRAINT chk_lsh_status
-                CHECK (status IN (''NEW'', ''CONTACTED'', ''QUALIFIED'', ''CLOSED'')),
-
-            CONSTRAINT fk_lsh_lead
-                FOREIGN KEY (lead_id)
-                REFERENCES %I.leads(id)
-                ON DELETE CASCADE,
-
-            CONSTRAINT fk_lsh_user
-                FOREIGN KEY (changed_by)
-                REFERENCES %I.users(id)
-                ON DELETE SET NULL
-        )
-    ', schema_name, schema_name, schema_name);
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_lsh_lead ON %I.lead_status_history (lead_id);',
-        schema_name,
-        schema_name
-    );
-
-
-    /* ======================================================
-       SETTINGS
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.settings (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            user_id UUID NOT NULL,
-
-            vendor_name VARCHAR(100) NOT NULL,
-            whatsapp VARCHAR(15) NOT NULL,
-            company_name VARCHAR(100),
-            logo TEXT,
-            welcome_message TEXT,
-
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            deleted_at TIMESTAMP,
-
-            CONSTRAINT fk_settings_user
-                FOREIGN KEY (user_id)
-                REFERENCES %I.users(id)
-                ON DELETE CASCADE,
-
-            CONSTRAINT uq_settings_user UNIQUE (user_id)
-        )
-    ', schema_name, schema_name);
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_settings_user ON %I.settings (user_id);',
-        schema_name,
-        schema_name
-    );
-
-
-    /* ======================================================
-       LOGS
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.logs (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            level VARCHAR(20) NOT NULL,
-            action VARCHAR(100) NOT NULL,
-            message TEXT NOT NULL,
-
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-            user_id UUID,
-
-            CONSTRAINT fk_logs_user
-                FOREIGN KEY (user_id)
-                REFERENCES %I.users(id)
-                ON DELETE SET NULL
-        )
-    ', schema_name, schema_name);"
-  Posição: 288
-Location   : db/migration/V1__Initial_schema.sql (C:\Users\Gabri\OneDrive\Área de Trabalho\leadflow-backend\target\classes\db\migration\V1__Initial_schema.sql)
-Line       : 49
-Statement  : Run Flyway with -X option to see the actual statement causing the problem
-
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'entityManagerFactory' defined in class path resource [org/springframework/boot/autoconfigure/orm/jpa/HibernateJpaConfiguration.class]: Failed to initialize dependency 'flywayInitializer' of LoadTimeWeaverAware bean 'entityManagerFactory': Error creating bean with name 'flywayInitializer' defined in class path resource [org/springframework/boot/autoconfigure/flyway/FlywayAutoConfiguration$FlywayConfiguration.class]: Validate failed: Migrations have failed validation
+Migration checksum mismatch for migration version 1
+-> Applied to database : -497251578
+-> Resolved locally    : 1397141408
+Either revert the changes to the migration, or run repair to update the schema history.
+Migration checksum mismatch for migration version 2
+-> Applied to database : 714928968
+-> Resolved locally    : -878233951
+Either revert the changes to the migration, or run repair to update the schema history.
+Migration checksum mismatch for migration version 3
+-> Applied to database : 595524265
+-> Resolved locally    : 241576378
+Either revert the changes to the migration, or run repair to update the schema history.
+Migration checksum mismatch for migration version 4
+-> Applied to database : -1824686890
+-> Resolved locally    : -1755999007
+Either revert the changes to the migration, or run repair to update the schema history.
+Need more flexibility with validation rules? Learn more: https://rd.gt/3AbJUZE
 	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:328)
 	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:207)
 	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:973)
@@ -227,192 +59,24 @@ Statement  : Run Flyway with -X option to see the actual statement causing the p
 	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContextInternal(DefaultCacheAwareContextLoaderDelegate.java:225)
 	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:152)
 	... 19 more
-Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'flywayInitializer' defined in class path resource [org/springframework/boot/autoconfigure/flyway/FlywayAutoConfiguration$FlywayConfiguration.class]: Script V1__Initial_schema.sql failed
-------------------------------------
-SQL State  : 42601
-Error Code : 0
-Message    : ERROR: unterminated dollar-quoted string at or near "$$
-BEGIN
-
-    EXECUTE format('CREATE SCHEMA IF NOT EXISTS %I', schema_name);
-
-    /* ======================================================
-       USERS
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.users (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            name VARCHAR(100) NOT NULL,
-            email VARCHAR(100) NOT NULL,
-            password VARCHAR(255) NOT NULL,
-
-            role_id UUID NOT NULL,
-
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            deleted_at TIMESTAMP,
-
-            CONSTRAINT fk_users_role
-                FOREIGN KEY (role_id)
-                REFERENCES public.roles(id)
-                ON DELETE RESTRICT,
-
-            CONSTRAINT uq_users_email UNIQUE (email)
-        )
-    ', schema_name);
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_users_email ON %I.users (email);',
-        schema_name,
-        schema_name
-    );
-
-
-    /* ======================================================
-       LEADS
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.leads (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            name VARCHAR(100) NOT NULL,
-            email VARCHAR(100) NOT NULL,
-            phone VARCHAR(20),
-
-            status VARCHAR(50) NOT NULL DEFAULT ''NEW'',
-
-            user_id UUID NOT NULL,
-
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            deleted_at TIMESTAMP,
-
-            CONSTRAINT chk_lead_status
-                CHECK (status IN (''NEW'', ''CONTACTED'', ''QUALIFIED'', ''CLOSED'')),
-
-            CONSTRAINT fk_leads_user
-                FOREIGN KEY (user_id)
-                REFERENCES %I.users(id)
-                ON DELETE CASCADE
-        )
-    ', schema_name, schema_name);
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_leads_user ON %I.leads (user_id);',
-        schema_name,
-        schema_name
-    );
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_leads_status ON %I.leads (status);',
-        schema_name,
-        schema_name
-    );
-
-
-    /* ======================================================
-       LEAD STATUS HISTORY
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.lead_status_history (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            lead_id UUID NOT NULL,
-            status VARCHAR(50) NOT NULL,
-
-            changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            changed_by UUID,
-
-            CONSTRAINT chk_lsh_status
-                CHECK (status IN (''NEW'', ''CONTACTED'', ''QUALIFIED'', ''CLOSED'')),
-
-            CONSTRAINT fk_lsh_lead
-                FOREIGN KEY (lead_id)
-                REFERENCES %I.leads(id)
-                ON DELETE CASCADE,
-
-            CONSTRAINT fk_lsh_user
-                FOREIGN KEY (changed_by)
-                REFERENCES %I.users(id)
-                ON DELETE SET NULL
-        )
-    ', schema_name, schema_name, schema_name);
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_lsh_lead ON %I.lead_status_history (lead_id);',
-        schema_name,
-        schema_name
-    );
-
-
-    /* ======================================================
-       SETTINGS
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.settings (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            user_id UUID NOT NULL,
-
-            vendor_name VARCHAR(100) NOT NULL,
-            whatsapp VARCHAR(15) NOT NULL,
-            company_name VARCHAR(100),
-            logo TEXT,
-            welcome_message TEXT,
-
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            deleted_at TIMESTAMP,
-
-            CONSTRAINT fk_settings_user
-                FOREIGN KEY (user_id)
-                REFERENCES %I.users(id)
-                ON DELETE CASCADE,
-
-            CONSTRAINT uq_settings_user UNIQUE (user_id)
-        )
-    ', schema_name, schema_name);
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_settings_user ON %I.settings (user_id);',
-        schema_name,
-        schema_name
-    );
-
-
-    /* ======================================================
-       LOGS
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.logs (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            level VARCHAR(20) NOT NULL,
-            action VARCHAR(100) NOT NULL,
-            message TEXT NOT NULL,
-
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-            user_id UUID,
-
-            CONSTRAINT fk_logs_user
-                FOREIGN KEY (user_id)
-                REFERENCES %I.users(id)
-                ON DELETE SET NULL
-        )
-    ', schema_name, schema_name);"
-  Posição: 288
-Location   : db/migration/V1__Initial_schema.sql (C:\Users\Gabri\OneDrive\Área de Trabalho\leadflow-backend\target\classes\db\migration\V1__Initial_schema.sql)
-Line       : 49
-Statement  : Run Flyway with -X option to see the actual statement causing the problem
-
+Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'flywayInitializer' defined in class path resource [org/springframework/boot/autoconfigure/flyway/FlywayAutoConfiguration$FlywayConfiguration.class]: Validate failed: Migrations have failed validation
+Migration checksum mismatch for migration version 1
+-> Applied to database : -497251578
+-> Resolved locally    : 1397141408
+Either revert the changes to the migration, or run repair to update the schema history.
+Migration checksum mismatch for migration version 2
+-> Applied to database : 714928968
+-> Resolved locally    : -878233951
+Either revert the changes to the migration, or run repair to update the schema history.
+Migration checksum mismatch for migration version 3
+-> Applied to database : 595524265
+-> Resolved locally    : 241576378
+Either revert the changes to the migration, or run repair to update the schema history.
+Migration checksum mismatch for migration version 4
+-> Applied to database : -1824686890
+-> Resolved locally    : -1755999007
+Either revert the changes to the migration, or run repair to update the schema history.
+Need more flexibility with validation rules? Learn more: https://rd.gt/3AbJUZE
 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1826)
 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:607)
 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529)
@@ -422,608 +86,38 @@ Statement  : Run Flyway with -X option to see the actual statement causing the p
 	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202)
 	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:315)
 	... 34 more
-Caused by: org.flywaydb.core.internal.exception.FlywayMigrateException: Script V1__Initial_schema.sql failed
-------------------------------------
-SQL State  : 42601
-Error Code : 0
-Message    : ERROR: unterminated dollar-quoted string at or near "$$
-BEGIN
-
-    EXECUTE format('CREATE SCHEMA IF NOT EXISTS %I', schema_name);
-
-    /* ======================================================
-       USERS
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.users (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            name VARCHAR(100) NOT NULL,
-            email VARCHAR(100) NOT NULL,
-            password VARCHAR(255) NOT NULL,
-
-            role_id UUID NOT NULL,
-
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            deleted_at TIMESTAMP,
-
-            CONSTRAINT fk_users_role
-                FOREIGN KEY (role_id)
-                REFERENCES public.roles(id)
-                ON DELETE RESTRICT,
-
-            CONSTRAINT uq_users_email UNIQUE (email)
-        )
-    ', schema_name);
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_users_email ON %I.users (email);',
-        schema_name,
-        schema_name
-    );
-
-
-    /* ======================================================
-       LEADS
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.leads (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            name VARCHAR(100) NOT NULL,
-            email VARCHAR(100) NOT NULL,
-            phone VARCHAR(20),
-
-            status VARCHAR(50) NOT NULL DEFAULT ''NEW'',
-
-            user_id UUID NOT NULL,
-
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            deleted_at TIMESTAMP,
-
-            CONSTRAINT chk_lead_status
-                CHECK (status IN (''NEW'', ''CONTACTED'', ''QUALIFIED'', ''CLOSED'')),
-
-            CONSTRAINT fk_leads_user
-                FOREIGN KEY (user_id)
-                REFERENCES %I.users(id)
-                ON DELETE CASCADE
-        )
-    ', schema_name, schema_name);
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_leads_user ON %I.leads (user_id);',
-        schema_name,
-        schema_name
-    );
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_leads_status ON %I.leads (status);',
-        schema_name,
-        schema_name
-    );
-
-
-    /* ======================================================
-       LEAD STATUS HISTORY
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.lead_status_history (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            lead_id UUID NOT NULL,
-            status VARCHAR(50) NOT NULL,
-
-            changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            changed_by UUID,
-
-            CONSTRAINT chk_lsh_status
-                CHECK (status IN (''NEW'', ''CONTACTED'', ''QUALIFIED'', ''CLOSED'')),
-
-            CONSTRAINT fk_lsh_lead
-                FOREIGN KEY (lead_id)
-                REFERENCES %I.leads(id)
-                ON DELETE CASCADE,
-
-            CONSTRAINT fk_lsh_user
-                FOREIGN KEY (changed_by)
-                REFERENCES %I.users(id)
-                ON DELETE SET NULL
-        )
-    ', schema_name, schema_name, schema_name);
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_lsh_lead ON %I.lead_status_history (lead_id);',
-        schema_name,
-        schema_name
-    );
-
-
-    /* ======================================================
-       SETTINGS
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.settings (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            user_id UUID NOT NULL,
-
-            vendor_name VARCHAR(100) NOT NULL,
-            whatsapp VARCHAR(15) NOT NULL,
-            company_name VARCHAR(100),
-            logo TEXT,
-            welcome_message TEXT,
-
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            deleted_at TIMESTAMP,
-
-            CONSTRAINT fk_settings_user
-                FOREIGN KEY (user_id)
-                REFERENCES %I.users(id)
-                ON DELETE CASCADE,
-
-            CONSTRAINT uq_settings_user UNIQUE (user_id)
-        )
-    ', schema_name, schema_name);
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_settings_user ON %I.settings (user_id);',
-        schema_name,
-        schema_name
-    );
-
-
-    /* ======================================================
-       LOGS
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.logs (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            level VARCHAR(20) NOT NULL,
-            action VARCHAR(100) NOT NULL,
-            message TEXT NOT NULL,
-
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-            user_id UUID,
-
-            CONSTRAINT fk_logs_user
-                FOREIGN KEY (user_id)
-                REFERENCES %I.users(id)
-                ON DELETE SET NULL
-        )
-    ', schema_name, schema_name);"
-  Posição: 288
-Location   : db/migration/V1__Initial_schema.sql (C:\Users\Gabri\OneDrive\Área de Trabalho\leadflow-backend\target\classes\db\migration\V1__Initial_schema.sql)
-Line       : 49
-Statement  : Run Flyway with -X option to see the actual statement causing the problem
-
-	at org.flywaydb.core.internal.command.DbMigrate.doMigrateGroup(DbMigrate.java:399)
-	at org.flywaydb.core.internal.command.DbMigrate.lambda$applyMigrations$1(DbMigrate.java:283)
-	at org.flywaydb.core.internal.jdbc.TransactionalExecutionTemplate.execute(TransactionalExecutionTemplate.java:59)
-	at org.flywaydb.core.internal.command.DbMigrate.applyMigrations(DbMigrate.java:282)
-	at org.flywaydb.core.internal.command.DbMigrate.migrateGroup(DbMigrate.java:255)
-	at org.flywaydb.core.internal.command.DbMigrate.lambda$migrateAll$0(DbMigrate.java:153)
-	at org.flywaydb.database.postgresql.PostgreSQLAdvisoryLockTemplate.execute(PostgreSQLAdvisoryLockTemplate.java:77)
-	at org.flywaydb.database.postgresql.PostgreSQLAdvisoryLockTemplate.lambda$execute$0(PostgreSQLAdvisoryLockTemplate.java:60)
-	at org.flywaydb.core.internal.jdbc.TransactionalExecutionTemplate.execute(TransactionalExecutionTemplate.java:59)
-	at org.flywaydb.database.postgresql.PostgreSQLAdvisoryLockTemplate.execute(PostgreSQLAdvisoryLockTemplate.java:60)
-	at org.flywaydb.database.postgresql.PostgreSQLConnection.lock(PostgreSQLConnection.java:105)
-	at org.flywaydb.core.internal.schemahistory.JdbcTableSchemaHistory.lock(JdbcTableSchemaHistory.java:164)
-	at org.flywaydb.core.internal.command.DbMigrate.migrateAll(DbMigrate.java:153)
-	at org.flywaydb.core.internal.command.DbMigrate.migrate(DbMigrate.java:104)
-	at org.flywaydb.core.Flyway.lambda$migrate$1(Flyway.java:247)
+Caused by: org.flywaydb.core.api.exception.FlywayValidateException: Validate failed: Migrations have failed validation
+Migration checksum mismatch for migration version 1
+-> Applied to database : -497251578
+-> Resolved locally    : 1397141408
+Either revert the changes to the migration, or run repair to update the schema history.
+Migration checksum mismatch for migration version 2
+-> Applied to database : 714928968
+-> Resolved locally    : -878233951
+Either revert the changes to the migration, or run repair to update the schema history.
+Migration checksum mismatch for migration version 3
+-> Applied to database : 595524265
+-> Resolved locally    : 241576378
+Either revert the changes to the migration, or run repair to update the schema history.
+Migration checksum mismatch for migration version 4
+-> Applied to database : -1824686890
+-> Resolved locally    : -1755999007
+Either revert the changes to the migration, or run repair to update the schema history.
+Need more flexibility with validation rules? Learn more: https://rd.gt/3AbJUZE
+	at org.flywaydb.core.Flyway.lambda$migrate$1(Flyway.java:201)
 	at org.flywaydb.core.FlywayExecutor.execute(FlywayExecutor.java:210)
 	at org.flywaydb.core.Flyway.migrate(Flyway.java:188)
 	at org.springframework.boot.autoconfigure.flyway.FlywayMigrationInitializer.afterPropertiesSet(FlywayMigrationInitializer.java:66)
 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1873)
 	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1822)
 	... 41 more
-Caused by: org.flywaydb.core.internal.sqlscript.FlywaySqlScriptException: Script V1__Initial_schema.sql failed
-------------------------------------
-SQL State  : 42601
-Error Code : 0
-Message    : ERROR: unterminated dollar-quoted string at or near "$$
-BEGIN
 
-    EXECUTE format('CREATE SCHEMA IF NOT EXISTS %I', schema_name);
-
-    /* ======================================================
-       USERS
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.users (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            name VARCHAR(100) NOT NULL,
-            email VARCHAR(100) NOT NULL,
-            password VARCHAR(255) NOT NULL,
-
-            role_id UUID NOT NULL,
-
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            deleted_at TIMESTAMP,
-
-            CONSTRAINT fk_users_role
-                FOREIGN KEY (role_id)
-                REFERENCES public.roles(id)
-                ON DELETE RESTRICT,
-
-            CONSTRAINT uq_users_email UNIQUE (email)
-        )
-    ', schema_name);
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_users_email ON %I.users (email);',
-        schema_name,
-        schema_name
-    );
-
-
-    /* ======================================================
-       LEADS
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.leads (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            name VARCHAR(100) NOT NULL,
-            email VARCHAR(100) NOT NULL,
-            phone VARCHAR(20),
-
-            status VARCHAR(50) NOT NULL DEFAULT ''NEW'',
-
-            user_id UUID NOT NULL,
-
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            deleted_at TIMESTAMP,
-
-            CONSTRAINT chk_lead_status
-                CHECK (status IN (''NEW'', ''CONTACTED'', ''QUALIFIED'', ''CLOSED'')),
-
-            CONSTRAINT fk_leads_user
-                FOREIGN KEY (user_id)
-                REFERENCES %I.users(id)
-                ON DELETE CASCADE
-        )
-    ', schema_name, schema_name);
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_leads_user ON %I.leads (user_id);',
-        schema_name,
-        schema_name
-    );
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_leads_status ON %I.leads (status);',
-        schema_name,
-        schema_name
-    );
-
-
-    /* ======================================================
-       LEAD STATUS HISTORY
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.lead_status_history (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            lead_id UUID NOT NULL,
-            status VARCHAR(50) NOT NULL,
-
-            changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            changed_by UUID,
-
-            CONSTRAINT chk_lsh_status
-                CHECK (status IN (''NEW'', ''CONTACTED'', ''QUALIFIED'', ''CLOSED'')),
-
-            CONSTRAINT fk_lsh_lead
-                FOREIGN KEY (lead_id)
-                REFERENCES %I.leads(id)
-                ON DELETE CASCADE,
-
-            CONSTRAINT fk_lsh_user
-                FOREIGN KEY (changed_by)
-                REFERENCES %I.users(id)
-                ON DELETE SET NULL
-        )
-    ', schema_name, schema_name, schema_name);
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_lsh_lead ON %I.lead_status_history (lead_id);',
-        schema_name,
-        schema_name
-    );
-
-
-    /* ======================================================
-       SETTINGS
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.settings (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            user_id UUID NOT NULL,
-
-            vendor_name VARCHAR(100) NOT NULL,
-            whatsapp VARCHAR(15) NOT NULL,
-            company_name VARCHAR(100),
-            logo TEXT,
-            welcome_message TEXT,
-
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            deleted_at TIMESTAMP,
-
-            CONSTRAINT fk_settings_user
-                FOREIGN KEY (user_id)
-                REFERENCES %I.users(id)
-                ON DELETE CASCADE,
-
-            CONSTRAINT uq_settings_user UNIQUE (user_id)
-        )
-    ', schema_name, schema_name);
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_settings_user ON %I.settings (user_id);',
-        schema_name,
-        schema_name
-    );
-
-
-    /* ======================================================
-       LOGS
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.logs (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            level VARCHAR(20) NOT NULL,
-            action VARCHAR(100) NOT NULL,
-            message TEXT NOT NULL,
-
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-            user_id UUID,
-
-            CONSTRAINT fk_logs_user
-                FOREIGN KEY (user_id)
-                REFERENCES %I.users(id)
-                ON DELETE SET NULL
-        )
-    ', schema_name, schema_name);"
-  Posição: 288
-Location   : db/migration/V1__Initial_schema.sql (C:\Users\Gabri\OneDrive\Área de Trabalho\leadflow-backend\target\classes\db\migration\V1__Initial_schema.sql)
-Line       : 49
-Statement  : Run Flyway with -X option to see the actual statement causing the problem
-
-	at org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor.handleException(DefaultSqlScriptExecutor.java:256)
-	at org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor.executeStatement(DefaultSqlScriptExecutor.java:217)
-	at org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor.execute(DefaultSqlScriptExecutor.java:137)
-	at org.flywaydb.core.internal.resolver.sql.SqlMigrationExecutor.executeOnce(SqlMigrationExecutor.java:75)
-	at org.flywaydb.core.internal.resolver.sql.SqlMigrationExecutor.lambda$execute$0(SqlMigrationExecutor.java:66)
-	at org.flywaydb.core.internal.database.DefaultExecutionStrategy.execute(DefaultExecutionStrategy.java:31)
-	at org.flywaydb.core.internal.resolver.sql.SqlMigrationExecutor.execute(SqlMigrationExecutor.java:65)
-	at org.flywaydb.core.internal.command.DbMigrate.doMigrateGroup(DbMigrate.java:391)
-	... 60 more
-Caused by: org.postgresql.util.PSQLException: ERROR: unterminated dollar-quoted string at or near "$$
-BEGIN
-
-    EXECUTE format('CREATE SCHEMA IF NOT EXISTS %I', schema_name);
-
-    /* ======================================================
-       USERS
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.users (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            name VARCHAR(100) NOT NULL,
-            email VARCHAR(100) NOT NULL,
-            password VARCHAR(255) NOT NULL,
-
-            role_id UUID NOT NULL,
-
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            deleted_at TIMESTAMP,
-
-            CONSTRAINT fk_users_role
-                FOREIGN KEY (role_id)
-                REFERENCES public.roles(id)
-                ON DELETE RESTRICT,
-
-            CONSTRAINT uq_users_email UNIQUE (email)
-        )
-    ', schema_name);
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_users_email ON %I.users (email);',
-        schema_name,
-        schema_name
-    );
-
-
-    /* ======================================================
-       LEADS
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.leads (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            name VARCHAR(100) NOT NULL,
-            email VARCHAR(100) NOT NULL,
-            phone VARCHAR(20),
-
-            status VARCHAR(50) NOT NULL DEFAULT ''NEW'',
-
-            user_id UUID NOT NULL,
-
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            deleted_at TIMESTAMP,
-
-            CONSTRAINT chk_lead_status
-                CHECK (status IN (''NEW'', ''CONTACTED'', ''QUALIFIED'', ''CLOSED'')),
-
-            CONSTRAINT fk_leads_user
-                FOREIGN KEY (user_id)
-                REFERENCES %I.users(id)
-                ON DELETE CASCADE
-        )
-    ', schema_name, schema_name);
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_leads_user ON %I.leads (user_id);',
-        schema_name,
-        schema_name
-    );
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_leads_status ON %I.leads (status);',
-        schema_name,
-        schema_name
-    );
-
-
-    /* ======================================================
-       LEAD STATUS HISTORY
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.lead_status_history (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            lead_id UUID NOT NULL,
-            status VARCHAR(50) NOT NULL,
-
-            changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            changed_by UUID,
-
-            CONSTRAINT chk_lsh_status
-                CHECK (status IN (''NEW'', ''CONTACTED'', ''QUALIFIED'', ''CLOSED'')),
-
-            CONSTRAINT fk_lsh_lead
-                FOREIGN KEY (lead_id)
-                REFERENCES %I.leads(id)
-                ON DELETE CASCADE,
-
-            CONSTRAINT fk_lsh_user
-                FOREIGN KEY (changed_by)
-                REFERENCES %I.users(id)
-                ON DELETE SET NULL
-        )
-    ', schema_name, schema_name, schema_name);
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_lsh_lead ON %I.lead_status_history (lead_id);',
-        schema_name,
-        schema_name
-    );
-
-
-    /* ======================================================
-       SETTINGS
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.settings (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            user_id UUID NOT NULL,
-
-            vendor_name VARCHAR(100) NOT NULL,
-            whatsapp VARCHAR(15) NOT NULL,
-            company_name VARCHAR(100),
-            logo TEXT,
-            welcome_message TEXT,
-
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            deleted_at TIMESTAMP,
-
-            CONSTRAINT fk_settings_user
-                FOREIGN KEY (user_id)
-                REFERENCES %I.users(id)
-                ON DELETE CASCADE,
-
-            CONSTRAINT uq_settings_user UNIQUE (user_id)
-        )
-    ', schema_name, schema_name);
-
-    EXECUTE format(
-        'CREATE INDEX IF NOT EXISTS idx_%I_settings_user ON %I.settings (user_id);',
-        schema_name,
-        schema_name
-    );
-
-
-    /* ======================================================
-       LOGS
-       ====================================================== */
-
-    EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I.logs (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-            level VARCHAR(20) NOT NULL,
-            action VARCHAR(100) NOT NULL,
-            message TEXT NOT NULL,
-
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-            user_id UUID,
-
-            CONSTRAINT fk_logs_user
-                FOREIGN KEY (user_id)
-                REFERENCES %I.users(id)
-                ON DELETE SET NULL
-        )
-    ', schema_name, schema_name);"
-  Posição: 288
-	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2846)
-	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2531)
-	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:429)
-	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:526)
-	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:436)
-	at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:358)
-	at org.postgresql.jdbc.PgStatement.executeCachedSql(PgStatement.java:343)
-	at org.postgresql.jdbc.PgStatement.executeWithFlags(PgStatement.java:319)
-	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:314)
-	at com.zaxxer.hikari.pool.ProxyStatement.execute(ProxyStatement.java:95)
-	at com.zaxxer.hikari.pool.HikariProxyStatement.execute(HikariProxyStatement.java)
-	at org.flywaydb.core.internal.jdbc.JdbcTemplate.executeStatement(JdbcTemplate.java:215)
-	at org.flywaydb.core.internal.sqlscript.ParsedSqlStatement.execute(ParsedSqlStatement.java:88)
-	at org.flywaydb.core.internal.sqlscript.DefaultSqlScriptExecutor.executeStatement(DefaultSqlScriptExecutor.java:212)
-	... 66 more
-
-com.leadflow.backend.repository.lead.LeadRepositoryTest.shouldExcludeSoftDeletedLeads -- Time elapsed: 0.001 s <<< ERROR!
-java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@56554365 testClass = com.leadflow.backend.repository.lead.LeadRepositoryTest, locations = [], classes = [com.leadflow.backend.BackendApplication], contextInitializerClasses = [], activeProfiles = ["integration"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true"], contextCustomizers = [[ImportsContextCustomizer@666b1244 key = [org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration, org.springframework.boot.test.autoconfigure.jdbc.TestDatabaseAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@16c8b7bd, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@576c5536, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@3bb8aabc, org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@59546cfe, org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@7baf6acf, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@3559ba37, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@5da7cee2, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@74b3a85f, org.springframework.boot.test.context.SpringBootTestAnnotation@5c4c751a], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+com.leadflow.backend.repository.lead.LeadRepositoryTest.shouldExcludeSoftDeletedLeads -- Time elapsed: 0 s <<< ERROR!
+java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [MergedContextConfiguration@ee46bef testClass = com.leadflow.backend.repository.lead.LeadRepositoryTest, locations = [], classes = [com.leadflow.backend.BackendApplication], contextInitializerClasses = [], activeProfiles = ["integration"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTestContextBootstrapper=true"], contextCustomizers = [[ImportsContextCustomizer@62c462e key = [org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration, org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration, org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManagerAutoConfiguration, org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration, org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration, org.springframework.boot.autoconfigure.sql.init.SqlInitializationAutoConfiguration, org.springframework.boot.test.autoconfigure.jdbc.TestDatabaseAutoConfiguration, org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration, org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration, org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration, org.springframework.boot.autoconfigure.jdbc.JdbcClientAutoConfiguration, org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration, org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@27d4a09, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@740d2e78, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@561868a0, org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@2dcd168a, org.springframework.boot.test.autoconfigure.OverrideAutoConfigurationContextCustomizerFactory$DisableAutoConfigurationContextCustomizer@7803bfd, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.filter.TypeExcludeFiltersContextCustomizer@34be3d80, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@6e6c6a9a, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@530712d, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@44b27187], contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
 	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:145)
 	at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130)
-	at org.springframework.test.context.web.ServletTestExecutionListener.setUpRequestContextIfNecessary(ServletTestExecutionListener.java:200)
-	at org.springframework.test.context.web.ServletTestExecutionListener.prepareTestInstance(ServletTestExecutionListener.java:139)
+	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:155)
+	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:111)
 	at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
 	at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:159)
 	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:183)
@@ -1041,12 +135,12 @@ java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceed
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
 
-com.leadflow.backend.repository.lead.LeadRepositoryTest.shouldSaveAndRetrieveLead -- Time elapsed: 0 s <<< ERROR!
-java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@56554365 testClass = com.leadflow.backend.repository.lead.LeadRepositoryTest, locations = [], classes = [com.leadflow.backend.BackendApplication], contextInitializerClasses = [], activeProfiles = ["integration"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true"], contextCustomizers = [[ImportsContextCustomizer@666b1244 key = [org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration, org.springframework.boot.test.autoconfigure.jdbc.TestDatabaseAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@16c8b7bd, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@576c5536, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@3bb8aabc, org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@59546cfe, org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@7baf6acf, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@3559ba37, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@5da7cee2, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@74b3a85f, org.springframework.boot.test.context.SpringBootTestAnnotation@5c4c751a], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+com.leadflow.backend.repository.lead.LeadRepositoryTest.shouldSaveAndRetrieveLead -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [MergedContextConfiguration@ee46bef testClass = com.leadflow.backend.repository.lead.LeadRepositoryTest, locations = [], classes = [com.leadflow.backend.BackendApplication], contextInitializerClasses = [], activeProfiles = ["integration"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTestContextBootstrapper=true"], contextCustomizers = [[ImportsContextCustomizer@62c462e key = [org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration, org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration, org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManagerAutoConfiguration, org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration, org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration, org.springframework.boot.autoconfigure.sql.init.SqlInitializationAutoConfiguration, org.springframework.boot.test.autoconfigure.jdbc.TestDatabaseAutoConfiguration, org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration, org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration, org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration, org.springframework.boot.autoconfigure.jdbc.JdbcClientAutoConfiguration, org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration, org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@27d4a09, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@740d2e78, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@561868a0, org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@2dcd168a, org.springframework.boot.test.autoconfigure.OverrideAutoConfigurationContextCustomizerFactory$DisableAutoConfigurationContextCustomizer@7803bfd, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.filter.TypeExcludeFiltersContextCustomizer@34be3d80, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@6e6c6a9a, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@530712d, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@44b27187], contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
 	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:145)
 	at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130)
-	at org.springframework.test.context.web.ServletTestExecutionListener.setUpRequestContextIfNecessary(ServletTestExecutionListener.java:200)
-	at org.springframework.test.context.web.ServletTestExecutionListener.prepareTestInstance(ServletTestExecutionListener.java:139)
+	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:155)
+	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:111)
 	at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
 	at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:159)
 	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:183)
@@ -1064,12 +158,12 @@ java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceed
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
 
-com.leadflow.backend.repository.lead.LeadRepositoryTest.shouldNotAllowDuplicateEmailPerUser -- Time elapsed: 0.001 s <<< ERROR!
-java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@56554365 testClass = com.leadflow.backend.repository.lead.LeadRepositoryTest, locations = [], classes = [com.leadflow.backend.BackendApplication], contextInitializerClasses = [], activeProfiles = ["integration"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true"], contextCustomizers = [[ImportsContextCustomizer@666b1244 key = [org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration, org.springframework.boot.test.autoconfigure.jdbc.TestDatabaseAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@16c8b7bd, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@576c5536, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@3bb8aabc, org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@59546cfe, org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@7baf6acf, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@3559ba37, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@5da7cee2, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@74b3a85f, org.springframework.boot.test.context.SpringBootTestAnnotation@5c4c751a], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+com.leadflow.backend.repository.lead.LeadRepositoryTest.shouldNotAllowDuplicateEmailPerUser -- Time elapsed: 0 s <<< ERROR!
+java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [MergedContextConfiguration@ee46bef testClass = com.leadflow.backend.repository.lead.LeadRepositoryTest, locations = [], classes = [com.leadflow.backend.BackendApplication], contextInitializerClasses = [], activeProfiles = ["integration"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTestContextBootstrapper=true"], contextCustomizers = [[ImportsContextCustomizer@62c462e key = [org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration, org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration, org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManagerAutoConfiguration, org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration, org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration, org.springframework.boot.autoconfigure.sql.init.SqlInitializationAutoConfiguration, org.springframework.boot.test.autoconfigure.jdbc.TestDatabaseAutoConfiguration, org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration, org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration, org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration, org.springframework.boot.autoconfigure.jdbc.JdbcClientAutoConfiguration, org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration, org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@27d4a09, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@740d2e78, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@561868a0, org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@2dcd168a, org.springframework.boot.test.autoconfigure.OverrideAutoConfigurationContextCustomizerFactory$DisableAutoConfigurationContextCustomizer@7803bfd, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.filter.TypeExcludeFiltersContextCustomizer@34be3d80, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@6e6c6a9a, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@530712d, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@44b27187], contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
 	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:145)
 	at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130)
-	at org.springframework.test.context.web.ServletTestExecutionListener.setUpRequestContextIfNecessary(ServletTestExecutionListener.java:200)
-	at org.springframework.test.context.web.ServletTestExecutionListener.prepareTestInstance(ServletTestExecutionListener.java:139)
+	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:155)
+	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:111)
 	at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
 	at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:159)
 	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:183)
@@ -1087,12 +181,12 @@ java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceed
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
 
-com.leadflow.backend.repository.lead.LeadRepositoryTest.shouldCountByStatusAndDeletedAtIsNull -- Time elapsed: 0.001 s <<< ERROR!
-java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [WebMergedContextConfiguration@56554365 testClass = com.leadflow.backend.repository.lead.LeadRepositoryTest, locations = [], classes = [com.leadflow.backend.BackendApplication], contextInitializerClasses = [], activeProfiles = ["integration"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.context.SpringBootTestContextBootstrapper=true"], contextCustomizers = [[ImportsContextCustomizer@666b1244 key = [org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration, org.springframework.boot.test.autoconfigure.jdbc.TestDatabaseAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@16c8b7bd, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@576c5536, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.client.TestRestTemplateContextCustomizer@3bb8aabc, org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@59546cfe, org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@7baf6acf, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@3559ba37, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@5da7cee2, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@74b3a85f, org.springframework.boot.test.context.SpringBootTestAnnotation@5c4c751a], resourceBasePath = "src/main/webapp", contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
+com.leadflow.backend.repository.lead.LeadRepositoryTest.shouldCountByStatusAndDeletedAtIsNull -- Time elapsed: 0 s <<< ERROR!
+java.lang.IllegalStateException: ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context for [MergedContextConfiguration@ee46bef testClass = com.leadflow.backend.repository.lead.LeadRepositoryTest, locations = [], classes = [com.leadflow.backend.BackendApplication], contextInitializerClasses = [], activeProfiles = ["integration"], propertySourceDescriptors = [], propertySourceProperties = ["org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTestContextBootstrapper=true"], contextCustomizers = [[ImportsContextCustomizer@62c462e key = [org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration, org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration, org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManagerAutoConfiguration, org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration, org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration, org.springframework.boot.autoconfigure.sql.init.SqlInitializationAutoConfiguration, org.springframework.boot.test.autoconfigure.jdbc.TestDatabaseAutoConfiguration, org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration, org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration, org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration, org.springframework.boot.autoconfigure.jdbc.JdbcClientAutoConfiguration, org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration, org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration]], org.springframework.boot.test.context.filter.ExcludeFilterContextCustomizer@27d4a09, org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory$DuplicateJsonObjectContextCustomizer@740d2e78, org.springframework.boot.test.mock.mockito.MockitoContextCustomizer@0, org.springframework.boot.test.web.reactor.netty.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory$DisableReactorResourceFactoryGlobalResourcesContextCustomizerCustomizer@561868a0, org.springframework.boot.test.autoconfigure.OnFailureConditionReportContextCustomizerFactory$OnFailureConditionReportContextCustomizer@2dcd168a, org.springframework.boot.test.autoconfigure.OverrideAutoConfigurationContextCustomizerFactory$DisableAutoConfigurationContextCustomizer@7803bfd, org.springframework.boot.test.autoconfigure.actuate.observability.ObservabilityContextCustomizerFactory$DisableObservabilityContextCustomizer@1f, org.springframework.boot.test.autoconfigure.filter.TypeExcludeFiltersContextCustomizer@34be3d80, org.springframework.boot.test.autoconfigure.properties.PropertyMappingContextCustomizer@6e6c6a9a, org.springframework.boot.test.autoconfigure.web.servlet.WebDriverContextCustomizer@530712d, org.springframework.test.context.support.DynamicPropertiesContextCustomizer@0, org.springframework.boot.test.context.SpringBootTestAnnotation@44b27187], contextLoader = org.springframework.boot.test.context.SpringBootContextLoader, parent = null]
 	at org.springframework.test.context.cache.DefaultCacheAwareContextLoaderDelegate.loadContext(DefaultCacheAwareContextLoaderDelegate.java:145)
 	at org.springframework.test.context.support.DefaultTestContext.getApplicationContext(DefaultTestContext.java:130)
-	at org.springframework.test.context.web.ServletTestExecutionListener.setUpRequestContextIfNecessary(ServletTestExecutionListener.java:200)
-	at org.springframework.test.context.web.ServletTestExecutionListener.prepareTestInstance(ServletTestExecutionListener.java:139)
+	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.injectDependencies(DependencyInjectionTestExecutionListener.java:155)
+	at org.springframework.test.context.support.DependencyInjectionTestExecutionListener.prepareTestInstance(DependencyInjectionTestExecutionListener.java:111)
 	at org.springframework.test.context.TestContextManager.prepareTestInstance(TestContextManager.java:260)
 	at org.springframework.test.context.junit.jupiter.SpringExtension.postProcessTestInstance(SpringExtension.java:159)
 	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:183)

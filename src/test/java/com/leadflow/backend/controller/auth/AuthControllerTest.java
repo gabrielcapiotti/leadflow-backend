@@ -4,11 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leadflow.backend.config.TestSecurityConfig;
 import com.leadflow.backend.dto.auth.LoginRequest;
 import com.leadflow.backend.dto.auth.RegisterRequest;
-import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.exception.GlobalExceptionHandler;
-import com.leadflow.backend.multitenancy.service.TenantService;
 import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.auth.AuthService;
 
@@ -28,7 +26,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -54,30 +51,21 @@ class AuthControllerTest {
     @MockBean
     private JwtService jwtService;
 
-    @MockBean
-    private TenantService tenantService;
-
     private User mockUser;
 
     @BeforeEach
     void setup() {
 
-        Tenant tenant = new Tenant("Test Tenant", "test_schema");
-        Role role = new Role("USER");
+        Role role = new Role("ROLE_USER");
 
         mockUser = new User(
                 "Test User",
                 "metest@test.com",
                 "password",
-                role,
-                tenant
+                role
         );
 
         ReflectionTestUtils.setField(mockUser, "id", UUID.randomUUID());
-
-        // Multi-tenant mock
-        when(tenantService.resolveSchemaByTenantIdentifier("test_schema"))
-                .thenReturn(Optional.of("test_schema"));
 
         when(authService.findByEmail("metest@test.com"))
                 .thenReturn(mockUser);
@@ -88,7 +76,8 @@ class AuthControllerTest {
         when(authService.authenticateUser(anyString(), anyString()))
                 .thenReturn(mockUser);
 
-        when(jwtService.generateToken(any(User.class)))
+        // ✅ Agora o mock reflete o método correto
+        when(jwtService.generateToken(any(User.class), anyString()))
                 .thenReturn("mocked-jwt-token");
     }
 

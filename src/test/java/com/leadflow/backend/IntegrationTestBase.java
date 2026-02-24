@@ -42,7 +42,7 @@ public abstract class IntegrationTestBase {
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.datasource.driver-class-name",
-                postgres::getDriverClassName);
+                () -> "org.postgresql.Driver");
 
         /* ==============================
            HIBERNATE

@@ -16,7 +16,6 @@ public final class CustomUserDetails implements UserDetails {
     private final String email;
     private final String password;
     private final String role;
-    private final UUID tenantId;
     private final boolean enabled;
 
     public CustomUserDetails(User user) {
@@ -37,10 +36,6 @@ public final class CustomUserDetails implements UserDetails {
         this.email = user.getEmail();
         this.password = user.getPassword();
         this.role = normalizeRole(user.getRole().getName());
-        this.tenantId = user.getTenant() != null
-                ? user.getTenant().getId()
-                : null;
-
         this.enabled = user.getDeletedAt() == null;
     }
 
@@ -64,15 +59,11 @@ public final class CustomUserDetails implements UserDetails {
     }
 
     /* ======================================================
-       GETTERS
+       GETTERS CUSTOM
        ====================================================== */
 
     public UUID getId() {
         return id;
-    }
-
-    public UUID getTenantId() {
-        return tenantId;
     }
 
     /* ======================================================

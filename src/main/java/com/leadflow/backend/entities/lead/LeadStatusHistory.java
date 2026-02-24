@@ -6,13 +6,15 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 @Entity
 @Table(
         name = "lead_status_history",
         indexes = {
-                @Index(name = "idx_lsh_lead_id", columnList = "lead_id")
+                @Index(name = "idx_lsh_lead_id", columnList = "lead_id"),
+                @Index(name = "idx_lsh_lead_changed_at", columnList = "lead_id,changed_at")
         }
 )
 public class LeadStatusHistory {
@@ -39,10 +41,10 @@ public class LeadStatusHistory {
     private Lead lead;
 
     /**
-     * Referência ao usuário que alterou o status.
-     * Pode ser null (SYSTEM).
+     * Usuário que alterou o status.
+     * Pode ser null quando alteração é SYSTEM.
      */
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(
             name = "changed_by",
             foreignKey = @ForeignKey(name = "fk_lsh_user")
@@ -66,7 +68,7 @@ public class LeadStatusHistory {
        ====================================================== */
 
     protected LeadStatusHistory() {
-        // JPA only
+        // Required by JPA
     }
 
     public LeadStatusHistory(Lead lead, LeadStatus status, User changedBy) {
@@ -81,7 +83,7 @@ public class LeadStatusHistory {
 
         this.lead = lead;
         this.status = status;
-        this.changedBy = changedBy;
+        this.changedBy = changedBy; // Pode ser null (SYSTEM)
     }
 
     /* ======================================================
@@ -108,22 +110,15 @@ public class LeadStatusHistory {
         return changedBy;
     }
 
-    /**
-     * Alias semântico para DTO
-     */
-    public User getUpdatedBy() {
-        return changedBy;
-    }
-
     /* ======================================================
-       EQUALS & HASHCODE (JPA SAFE)
+       EQUALS & HASHCODE (Hibernate-safe)
        ====================================================== */
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof LeadStatusHistory other)) return false;
-        return id != null && id.equals(other.id);
+        return id != null && Objects.equals(id, other.id);
     }
 
     @Override

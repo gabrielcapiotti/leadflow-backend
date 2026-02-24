@@ -7,7 +7,9 @@ import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.service.lead.LeadService;
 import com.leadflow.backend.service.lead.LeadStatusHistoryService;
 import com.leadflow.backend.service.user.UserService;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -35,7 +37,7 @@ public class LeadStatusHistoryController {
     }
 
     /* ======================================================
-       HISTORY BY LEAD (ISOLADO POR USUÁRIO)
+       HISTORY BY LEAD (ISOLATED BY USER)
        ====================================================== */
 
     @GetMapping("/{leadId}/history")
@@ -48,6 +50,10 @@ public class LeadStatusHistoryController {
 
         Lead lead = leadService.getByIdForUser(leadId, user.getId());
 
+        if (lead == null) {
+            return ResponseEntity.notFound().build();
+        }
+
         List<LeadStatusHistoryResponse> response =
                 historyService.getHistoryByLead(lead);
 
@@ -55,7 +61,7 @@ public class LeadStatusHistoryController {
     }
 
     /* ======================================================
-       HISTORY BY HISTORY ID (ISOLADO POR USUÁRIO)
+       HISTORY BY HISTORY ID (ISOLATED BY USER)
        ====================================================== */
 
     @GetMapping("/history/{historyId}")
@@ -68,10 +74,14 @@ public class LeadStatusHistoryController {
 
         LeadStatusHistory history = historyService.getById(historyId);
 
-        if (history == null ||
-            history.getLead() == null ||
+        if (history == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        if (history.getLead() == null ||
             !history.getLead().getUserId().equals(user.getId())) {
 
+            // Evita vazamento de existência entre usuários
             return ResponseEntity.notFound().build();
         }
 
@@ -80,8 +90,8 @@ public class LeadStatusHistoryController {
                         history.getId(),
                         history.getStatus(),
                         history.getChangedAt(),
-                        history.getUpdatedBy() != null
-                                ? history.getUpdatedBy().getEmail()
+                        history.getChangedBy() != null
+                                ? history.getChangedBy().getEmail()
                                 : "SYSTEM"
                 );
 
@@ -96,16 +106,14 @@ public class LeadStatusHistoryController {
 
         if (principal == null) {
             throw new AuthenticationCredentialsNotFoundException(
-                    "User not authenticated"
+                    "Authentication required"
             );
         }
 
         User user = userService.getActiveByEmail(principal.getUsername());
 
         if (user == null) {
-            throw new AuthenticationCredentialsNotFoundException(
-                    "User not authenticated"
-            );
+            throw new AccessDeniedException("Authenticated user not found");
         }
 
         return user;

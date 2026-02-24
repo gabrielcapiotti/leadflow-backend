@@ -32,7 +32,7 @@ com\leadflow\backend\entities\log\Log.class
 com\leadflow\backend\multitenancy\service\TenantProvisioningService.class
 com\leadflow\backend\repository\tenant\TenantRepository.class
 com\leadflow\backend\security\SecurityConfig.class
-com\leadflow\backend\security\TokenService.class
+com\leadflow\backend\security\jwt\JwtAuthenticationFilter.class
 com\leadflow\backend\dto\settings\UpdateSettingRequest.class
 com\leadflow\backend\service\lead\LeadStatusHistoryService.class
 com\leadflow\backend\multitenancy\TenantContext.class
@@ -48,7 +48,6 @@ com\leadflow\backend\controller\lead\LeadController.class
 com\leadflow\backend\service\lead\LeadService.class
 com\leadflow\backend\entities\lead\LeadStatusHistory.class
 com\leadflow\backend\dto\lead\LeadResponse.class
-com\leadflow\backend\security\JwtAuthenticationFilter.class
 com\leadflow\backend\controller\lead\LeadStatusHistoryController.class
 com\leadflow\backend\dto\auth\LoginRequest.class
 com\leadflow\backend\repository\user\RoleRepository.class

@@ -1,7 +1,7 @@
 package com.leadflow.backend.controller.role;
 
-import com.leadflow.backend.service.RoleService;
 import com.leadflow.backend.security.TestSecurityConfig;
+import com.leadflow.backend.service.RoleService;
 
 import org.junit.jupiter.api.Test;
 
@@ -20,9 +20,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(RoleController.class)
-@AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
 @ActiveProfiles("test")
+@AutoConfigureMockMvc
 class RoleControllerSecurityTest {
 
     @Autowired
@@ -37,7 +37,6 @@ class RoleControllerSecurityTest {
 
     @Test
     void shouldReturn401WhenNotAuthenticated() throws Exception {
-
         mockMvc.perform(get("/api/roles"))
                 .andExpect(status().isUnauthorized());
     }
@@ -49,7 +48,6 @@ class RoleControllerSecurityTest {
     @Test
     @WithMockUser(roles = "USER")
     void shouldReturn403ForUserRole() throws Exception {
-
         mockMvc.perform(get("/api/roles"))
                 .andExpect(status().isForbidden());
     }

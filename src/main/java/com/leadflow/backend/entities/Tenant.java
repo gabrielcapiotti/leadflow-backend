@@ -32,17 +32,20 @@ public class Tenant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
+    @Column(updatable = false, nullable = false)
     private UUID id;
 
     /* ======================================================
        FIELDS
        ====================================================== */
 
-    @Column(name = "name", nullable = false, length = 100)
+    @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(name = "schema_name", nullable = false, length = 100)
+    /**
+     * Schema é imutável após criação.
+     */
+    @Column(name = "schema_name", nullable = false, length = 100, updatable = false)
     private String schemaName;
 
     @CreationTimestamp
@@ -61,7 +64,7 @@ public class Tenant {
        ====================================================== */
 
     protected Tenant() {
-        // Required by JPA
+        // JPA only
     }
 
     public Tenant(String name, String schemaName) {
@@ -73,29 +76,17 @@ public class Tenant {
        GETTERS
        ====================================================== */
 
-    public UUID getId() {
-        return id;
-    }
+    public UUID getId() { return id; }
 
-    public String getName() {
-        return name;
-    }
+    public String getName() { return name; }
 
-    public String getSchemaName() {
-        return schemaName;
-    }
+    public String getSchemaName() { return schemaName; }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 
-    public LocalDateTime getDeletedAt() {
-        return deletedAt;
-    }
+    public LocalDateTime getDeletedAt() { return deletedAt; }
 
     /* ======================================================
        DOMAIN BEHAVIOR
@@ -106,7 +97,9 @@ public class Tenant {
     }
 
     public void softDelete() {
-        this.deletedAt = LocalDateTime.now();
+        if (this.deletedAt == null) {
+            this.deletedAt = LocalDateTime.now();
+        }
     }
 
     public boolean isDeleted() {
@@ -129,15 +122,16 @@ public class Tenant {
             throw new IllegalArgumentException("Schema name cannot be blank");
         }
 
-        if (!schema.matches("^[a-zA-Z0-9_]+$")) {
+        // 🔒 Consistente com connection provider
+        if (!schema.matches("^[a-z0-9_]+$")) {
             throw new IllegalArgumentException(
-                    "Schema name must contain only letters, numbers and underscore"
+                    "Schema name must contain only lowercase letters, numbers and underscore"
             );
         }
 
-        if (schema.equalsIgnoreCase("public")) {
+        if (schema.equals("public")) {
             throw new IllegalArgumentException(
-                    "Schema 'public' is reserved"
+                    "Schema 'public' is reserved and cannot be registered as a tenant"
             );
         }
     }
@@ -156,8 +150,9 @@ public class Tenant {
     }
 
     private void setSchemaName(String schema) {
-        validateSchema(schema);
-        this.schemaName = normalizeSchema(schema);
+        String normalized = normalizeSchema(schema);
+        validateSchema(normalized);
+        this.schemaName = normalized;
     }
 
     /* ======================================================

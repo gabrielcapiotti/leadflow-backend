@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 @Entity
@@ -23,6 +24,8 @@ import java.util.UUID;
                 @Index(name = "idx_leads_user_email", columnList = "user_id,email")
         }
 )
+// Opcional para produção:
+// @Where(clause = "deleted_at IS NULL")
 public class Lead {
 
     /* ======================================================
@@ -31,17 +34,17 @@ public class Lead {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false)
     private UUID id;
 
     /* ======================================================
-       RELATIONSHIPS (SCHEMA-BASED MULTI-TENANT)
+       RELATIONSHIPS (SCHEMA MULTI-TENANT SAFE)
        ====================================================== */
 
     /**
-     * Referência apenas por ID.
-     * Não existe relacionamento JPA com User
-     * para evitar dependência cross-schema.
+     * Apenas referência por ID.
+     * Não existe relacionamento JPA com User.
+     * Isolamento ocorre via schema + userId.
      */
     @Column(name = "user_id", nullable = false)
     private UUID userId;
@@ -50,17 +53,17 @@ public class Lead {
        FIELDS
        ====================================================== */
 
-    @Column(name = "name", nullable = false, length = 100)
+    @Column(nullable = false, length = 150)
     private String name;
 
-    @Column(name = "email", nullable = false, length = 100)
+    @Column(nullable = false, length = 150)
     private String email;
 
-    @Column(name = "phone", length = 15)
+    @Column(length = 20)
     private String phone;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 30)
+    @Column(nullable = false, length = 30)
     private LeadStatus status = LeadStatus.NEW;
 
     /* ======================================================
@@ -83,14 +86,15 @@ public class Lead {
        ====================================================== */
 
     protected Lead() {
-        // JPA only
+        // Required by JPA
     }
 
     public Lead(UUID userId, String name, String email, String phone) {
-        setUserId(userId);
+        validateUserId(userId);
+        this.userId = userId;
         setName(name);
         setEmail(email);
-        this.phone = phone;
+        this.phone = normalizePhone(phone);
         this.status = LeadStatus.NEW;
     }
 
@@ -109,18 +113,18 @@ public class Lead {
     public LocalDateTime getDeletedAt() { return deletedAt; }
 
     /* ======================================================
-       CONTROLLED SETTERS
+       VALIDATION
        ====================================================== */
 
-    private void setUserId(UUID userId) {
+    private void validateUserId(UUID userId) {
         if (userId == null)
             throw new IllegalArgumentException("UserId cannot be null");
-        this.userId = userId;
     }
 
     private void setName(String name) {
         if (name == null || name.isBlank())
             throw new IllegalArgumentException("Name cannot be blank");
+
         this.name = name.trim();
     }
 
@@ -129,6 +133,10 @@ public class Lead {
             throw new IllegalArgumentException("Email cannot be blank");
 
         this.email = email.trim().toLowerCase();
+    }
+
+    private String normalizePhone(String phone) {
+        return phone != null ? phone.trim() : null;
     }
 
     /* ======================================================
@@ -164,14 +172,14 @@ public class Lead {
     }
 
     /* ======================================================
-       EQUALS & HASHCODE (JPA SAFE)
+       EQUALS & HASHCODE (Hibernate-safe)
        ====================================================== */
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Lead other)) return false;
-        return id != null && id.equals(other.id);
+        return id != null && Objects.equals(id, other.id);
     }
 
     @Override

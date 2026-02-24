@@ -1,6 +1,5 @@
 package com.leadflow.backend.service.user;
 
-import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.repository.user.UserRepository;
@@ -41,20 +40,15 @@ class UserServiceTest {
         userId = UUID.randomUUID();
         roleId = UUID.randomUUID();
 
-        Role role = new Role("USER");
+        Role role = new Role("ROLE_USER");
         ReflectionTestUtils.setField(role, "id", roleId);
 
-        Tenant tenant = new Tenant(
-                "Test Tenant",
-                "test_schema"
-        );
-
+        // ✅ User sem Tenant
         user = new User(
                 "Test User",
                 "test@example.com",
                 "password",
-                role,
-                tenant
+                role
         );
 
         ReflectionTestUtils.setField(user, "id", userId);
@@ -73,7 +67,8 @@ class UserServiceTest {
         User result = userService.getActiveByEmail("test@example.com");
 
         assertThat(result).isEqualTo(user);
-        verify(userRepository).findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com");
+        verify(userRepository)
+                .findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com");
     }
 
     @Test
@@ -97,9 +92,20 @@ class UserServiceTest {
         when(userRepository.findById(userId))
                 .thenReturn(Optional.of(user));
 
-        Optional<User> result = userRepository.findById(userId);
+        User result = userService.getById(userId);
 
-        assertThat(result).isPresent();
-        assertThat(result.get().getId()).isEqualTo(userId);
+        assertThat(result).isEqualTo(user);
+        verify(userRepository).findById(userId);
+    }
+
+    @Test
+    void shouldThrowWhenUserNotFoundById() {
+
+        when(userRepository.findById(userId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() ->
+                userService.getById(userId)
+        ).isInstanceOf(IllegalArgumentException.class);
     }
 }

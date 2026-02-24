@@ -1,19 +1,19 @@
 package com.leadflow.backend.repository.lead;
 
-import com.leadflow.backend.IntegrationTestBase;
-import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.enums.LeadStatus;
 import com.leadflow.backend.entities.lead.Lead;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.multitenancy.context.TenantContext;
-import com.leadflow.backend.repository.tenant.TenantRepository;
 import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -23,9 +23,10 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 
+@DataJpaTest
 @ActiveProfiles("integration")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class LeadRepositoryTest extends IntegrationTestBase {
+class LeadRepositoryTest {
 
     @Autowired
     private LeadRepository leadRepository;
@@ -35,9 +36,6 @@ class LeadRepositoryTest extends IntegrationTestBase {
 
     @Autowired
     private RoleRepository roleRepository;
-
-    @Autowired
-    private TenantRepository tenantRepository;
 
     private static final String TENANT_SCHEMA = "public";
 
@@ -50,7 +48,6 @@ class LeadRepositoryTest extends IntegrationTestBase {
     void cleanup() {
         leadRepository.deleteAll();
         userRepository.deleteAll();
-        tenantRepository.deleteAll();
         TenantContext.clear();
     }
 
@@ -60,15 +57,10 @@ class LeadRepositoryTest extends IntegrationTestBase {
 
     private User createUser() {
 
-        Role role = roleRepository.findByNameIgnoreCase("USER")
-                .orElseGet(() -> roleRepository.saveAndFlush(new Role("USER")));
-
-        Tenant tenant = tenantRepository.saveAndFlush(
-                new Tenant(
-                        "Test Tenant " + UUID.randomUUID(),
-                        "test_schema_" + UUID.randomUUID()
-                )
-        );
+        Role role = roleRepository.findByNameIgnoreCase("ROLE_USER")
+                .orElseGet(() ->
+                        roleRepository.saveAndFlush(new Role("ROLE_USER"))
+                );
 
         String randomEmail =
                 "user_" + UUID.randomUUID() + "@example.com";
@@ -77,8 +69,7 @@ class LeadRepositoryTest extends IntegrationTestBase {
                 "Test User",
                 randomEmail,
                 "password",
-                role,
-                tenant
+                role
         );
 
         return userRepository.saveAndFlush(user);

@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/roles")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('ADMIN')") // 🔒 Protege todos os endpoints da classe
 public class RoleController {
 
     private final RoleService roleService;
@@ -22,9 +22,9 @@ public class RoleController {
         this.roleService = roleService;
     }
 
-    /* ==========================
+    /* ======================================================
        LIST ALL ROLES
-       ========================== */
+       ====================================================== */
 
     @GetMapping
     public ResponseEntity<List<RoleResponse>> list() {
@@ -37,9 +37,9 @@ public class RoleController {
         return ResponseEntity.ok(response);
     }
 
-    /* ==========================
+    /* ======================================================
        GET ROLE BY UUID
-       ========================== */
+       ====================================================== */
 
     @GetMapping("/{id}")
     public ResponseEntity<RoleResponse> getById(
@@ -48,18 +48,18 @@ public class RoleController {
 
         Role role = roleService.getById(id);
 
+        if (role == null) {
+            return ResponseEntity.notFound().build();
+        }
+
         return ResponseEntity.ok(toResponse(role));
     }
 
-    /* ==========================
+    /* ======================================================
        MAPPER
-       ========================== */
+       ====================================================== */
 
     private RoleResponse toResponse(Role role) {
-
-        if (role == null) {
-            throw new IllegalArgumentException("Role cannot be null");
-        }
 
         return new RoleResponse(
                 role.getId(),

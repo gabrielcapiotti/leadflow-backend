@@ -1,5 +1,6 @@
 package com.leadflow.backend.multitenancy.service;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,13 @@ public class TenantService {
 
     private static final Pattern VALID_SCHEMA =
             Pattern.compile("^[a-z0-9_]{3,50}$");
+
+    private static final String RESOLVE_SCHEMA_SQL = """
+            SELECT schema_name
+            FROM public.tenants
+            WHERE LOWER(schema_name) = LOWER(?)
+              AND deleted_at IS NULL
+            """;
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -33,19 +41,16 @@ public class TenantService {
         String normalized = identifier.trim().toLowerCase();
 
         try {
-            return Optional.ofNullable(
-                    jdbcTemplate.queryForObject(
-                            """
-                            SELECT schema_name
-                            FROM tenants
-                            WHERE LOWER(schema_name) = LOWER(?)
-                              AND deleted_at IS NULL
-                            """,
-                            String.class,
-                            normalized
-                    )
+
+            String schema = jdbcTemplate.queryForObject(
+                    RESOLVE_SCHEMA_SQL,
+                    String.class,
+                    normalized
             );
-        } catch (Exception ex) {
+
+            return Optional.ofNullable(schema);
+
+        } catch (EmptyResultDataAccessException ex) {
             return Optional.empty();
         }
     }

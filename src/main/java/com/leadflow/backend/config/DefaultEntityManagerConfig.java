@@ -11,14 +11,14 @@ import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import javax.sql.DataSource;
 import jakarta.persistence.EntityManagerFactory;
+import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
 @EnableJpaRepositories(
-        basePackages = "com.leadflow.backend.repository.tenant",
+        basePackages = "com.leadflow.backend.repository",
         entityManagerFactoryRef = "tenantEntityManagerFactory",
         transactionManagerRef = "tenantTransactionManager"
 )
@@ -45,8 +45,8 @@ public class DefaultEntityManagerConfig {
 
         Map<String, Object> properties = new HashMap<>();
 
-        properties.put("hibernate.hbm2ddl.auto", "none");
-        properties.put("hibernate.multiTenancy", "SCHEMA");
+        // Hibernate 6 configuration
+        properties.put("hibernate.multi_tenancy", "SCHEMA");
         properties.put("hibernate.multi_tenant_connection_provider", multiTenantConnectionProvider);
         properties.put("hibernate.tenant_identifier_resolver", tenantIdentifierResolver);
 

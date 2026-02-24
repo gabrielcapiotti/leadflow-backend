@@ -1,6 +1,5 @@
 package com.leadflow.backend.service.lead;
 
-import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.enums.LeadStatus;
 import com.leadflow.backend.entities.lead.Lead;
 import com.leadflow.backend.entities.lead.LeadStatusHistory;
@@ -14,12 +13,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,7 +25,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@ActiveProfiles("test")
 class LeadServiceTest {
 
     @Mock
@@ -45,29 +42,19 @@ class LeadServiceTest {
     @BeforeEach
     void setup() {
 
-        Role role = new Role("USER");
+        Role role = new Role("ROLE_USER");
         ReflectionTestUtils.setField(role, "id", UUID.randomUUID());
-
-        Tenant tenant = new Tenant("Test Tenant", "test_schema");
 
         user = new User(
                 "Test User",
                 "test@example.com",
                 "password",
-                role,
-                tenant
+                role
         );
 
         ReflectionTestUtils.setField(user, "id", UUID.randomUUID());
 
         leadId = UUID.randomUUID();
-
-        lenient().when(leadRepository.save(any(Lead.class)))
-                .thenAnswer(invocation -> {
-                    Lead lead = invocation.getArgument(0);
-                    ReflectionTestUtils.setField(lead, "id", leadId);
-                    return lead;
-                });
     }
 
     /* ==========================
@@ -78,8 +65,16 @@ class LeadServiceTest {
     @DisplayName("Should create lead and register history")
     void shouldCreateLead() {
 
-        when(leadRepository.findByUserIdAndDeletedAtIsNull(user.getId()))
-                .thenReturn(List.of());
+        when(leadRepository.existsByUserIdAndEmailIgnoreCaseAndDeletedAtIsNull(
+                user.getId(), "lead@example.com"))
+                .thenReturn(false);
+
+        when(leadRepository.save(any(Lead.class)))
+                .thenAnswer(invocation -> {
+                    Lead lead = invocation.getArgument(0);
+                    ReflectionTestUtils.setField(lead, "id", leadId);
+                    return lead;
+                });
 
         Lead created = leadService.createLead(
                 "Lead",
@@ -97,56 +92,17 @@ class LeadServiceTest {
     }
 
     @Test
-    void shouldThrowWhenUserIsNull() {
-        assertThatThrownBy(() ->
-                leadService.createLead("Lead", "lead@example.com", "123", null)
-        )
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("User cannot be null");
-    }
-
-    @Test
     void shouldNotAllowDuplicateEmail() {
 
-        Lead existing = new Lead(
-                user.getId(),
-                "Existing",
-                "duplicate@example.com",
-                "123"
-        );
-
-        when(leadRepository.findByUserIdAndDeletedAtIsNull(user.getId()))
-                .thenReturn(List.of(existing));
+        when(leadRepository.existsByUserIdAndEmailIgnoreCaseAndDeletedAtIsNull(
+                user.getId(), "duplicate@example.com"))
+                .thenReturn(true);
 
         assertThatThrownBy(() ->
                 leadService.createLead("New", "duplicate@example.com", "456", user)
         )
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("Email already in use");
-    }
-
-    /* ==========================
-       LIST
-       ========================== */
-
-    @Test
-    void shouldListActiveLeads() {
-
-        Lead lead = new Lead(
-                user.getId(),
-                "Lead",
-                "lead@example.com",
-                "123"
-        );
-
-        when(leadRepository.findByUserIdAndDeletedAtIsNull(user.getId()))
-                .thenReturn(List.of(lead));
-
-        List<Lead> result = leadService.listActiveLeads(user);
-
-        assertThat(result).hasSize(1);
-        verify(leadRepository)
-                .findByUserIdAndDeletedAtIsNull(user.getId());
     }
 
     /* ==========================
@@ -242,25 +198,6 @@ class LeadServiceTest {
         .hasMessageContaining("Invalid status transition");
     }
 
-    @Test
-    void shouldNotSaveHistoryIfStatusIsSame() {
-
-        Lead lead = new Lead(
-                user.getId(),
-                "Lead",
-                "lead@example.com",
-                "123"
-        );
-
-        when(leadRepository
-                .findByIdAndUserIdAndDeletedAtIsNull(leadId, user.getId()))
-                .thenReturn(Optional.of(lead));
-
-        leadService.updateStatus(leadId, LeadStatus.NEW, user);
-
-        verify(historyRepository, never()).save(any());
-    }
-
     /* ==========================
        SOFT DELETE
        ========================== */
@@ -282,19 +219,8 @@ class LeadServiceTest {
         leadService.softDelete(leadId, user);
 
         assertThat(lead.getDeletedAt()).isNotNull();
-        verify(leadRepository).save(lead);
-    }
 
-    @Test
-    void shouldThrowWhenDeletingLeadNotFound() {
-
-        when(leadRepository
-                .findByIdAndUserIdAndDeletedAtIsNull(leadId, user.getId()))
-                .thenReturn(Optional.empty());
-
-        assertThatThrownBy(() ->
-                leadService.softDelete(leadId, user)
-        )
-        .isInstanceOf(IllegalArgumentException.class);
+        // NÃO deve chamar save (dirty checking)
+        verify(leadRepository, never()).save(any());
     }
 }

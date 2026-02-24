@@ -10,7 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -97,7 +96,6 @@ public class UserService {
 
         String normalizedEmail = email.trim().toLowerCase();
 
-        // 🔒 Evita duplicação de email
         boolean emailExists = userRepository
                 .existsByEmailIgnoreCaseAndDeletedAtIsNull(normalizedEmail);
 
@@ -105,9 +103,10 @@ public class UserService {
             throw new IllegalArgumentException("Email already in use");
         }
 
-        user.setName(name.trim());
-        user.setEmail(normalizedEmail);
-        user.setRole(role);
+        // ✅ Usa métodos de domínio
+        user.changeName(name.trim());
+        user.changeEmail(normalizedEmail);
+        user.changeRole(role);
 
         return userRepository.save(user);
     }
@@ -121,11 +120,12 @@ public class UserService {
 
         User user = getById(id);
 
-        if (user.getDeletedAt() != null) {
+        if (user.isDeleted()) {
             return; // idempotência
         }
 
-        user.setDeletedAt(LocalDateTime.now());
+        user.softDelete();
+
         userRepository.save(user);
     }
 }

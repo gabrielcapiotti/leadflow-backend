@@ -1,20 +1,24 @@
 package com.leadflow.backend.controller.user;
 
-import com.leadflow.backend.config.TestSecurityConfig;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.exception.GlobalExceptionHandler;
+import com.leadflow.backend.security.TestSecurityConfig;
 import com.leadflow.backend.service.user.UserService;
 
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+
 import org.springframework.security.test.context.support.WithMockUser;
+
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -27,7 +31,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(UserController.class)
 @ActiveProfiles("test")
-@Import({TestSecurityConfig.class, GlobalExceptionHandler.class})
+@AutoConfigureMockMvc
+@Import({ TestSecurityConfig.class, GlobalExceptionHandler.class })
 class UserControllerSecurityTest {
 
     @Autowired
@@ -37,7 +42,7 @@ class UserControllerSecurityTest {
     private UserService userService;
 
     /* ==========================
-       USER ROLE
+       USER ROLE → 403
        ========================== */
 
     @Test
@@ -49,7 +54,7 @@ class UserControllerSecurityTest {
     }
 
     /* ==========================
-       ADMIN ROLE
+       ADMIN ROLE → 200
        ========================== */
 
     @Test
@@ -66,7 +71,7 @@ class UserControllerSecurityTest {
     }
 
     /* ==========================
-       NOT AUTHENTICATED
+       NOT AUTHENTICATED → 401
        ========================== */
 
     @Test

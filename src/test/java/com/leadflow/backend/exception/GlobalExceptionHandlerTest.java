@@ -17,8 +17,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.leadflow.backend.multitenancy.service.TenantService;
-import com.leadflow.backend.security.JwtAuthenticationFilter;
 import com.leadflow.backend.security.jwt.JwtService;
+import com.leadflow.backend.security.jwt.JwtAuthenticationFilter; // ✅ IMPORT CORRETO
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 
@@ -45,12 +46,10 @@ class GlobalExceptionHandlerTest {
 
     @BeforeEach
     void setUp() {
-        // Inicializar dados de teste ou configurar o banco de dados, se necessário
+        // opcional
     }
 
-    /* ==========================
-       DUMMY CONTROLLER
-       ========================== */
+    /* ========================= DUMMY CONTROLLER ========================= */
 
     @RestController
     @RequestMapping("/dummy")
@@ -95,9 +94,7 @@ class GlobalExceptionHandlerTest {
         public void setName(String name) { this.name = name; }
     }
 
-    /* ==========================
-       TESTS
-       ========================== */
+    /* ========================= TESTS ========================= */
 
     @Test
     @WithMockUser

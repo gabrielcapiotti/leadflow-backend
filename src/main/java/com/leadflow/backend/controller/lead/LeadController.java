@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -97,7 +98,7 @@ public class LeadController {
     }
 
     /* ======================================================
-       DELETE
+       DELETE (Soft Delete)
        ====================================================== */
 
     @DeleteMapping("/{id}")
@@ -119,10 +120,16 @@ public class LeadController {
 
     private User resolveAuthenticatedUser(UserDetails principal) {
 
-        if (principal == null || !principal.isEnabled()) {
-            throw new IllegalStateException("User not authenticated");
+        if (principal == null) {
+            throw new AccessDeniedException("Authentication required");
         }
 
-        return userService.getActiveByEmail(principal.getUsername());
+        User user = userService.getActiveByEmail(principal.getUsername());
+
+        if (user == null) {
+            throw new AccessDeniedException("Authenticated user not found");
+        }
+
+        return user;
     }
 }

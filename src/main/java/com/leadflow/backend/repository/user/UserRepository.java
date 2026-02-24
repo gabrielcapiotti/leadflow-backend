@@ -14,7 +14,7 @@ import java.util.UUID;
 public interface UserRepository extends JpaRepository<User, UUID> {
 
     /* ======================================================
-       AUTENTICAÇÃO (USUÁRIOS ATIVOS)
+       AUTENTICAÇÃO (APENAS USUÁRIOS ATIVOS)
        ====================================================== */
 
     @EntityGraph(attributePaths = {"role"})
@@ -36,7 +36,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     Page<User> findByDeletedAtIsNull(Pageable pageable);
 
-    boolean existsByEmailAndDeletedAtIsNull(String string);
+    Optional<User> findByEmailAndDeletedAtIsNull(String email);
 
-    Object findByEmailAndDeletedAtIsNull(String string);
+    boolean existsByEmailAndDeletedAtIsNull(String email);
 }

@@ -1,7 +1,8 @@
-package com.leadflow.backend.security;
+package com.leadflow.backend.security.jwt;
 
 import com.leadflow.backend.multitenancy.context.TenantContext;
-import com.leadflow.backend.security.jwt.JwtService;
+import com.leadflow.backend.security.CustomUserDetails;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -58,7 +59,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     UUID expectedUserId = customUser.getId();
                     String headerTenant = TenantContext.getTenant();
-                    String tokenTenant = jwtService.extractTenant(token);
 
                     boolean valid = jwtService.isTokenValid(
                             token,
@@ -67,8 +67,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             headerTenant
                     );
 
-                    // 🔒 Bloqueia mismatch entre header e token
-                    if (valid && headerTenant.equals(tokenTenant)) {
+                    if (valid) {
 
                         UsernamePasswordAuthenticationToken authToken =
                                 new UsernamePasswordAuthenticationToken(
@@ -89,7 +88,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             } catch (Exception ignored) {
                 // Token inválido → não autentica
-                // Não lança erro para permitir fluxo do Spring Security
             }
         }
 

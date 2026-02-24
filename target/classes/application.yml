@@ -6,7 +6,6 @@ spring:
     url: jdbc:postgresql://localhost:2411/leadflow
     username: postgres
     password: venusia
-    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
@@ -16,6 +15,7 @@ spring:
       hibernate:
         format_sql: true
         multiTenancy: SCHEMA
+        multi_tenancy: SCHEMA
 
   flyway:
     enabled: true
@@ -34,14 +34,14 @@ server:
 logging:
   level:
     root: INFO
-    "[com.leadflow]": INFO
-    "[org.hibernate.SQL]": DEBUG
-    "[org.hibernate.orm.jdbc.bind]": TRACE
+    com.leadflow: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
 
 security:
   jwt:
-    secret: "leadflow-super-secret-key-2026-ultra-secure"
+    secret: integration-secret-key
     expiration: 3600000
-  filter:
-    order:
-      tenantFilter: BEFORE UsernamePasswordAuthenticationFilter
+
+multitenancy:
+  enabled: true

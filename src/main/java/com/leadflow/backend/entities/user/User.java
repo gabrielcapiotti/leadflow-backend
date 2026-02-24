@@ -1,20 +1,21 @@
 package com.leadflow.backend.entities.user;
 
-import com.leadflow.backend.entities.Tenant;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 @Entity
 @Table(
         name = "users",
         indexes = {
-                @Index(name = "idx_users_email", columnList = "email"),
-                @Index(name = "idx_users_tenant", columnList = "tenant_id"),
-                @Index(name = "idx_users_email_tenant", columnList = "email, tenant_id")
+                @Index(name = "idx_users_email", columnList = "email")
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uq_users_email", columnNames = "email")
         }
 )
 public class User {
@@ -32,10 +33,10 @@ public class User {
        FIELDS
        ====================================================== */
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 150)
     private String name;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 150)
     private String email;
 
     @Column(nullable = false, length = 255)
@@ -52,14 +53,6 @@ public class User {
             foreignKey = @ForeignKey(name = "fk_users_role")
     )
     private Role role;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(
-            name = "tenant_id",
-            nullable = false,
-            foreignKey = @ForeignKey(name = "fk_users_tenant")
-    )
-    private Tenant tenant;
 
     /* ======================================================
        AUDIT
@@ -81,22 +74,20 @@ public class User {
        ====================================================== */
 
     protected User() {
-        // JPA only
+        // Required by JPA
     }
 
     public User(String name,
                 String email,
                 String encryptedPassword,
-                Role role,
-                Tenant tenant) {
+                Role role) {
 
-        validate(name, email, encryptedPassword, role, tenant);
+        validate(name, email, encryptedPassword, role);
 
         this.name = name.trim();
         this.email = normalizeEmail(email);
         this.password = encryptedPassword;
         this.role = role;
-        this.tenant = tenant;
     }
 
     /* ======================================================
@@ -106,8 +97,7 @@ public class User {
     private void validate(String name,
                           String email,
                           String password,
-                          Role role,
-                          Tenant tenant) {
+                          Role role) {
 
         if (name == null || name.isBlank())
             throw new IllegalArgumentException("Name cannot be blank");
@@ -120,9 +110,6 @@ public class User {
 
         if (role == null)
             throw new IllegalArgumentException("Role cannot be null");
-
-        if (tenant == null)
-            throw new IllegalArgumentException("Tenant cannot be null");
     }
 
     private String normalizeEmail(String email) {
@@ -134,21 +121,12 @@ public class User {
        ====================================================== */
 
     public UUID getId() { return id; }
-
     public String getName() { return name; }
-
     public String getEmail() { return email; }
-
     public String getPassword() { return password; }
-
     public Role getRole() { return role; }
-
-    public Tenant getTenant() { return tenant; }
-
     public LocalDateTime getCreatedAt() { return createdAt; }
-
     public LocalDateTime getUpdatedAt() { return updatedAt; }
-
     public LocalDateTime getDeletedAt() { return deletedAt; }
 
     /* ======================================================
@@ -183,15 +161,10 @@ public class User {
         this.password = encryptedPassword;
     }
 
-    public void changeTenant(Tenant newTenant) {
-        if (newTenant == null)
-            throw new IllegalArgumentException("Tenant cannot be null");
-
-        this.tenant = newTenant;
-    }
-
     public void softDelete() {
-        this.deletedAt = LocalDateTime.now();
+        if (this.deletedAt == null) {
+            this.deletedAt = LocalDateTime.now();
+        }
     }
 
     public void restore() {
@@ -203,48 +176,14 @@ public class User {
     }
 
     /* ======================================================
-       SETTERS CONTROLADOS
-       ====================================================== */
-
-    public void setName(String name) {
-        changeName(name);
-    }
-
-    public void setEmail(String email) {
-        changeEmail(email);
-    }
-
-    public void setRole(Role role) {
-        changeRole(role);
-    }
-
-    public void setTenant(Tenant tenant) {
-        changeTenant(tenant);
-    }
-
-    public void setDeletedAt(LocalDateTime deletedAt) {
-        this.deletedAt = deletedAt;
-    }
-
-    /**
-     * Intended for testing or controlled persistence scenarios only.
-     */
-    public void setId(UUID id) {
-        if (this.id != null) {
-            throw new IllegalStateException("ID already set");
-        }
-        this.id = id;
-    }
-
-    /* ======================================================
-       EQUALS & HASHCODE (JPA SAFE)
+       EQUALS & HASHCODE (Hibernate-safe)
        ====================================================== */
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof User other)) return false;
-        return id != null && id.equals(other.id);
+        return id != null && Objects.equals(id, other.id);
     }
 
     @Override
@@ -261,7 +200,6 @@ public class User {
         return "User{" +
                 "id=" + id +
                 ", email='" + email + '\'' +
-                ", tenant=" + (tenant != null ? tenant.getSchemaName() : null) +
                 '}';
     }
 }

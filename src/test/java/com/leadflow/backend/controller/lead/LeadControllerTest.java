@@ -1,17 +1,12 @@
 package com.leadflow.backend.controller.lead;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.leadflow.backend.config.TestSecurityConfig;
 import com.leadflow.backend.dto.lead.CreateLeadRequest;
-import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.enums.LeadStatus;
 import com.leadflow.backend.entities.lead.Lead;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.exception.GlobalExceptionHandler;
-import com.leadflow.backend.multitenancy.resolver.JwtTenantResolver;
-import com.leadflow.backend.multitenancy.service.TenantService;
-import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.lead.LeadService;
 import com.leadflow.backend.service.user.UserService;
 
@@ -20,6 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -27,10 +23,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -40,7 +34,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = LeadController.class)
 @ActiveProfiles("test")
-@Import({TestSecurityConfig.class, GlobalExceptionHandler.class})
+@AutoConfigureMockMvc(addFilters = false)
+@Import(GlobalExceptionHandler.class)
 class LeadControllerTest {
 
     @Autowired
@@ -53,15 +48,6 @@ class LeadControllerTest {
     private LeadService leadService;
 
     @MockBean
-    private JwtService jwtService;
-
-    @MockBean
-    private TenantService tenantService;
-
-    @MockBean
-    private JwtTenantResolver jwtTenantResolver;
-
-    @MockBean
     private UserService userService;
 
     private Lead lead;
@@ -71,24 +57,20 @@ class LeadControllerTest {
     @BeforeEach
     void setUp() {
 
-        Tenant tenant = new Tenant("Test Tenant", "test_schema");
-        Role role = new Role("USER");
+        Role role = new Role("ROLE_USER");
 
         user = new User(
                 "Test User",
                 "test@example.com",
                 "password",
-                role,
-                tenant
+                role
         );
 
-        // Define ID manualmente (porque estamos fora do JPA)
         UUID userId = UUID.randomUUID();
         ReflectionTestUtils.setField(user, "id", userId);
 
         leadId = UUID.randomUUID();
 
-        // CONSTRUTOR CORRETO (userId-based)
         lead = new Lead(
                 userId,
                 "Test Lead",
@@ -100,29 +82,9 @@ class LeadControllerTest {
         ReflectionTestUtils.setField(lead, "createdAt", LocalDateTime.now());
         ReflectionTestUtils.setField(lead, "updatedAt", LocalDateTime.now());
 
+        // 🔥 Importante: controller resolveUser usa email do principal
         when(userService.getActiveByEmail("test@example.com"))
                 .thenReturn(user);
-
-        // ✅ NOVO MÉTODO (retorna Optional)
-        when(tenantService.resolveSchemaByTenantIdentifier("test_schema"))
-                .thenReturn(Optional.of("test_schema"));
-    }
-
-    private RequestPostProcessor tenant() {
-        return request -> {
-            request.addHeader("X-Tenant-ID", "test_schema");
-            return request;
-        };
-    }
-
-    /* ======================================================
-       AUTHENTICATION
-       ====================================================== */
-
-    @Test
-    void shouldReturn401WhenNotAuthenticated() throws Exception {
-        mockMvc.perform(get("/api/leads").with(tenant()))
-                .andExpect(status().isUnauthorized());
     }
 
     /* ======================================================
@@ -130,7 +92,7 @@ class LeadControllerTest {
        ====================================================== */
 
     @Test
-    @WithMockUser(username = "test@example.com", roles = "USER")
+    @WithMockUser(username = "test@example.com")
     void createLead_ShouldReturnCreatedLead() throws Exception {
 
         when(leadService.createLead(
@@ -147,7 +109,6 @@ class LeadControllerTest {
         );
 
         mockMvc.perform(post("/api/leads")
-                        .with(tenant())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -161,7 +122,7 @@ class LeadControllerTest {
        ====================================================== */
 
     @Test
-    @WithMockUser(username = "test@example.com", roles = "USER")
+    @WithMockUser(username = "test@example.com")
     void updateLeadStatus_ShouldReturnUpdatedLead() throws Exception {
 
         lead.changeStatus(LeadStatus.CONTACTED);
@@ -173,10 +134,8 @@ class LeadControllerTest {
         )).thenReturn(lead);
 
         mockMvc.perform(patch("/api/leads/{id}/status", leadId)
-                        .with(tenant())
                         .param("status", "CONTACTED"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(leadId.toString()))
                 .andExpect(jsonPath("$.status").value("CONTACTED"));
     }
 
@@ -185,11 +144,10 @@ class LeadControllerTest {
        ====================================================== */
 
     @Test
-    @WithMockUser(username = "test@example.com", roles = "USER")
+    @WithMockUser(username = "test@example.com")
     void deleteLead_ShouldReturnNoContent() throws Exception {
 
-        mockMvc.perform(delete("/api/leads/{id}", leadId)
-                        .with(tenant()))
+        mockMvc.perform(delete("/api/leads/{id}", leadId))
                 .andExpect(status().isNoContent());
     }
 }

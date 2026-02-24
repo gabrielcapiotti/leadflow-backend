@@ -51,6 +51,20 @@
 				"test",
 				"-Dtest=LeadServiceTest"
 			]
+		},
+		{
+			"label": "Run LeadRepositoryTest",
+			"type": "shell",
+			"command": "mvn",
+			"args": [
+				"test",
+				"-Dtest=LeadRepositoryTest"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$java"
+			],
+			"group": "test"
 		}
 	]
 }

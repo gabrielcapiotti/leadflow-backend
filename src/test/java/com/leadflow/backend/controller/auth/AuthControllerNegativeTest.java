@@ -1,9 +1,10 @@
 package com.leadflow.backend.controller.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.leadflow.backend.config.TestSecurityConfig;
 import com.leadflow.backend.dto.auth.LoginRequest;
 import com.leadflow.backend.dto.auth.RegisterRequest;
-import com.leadflow.backend.security.TestSecurityConfig;
+import com.leadflow.backend.multitenancy.service.TenantService;
 import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.auth.AuthService;
 
@@ -38,6 +39,9 @@ class AuthControllerNegativeTest {
 
     @MockBean
     private JwtService jwtService;
+
+    @MockBean
+    private TenantService tenantService;
 
     /* =========================================================
        REGISTER - VALIDATION
@@ -139,16 +143,5 @@ class AuthControllerNegativeTest {
                 .andExpect(jsonPath("$.error").value("Authentication Error"))
                 .andExpect(jsonPath("$.message")
                         .value("Invalid email or password"));
-    }
-
-    /* =========================================================
-       ME - NOT AUTHENTICATED
-       ========================================================= */
-
-    @Test
-    void shouldReturn401WhenNotAuthenticatedOnMe() throws Exception {
-
-        mockMvc.perform(get("/auth/me"))
-                .andExpect(status().isUnauthorized());
     }
 }

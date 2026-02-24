@@ -1,5 +1,5 @@
 -- V2__Tenant_schema.sql
--- Tenant domain tables (executado dentro do schema do tenant)
+-- Executado dentro do schema do tenant
 
 ----------------------------------------------------------
 -- USERS
@@ -29,6 +29,11 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE INDEX IF NOT EXISTS idx_users_email
 ON users(email);
 
+CREATE INDEX IF NOT EXISTS idx_users_deleted
+ON users(deleted_at);
+
+
+
 ----------------------------------------------------------
 -- LEADS
 ----------------------------------------------------------
@@ -40,7 +45,7 @@ CREATE TABLE IF NOT EXISTS leads (
     email VARCHAR(100) NOT NULL,
     phone VARCHAR(20),
 
-    status VARCHAR(50) NOT NULL DEFAULT 'NEW',
+    status VARCHAR(30) NOT NULL DEFAULT 'NEW',
 
     user_id UUID NOT NULL,
 
@@ -54,12 +59,25 @@ CREATE TABLE IF NOT EXISTS leads (
     CONSTRAINT fk_leads_user
         FOREIGN KEY (user_id)
         REFERENCES users(id)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+
+    CONSTRAINT uq_leads_email_user
+        UNIQUE (email, user_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_leads_email ON leads(email);
-CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
-CREATE INDEX IF NOT EXISTS idx_leads_user ON leads(user_id);
+CREATE INDEX IF NOT EXISTS idx_leads_user
+ON leads(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_leads_status
+ON leads(status);
+
+CREATE INDEX IF NOT EXISTS idx_leads_user_deleted
+ON leads(user_id, deleted_at);
+
+CREATE INDEX IF NOT EXISTS idx_leads_email
+ON leads(email);
+
+
 
 ----------------------------------------------------------
 -- LEAD STATUS HISTORY
@@ -69,7 +87,7 @@ CREATE TABLE IF NOT EXISTS lead_status_history (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 
     lead_id UUID NOT NULL,
-    status VARCHAR(50) NOT NULL,
+    status VARCHAR(30) NOT NULL,
 
     changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -89,7 +107,13 @@ CREATE TABLE IF NOT EXISTS lead_status_history (
         ON DELETE SET NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_lsh_lead ON lead_status_history(lead_id);
+CREATE INDEX IF NOT EXISTS idx_lsh_lead
+ON lead_status_history(lead_id);
+
+CREATE INDEX IF NOT EXISTS idx_lsh_status
+ON lead_status_history(status);
+
+
 
 ----------------------------------------------------------
 -- SETTINGS
@@ -118,7 +142,10 @@ CREATE TABLE IF NOT EXISTS settings (
     CONSTRAINT uq_settings_user UNIQUE (user_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_settings_user ON settings(user_id);
+CREATE INDEX IF NOT EXISTS idx_settings_user
+ON settings(user_id);
+
+
 
 ----------------------------------------------------------
 -- LOGS
@@ -141,4 +168,8 @@ CREATE TABLE IF NOT EXISTS logs (
         ON DELETE SET NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_logs_user ON logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_logs_user
+ON logs(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_logs_level
+ON logs(level);

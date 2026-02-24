@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:15:///leadflow_jpa_test
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        multiTenancy: NONE
+
+  flyway:
+    enabled: false
+
+multitenancy:
+  enabled: false

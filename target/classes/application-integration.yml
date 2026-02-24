@@ -1,27 +1,49 @@
 spring:
+  application:
+    name: leadflow-backend
+
   datasource:
-    url: jdbc:tc:postgresql:15:///testdb
     driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
-    initialization-mode: never
+    url: jdbc:tc:postgresql:15:///leadflow_test
+    username: postgres
+    password: postgres
 
   jpa:
+    open-in-view: false
+    show-sql: false
     hibernate:
-      ddl-auto: none
+      ddl-auto: create-drop
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
         multiTenancy: SCHEMA
-        multi_tenant_connection_provider: com.leadflow.backend.multitenancy.provider.SchemaMultiTenantConnectionProvider
-        tenant_identifier_resolver: com.leadflow.backend.multitenancy.identifier.CurrentTenantIdentifierResolverImpl
+        jdbc:
+          time_zone: UTC
 
   flyway:
-    enabled: false
-    baseline-on-migrate: true
-    validate-on-migrate: true
+    enabled: false   # Usando create-drop nos testes
+
+  sql:
+    init:
+      mode: never
+
+logging:
+  level:
+    root: WARN
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.springframework.test.context: INFO
+    org.springframework.security: WARN
 
 security:
   jwt:
-    secret: integration-secret-key
+    secret: integration-secret-key-with-at-least-32-characters-long-12345
+    expiration: 3600000
+    issuer: leadflow-integration
 
 multitenancy:
   enabled: true
+
+server:
+  port: 0

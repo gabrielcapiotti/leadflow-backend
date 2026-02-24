@@ -2,6 +2,7 @@ package com.leadflow.backend.repository.lead;
 
 import com.leadflow.backend.entities.enums.LeadStatus;
 import com.leadflow.backend.entities.lead.Lead;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,19 +14,17 @@ import java.util.UUID;
 public interface LeadRepository extends JpaRepository<Lead, UUID> {
 
     /* ======================================================
-       CONSULTAS ADMINISTRATIVAS (TENANT CONTEXT)
+       ADMINISTRATIVE QUERIES (TENANT CONTEXT)
        ====================================================== */
 
     List<Lead> findByDeletedAtIsNull();
 
     List<Lead> findByStatusAndDeletedAtIsNull(LeadStatus status);
 
-    Optional<Lead> findByEmailAndDeletedAtIsNull(String email);
-
     long countByStatusAndDeletedAtIsNull(LeadStatus status);
 
     /* ======================================================
-       ISOLAMENTO POR USER ID (PROTEÇÃO CONTRA IDOR)
+       USER ISOLATION (ANTI-IDOR)
        ====================================================== */
 
     List<Lead> findByUserIdAndDeletedAtIsNull(UUID userId);
@@ -38,5 +37,19 @@ public interface LeadRepository extends JpaRepository<Lead, UUID> {
     Optional<Lead> findByIdAndUserIdAndDeletedAtIsNull(
             UUID id,
             UUID userId
+    );
+
+    /* ======================================================
+       EMAIL VALIDATION (PERFORMANCE SAFE)
+       ====================================================== */
+
+    boolean existsByUserIdAndEmailIgnoreCaseAndDeletedAtIsNull(
+            UUID userId,
+            String email
+    );
+
+    Optional<Lead> findByUserIdAndEmailIgnoreCaseAndDeletedAtIsNull(
+            UUID userId,
+            String email
     );
 }

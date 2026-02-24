@@ -1,27 +1,45 @@
 spring:
+  application:
+    name: leadflow-backend-test
+
   datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
     driver-class-name: org.h2.Driver
     username: sa
     password:
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: create-drop
-    open-in-view: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
         multiTenancy: NONE
+        jdbc:
+          time_zone: UTC
 
   flyway:
-    enabled: true
-    locations:
-      - classpath:db/migration/global
-      - classpath:db/migration/tenants
-    clean-disabled: false
+    enabled: false
+
+  h2:
+    console:
+      enabled: false
+
+logging:
+  level:
+    root: WARN
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
 
 security:
   jwt:
-    secret: test-secret-key-test-secret-key
+    secret: 12345678901234567890123456789012
     expiration: 3600000
+
+multitenancy:
+  enabled: false
+
+server:
+  port: 0

@@ -7,6 +7,7 @@ import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.repository.lead.LeadRepository;
 import com.leadflow.backend.repository.lead.LeadStatusHistoryRepository;
 import com.leadflow.backend.repository.user.UserRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,15 +69,13 @@ public class LeadService {
             throw new IllegalArgumentException("Email cannot be null or blank");
         }
 
-        boolean emailExists = leadRepository
-                .findByUserIdAndDeletedAtIsNull(createdBy.getId())
-                .stream()
-                .anyMatch(l ->
-                        l.getEmail() != null &&
-                        l.getEmail().equalsIgnoreCase(email)
+        boolean exists = leadRepository
+                .existsByUserIdAndEmailIgnoreCaseAndDeletedAtIsNull(
+                        createdBy.getId(),
+                        email.trim().toLowerCase()
                 );
 
-        if (emailExists) {
+        if (exists) {
             throw new IllegalArgumentException("Email already in use");
         }
 
@@ -87,7 +86,7 @@ public class LeadService {
                 phone
         );
 
-        lead = leadRepository.save(lead);
+        leadRepository.save(lead);
 
         historyRepository.save(
                 new LeadStatusHistory(lead, LeadStatus.NEW, createdBy)
@@ -107,7 +106,8 @@ public class LeadService {
             throw new IllegalArgumentException("User cannot be null");
         }
 
-        return leadRepository.findByUserIdAndDeletedAtIsNull(user.getId());
+        return leadRepository
+                .findByUserIdAndDeletedAtIsNull(user.getId());
     }
 
     /* ======================================================
@@ -135,13 +135,7 @@ public class LeadService {
                         new IllegalArgumentException("Lead not found or already deleted")
                 );
 
-        LeadStatus oldStatus = lead.getStatus();
-
-        if (!oldStatus.canTransitionTo(newStatus)) {
-            throw new IllegalArgumentException("Invalid status transition");
-        }
-
-        if (oldStatus == newStatus) {
+        if (lead.getStatus() == newStatus) {
             return lead;
         }
 
@@ -172,12 +166,10 @@ public class LeadService {
                 );
 
         lead.softDelete();
-
-        leadRepository.save(lead);
     }
 
     /* ======================================================
-       GET BY ID (ISOLADO)
+       GET BY ID (ISOLATED)
        ====================================================== */
 
     @Transactional(readOnly = true)
