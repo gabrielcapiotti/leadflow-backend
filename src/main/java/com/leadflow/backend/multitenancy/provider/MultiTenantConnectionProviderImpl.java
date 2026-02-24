@@ -12,17 +12,15 @@ import java.sql.Statement;
 import java.util.Objects;
 
 @Component
-public class SchemaMultiTenantConnectionProvider
+public class MultiTenantConnectionProviderImpl
         implements MultiTenantConnectionProvider<String> {
 
-    private static final Logger logger =
-            LoggerFactory.getLogger(SchemaMultiTenantConnectionProvider.class);
+    private static final Logger logger = LoggerFactory.getLogger(MultiTenantConnectionProviderImpl.class);
 
     private static final String DEFAULT_SCHEMA = "public";
-
     private final DataSource dataSource;
 
-    public SchemaMultiTenantConnectionProvider(DataSource dataSource) {
+    public MultiTenantConnectionProviderImpl(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
@@ -36,55 +34,40 @@ public class SchemaMultiTenantConnectionProvider
     }
 
     @Override
-    public void releaseAnyConnection(Connection connection)
-            throws SQLException {
+    public void releaseAnyConnection(Connection connection) throws SQLException {
         connection.close();
     }
 
     @Override
-    public Connection getConnection(String tenantIdentifier)
-            throws SQLException {
-
+    public Connection getConnection(String tenantIdentifier) throws SQLException {
+        // Obter conexão
         Connection connection = getAnyConnection();
+
+        // Resolver e validar o schema do tenant
         String schema = resolveSchema(tenantIdentifier);
 
         try {
-
             ensureSchemaExists(connection, schema);
 
-            // 🔥 Hibernate 6 compatible approach
+            // Configura o schema específico para o tenant
             connection.setSchema(schema);
-
             logger.trace("Connection switched to schema: {}", schema);
 
             return connection;
 
         } catch (SQLException ex) {
-
             connection.close();
-
-            throw new SQLException(
-                    "Failed to obtain connection for schema: " + schema,
-                    ex
-            );
+            throw new SQLException("Failed to obtain connection for schema: " + schema, ex);
         }
     }
 
     @Override
-    public void releaseConnection(
-            String tenantIdentifier,
-            Connection connection
-    ) throws SQLException {
-
+    public void releaseConnection(String tenantIdentifier, Connection connection) throws SQLException {
         try {
-
-            // Reset before returning to pool
+            // Restaurar para o schema default após uso
             connection.setSchema(DEFAULT_SCHEMA);
-
         } catch (SQLException ex) {
-
             logger.error("Failed to reset schema to default", ex);
-
         } finally {
             connection.close();
         }
@@ -98,7 +81,7 @@ public class SchemaMultiTenantConnectionProvider
     @Override
     public boolean isUnwrappableAs(Class<?> unwrapType) {
         return MultiTenantConnectionProvider.class.isAssignableFrom(unwrapType)
-                || SchemaMultiTenantConnectionProvider.class.isAssignableFrom(unwrapType);
+                || MultiTenantConnectionProviderImpl.class.isAssignableFrom(unwrapType);
     }
 
     @Override
@@ -107,9 +90,7 @@ public class SchemaMultiTenantConnectionProvider
         if (isUnwrappableAs(unwrapType)) {
             return (T) this;
         }
-        throw new IllegalArgumentException(
-                "Cannot unwrap to: " + unwrapType
-        );
+        throw new IllegalArgumentException("Cannot unwrap to: " + unwrapType);
     }
 
     /* ======================================================
@@ -117,30 +98,25 @@ public class SchemaMultiTenantConnectionProvider
        ====================================================== */
 
     private String resolveSchema(String tenantIdentifier) {
-
-        if (Objects.isNull(tenantIdentifier) ||
-                tenantIdentifier.isBlank()) {
-
+        // Garantir que o tenant identifier seja minúsculo e válido
+        if (Objects.isNull(tenantIdentifier) || tenantIdentifier.isBlank()) {
             return DEFAULT_SCHEMA;
         }
 
-        if (!tenantIdentifier.matches("^[a-z0-9_]+$")) {
+        String normalizedTenant = tenantIdentifier.trim().toLowerCase();
 
-            throw new IllegalArgumentException(
-                    "Invalid tenant identifier: " + tenantIdentifier
-            );
+        if (!normalizedTenant.matches("^[a-z0-9_]+$")) {
+            throw new IllegalArgumentException("Invalid tenant identifier: " + normalizedTenant);
         }
 
-        return tenantIdentifier.toLowerCase();
+        return normalizedTenant;
     }
 
     /**
      * Garante que o schema exista.
      * Necessário para Testcontainers e DataJpaTest.
      */
-    private void ensureSchemaExists(Connection connection, String schema)
-            throws SQLException {
-
+    private void ensureSchemaExists(Connection connection, String schema) throws SQLException {
         if (DEFAULT_SCHEMA.equals(schema)) {
             return;
         }

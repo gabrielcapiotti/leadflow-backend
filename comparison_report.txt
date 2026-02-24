@@ -1,0 +1,26 @@
+### Comparação entre as classes duplicadas
+
+#### Classe 1: `MultiTenantHibernateConfigBackend` (Pacote: `com.leadflow.backend`)
+- **Anotações**: 
+  - `@Configuration`
+  - `@RequiredArgsConstructor`
+  - `@ConditionalOnProperty`
+- **Métodos**:
+  - `customize(Map<String, Object> hibernateProperties)`
+    - Define explicitamente a estratégia de multi-tenancy como `SCHEMA`.
+- **Diferenciais**:
+  - Inclui a configuração explícita de `hibernate.multi_tenancy`.
+
+#### Classe 2: `MultiTenantHibernateConfig` (Pacote: `com.leadflow.backend.multitenancy.config`)
+- **Anotações**: 
+  - `@Configuration`
+  - `@RequiredArgsConstructor`
+  - `@ConditionalOnProperty`
+- **Métodos**:
+  - `customize(Map<String, Object> hibernateProperties)`
+    - Não define explicitamente a estratégia de multi-tenancy.
+- **Diferenciais**:
+  - Comentários explicativos sobre a ativação automática da estratégia SCHEMA.
+
+#### Decisão:
+A classe `MultiTenantHibernateConfigBackend` é mais completa, pois inclui a configuração explícita da estratégia de multi-tenancy. A classe `MultiTenantHibernateConfig` será excluída para evitar redundância e conflitos.

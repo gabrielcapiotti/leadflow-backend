@@ -20,8 +20,7 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    private static final Logger logger =
-            LoggerFactory.getLogger(JwtService.class);
+    private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
 
     private final Key signingKey;
     private final long expirationMillis;
@@ -33,33 +32,23 @@ public class JwtService {
     public JwtService(
             @Value("${security.jwt.secret}") String secret,
             @Value("${security.jwt.expiration}") long expirationMillis,
-            @Value("${security.jwt.issuer:leadflow}") String issuer
+            @Value("${security.jwt.issuer:leadflow}") String issuer,
+            Clock clock // Dependency injection for Clock, easier to test
     ) {
-        this(secret, expirationMillis, issuer, Clock.systemUTC());
+        this.signingKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.expirationMillis = expirationMillis;
+        this.issuer = issuer;
+        this.clock = clock != null ? clock : Clock.systemUTC(); // Default to UTC if null
     }
 
     /* ========================= CONSTRUCTOR (TEST) ========================= */
 
-    public JwtService(
-            String secret,
-            long expirationMillis,
-            String issuer,
-            Clock clock
-    ) {
-
-        if (secret == null || secret.length() < 32) {
-            throw new IllegalArgumentException(
-                    "JWT secret must be at least 32 characters"
-            );
-        }
-
-        this.signingKey = Keys.hmacShaKeyFor(
-                secret.getBytes(StandardCharsets.UTF_8)
-        );
-
-        this.expirationMillis = expirationMillis;
-        this.issuer = issuer;
-        this.clock = clock;
+    // Construtor para testes
+    public JwtService() {
+        this.signingKey = Keys.hmacShaKeyFor("defaultsecretdefaultsecretdefaultsecret".getBytes(StandardCharsets.UTF_8)); // Chave default para testes
+        this.expirationMillis = 3600000; // 1 hora
+        this.issuer = "leadflow";
+        this.clock = Clock.systemUTC(); // Usando UTC como padrão
     }
 
     /* ========================= TOKEN GENERATION ========================= */
@@ -76,7 +65,7 @@ public class JwtService {
 
         Instant now = Instant.now(clock);
 
-        return Jwts.builder()
+        String token = Jwts.builder()
                 .setId(UUID.randomUUID().toString())
                 .setSubject(user.getEmail())
                 .setIssuer(issuer)
@@ -87,6 +76,10 @@ public class JwtService {
                 .claim("tenant", tenantSchema.trim().toLowerCase())
                 .signWith(signingKey, SignatureAlgorithm.HS256)
                 .compact();
+
+        logger.debug("Generated JWT token for user: {}", user.getEmail()); // Log para rastrear a geração do token
+
+        return token;
     }
 
     /* ========================= BASIC VALIDATION ========================= */
@@ -94,16 +87,15 @@ public class JwtService {
     public boolean isValid(String token) {
 
         if (token == null || token.isBlank()) {
+            logger.warn("Received null or blank token");
             return false;
         }
 
         try {
             extractAllClaims(token);
             return true;
-
         } catch (ExpiredJwtException e) {
             logger.warn("JWT expired");
-
         } catch (JwtException | IllegalArgumentException e) {
             logger.warn("Invalid JWT");
         }
@@ -125,7 +117,6 @@ public class JwtService {
         }
 
         try {
-
             String email = extractEmail(token);
             UUID tokenUserId = extractUserId(token);
             String tokenTenant = extractTenant(token);
@@ -136,21 +127,19 @@ public class JwtService {
                     && !isTokenExpired(token);
 
         } catch (Exception e) {
+            logger.error("Error validating token context", e);
             return false;
         }
     }
 
     private boolean isTokenExpired(String token) {
-        return extractExpiration(token)
-                .before(Date.from(Instant.now(clock)));
+        Date expiration = extractExpiration(token);
+        return expiration.before(Date.from(Instant.now(clock)));
     }
 
     /* ========================= CLAIM EXTRACTION ========================= */
 
-    public <T> T extractClaim(
-            String token,
-            Function<Claims, T> resolver
-    ) {
+    public <T> T extractClaim(String token, Function<Claims, T> resolver) {
         return resolver.apply(extractAllClaims(token));
     }
 
@@ -159,30 +148,19 @@ public class JwtService {
     }
 
     public UUID extractUserId(String token) {
-        String value = extractClaim(
-                token,
-                claims -> claims.get("userId", String.class)
-        );
-
+        String value = extractClaim(token, claims -> claims.get("userId", String.class));
         if (value == null) {
             throw new IllegalArgumentException("userId claim missing");
         }
-
         return UUID.fromString(value);
     }
 
     public String extractRole(String token) {
-        return extractClaim(
-                token,
-                claims -> claims.get("role", String.class)
-        );
+        return extractClaim(token, claims -> claims.get("role", String.class));
     }
 
     public String extractTenant(String token) {
-        return extractClaim(
-                token,
-                claims -> claims.get("tenant", String.class)
-        );
+        return extractClaim(token, claims -> claims.get("tenant", String.class));
     }
 
     public Date extractExpiration(String token) {

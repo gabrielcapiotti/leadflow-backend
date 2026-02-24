@@ -6,7 +6,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 
 /* ======================================================
-   TENANTS (GLOBAL - PUBLIC)
+   GLOBAL TABLES (PUBLIC SCHEMA)
    ====================================================== */
 
 CREATE TABLE IF NOT EXISTS public.tenants (
@@ -21,12 +21,8 @@ CREATE TABLE IF NOT EXISTS public.tenants (
 );
 
 CREATE INDEX IF NOT EXISTS idx_tenants_schema_name
-ON public.tenants (schema_name);
+    ON public.tenants (schema_name);
 
-
-/* ======================================================
-   ROLES (GLOBAL - PUBLIC)
-   ====================================================== */
 
 CREATE TABLE IF NOT EXISTS public.roles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -46,7 +42,13 @@ LANGUAGE plpgsql
 AS $$
 BEGIN
 
+    -- Segurança extra contra schema injection
+    IF schema_name !~ '^[a-z0-9_]+$' THEN
+        RAISE EXCEPTION 'Invalid schema name: %', schema_name;
+    END IF;
+
     EXECUTE format('CREATE SCHEMA IF NOT EXISTS %I', schema_name);
+
 
     /* ======================================================
        USERS

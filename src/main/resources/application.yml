@@ -15,7 +15,9 @@ spring:
       hibernate:
         format_sql: true
         multiTenancy: SCHEMA
-        multi_tenancy: SCHEMA
+        # Para Hibernate 6, não é necessário ter "multi_tenancy" como propriedade extra.
+        multiTenantConnectionProviderClass: com.leadflow.backend.multitenancy.config.MultiTenantConnectionProvider
+        currentTenantIdentifierResolverClass: com.leadflow.backend.multitenancy.context.TenantContextResolver
 
   flyway:
     enabled: true
@@ -24,7 +26,8 @@ spring:
       - classpath:db/migration/tenants
     schemas:
       - public
-      - tenant_x
+      # Apenas o schema do tenant específico que será usado na migração
+      # Você pode incluir outros schemas dos tenants conforme necessário
 
 server:
   port: 8081

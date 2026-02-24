@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.UUID;
+import java.time.Clock;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,10 +27,12 @@ class JwtServiceTest {
     @BeforeEach
     void setUp() {
 
+        // Passando Clock.systemUTC() ao construtor
         jwtService = new JwtService(
                 SECRET,
                 3_600_000L,
-                "leadflow"
+                "leadflow",
+                Clock.systemUTC() // Adicionando o Clock
         );
 
         userId = UUID.randomUUID();

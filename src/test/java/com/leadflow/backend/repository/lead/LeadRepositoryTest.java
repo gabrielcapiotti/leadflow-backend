@@ -7,6 +7,7 @@ import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.*;
 
 @DataJpaTest
-@ActiveProfiles("integration")
+@ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class LeadRepositoryTest {
 
@@ -45,15 +46,13 @@ class LeadRepositoryTest {
     }
 
     @AfterEach
-    void cleanup() {
-        leadRepository.deleteAll();
-        userRepository.deleteAll();
-        TenantContext.clear();
+    void clearTenant() {
+        TenantContext.clear(); // ✅ Apenas limpar contexto
     }
 
-    /* ==========================
+    /* ======================================================
        HELPER
-       ========================== */
+       ====================================================== */
 
     private User createUser() {
 
@@ -75,9 +74,9 @@ class LeadRepositoryTest {
         return userRepository.saveAndFlush(user);
     }
 
-    /* ==========================
+    /* ======================================================
        SAVE & FIND
-       ========================== */
+       ====================================================== */
 
     @Test
     void shouldSaveAndRetrieveLead() {
@@ -103,9 +102,9 @@ class LeadRepositoryTest {
                 .isEqualTo(savedUser.getId());
     }
 
-    /* ==========================
+    /* ======================================================
        UNIQUE CONSTRAINT
-       ========================== */
+       ====================================================== */
 
     @Test
     void shouldNotAllowDuplicateEmailPerUser() {
@@ -125,9 +124,9 @@ class LeadRepositoryTest {
         ).isInstanceOf(DataIntegrityViolationException.class);
     }
 
-    /* ==========================
+    /* ======================================================
        FILTERS
-       ========================== */
+       ====================================================== */
 
     @Test
     void shouldFindByUserIdAndDeletedAtIsNull() {
@@ -179,9 +178,9 @@ class LeadRepositoryTest {
         assertThat(leads).isEmpty();
     }
 
-    /* ==========================
+    /* ======================================================
        COUNT
-       ========================== */
+       ====================================================== */
 
     @Test
     void shouldCountByStatusAndDeletedAtIsNull() {

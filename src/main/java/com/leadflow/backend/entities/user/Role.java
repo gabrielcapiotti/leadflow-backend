@@ -49,10 +49,12 @@ public class Role {
        CONSTRUCTORS
        ====================================================== */
 
+    // Construtor padrão, necessário para o JPA
     protected Role() {
         // Required by JPA
     }
 
+    // Construtor para inicializar a role com validação
     public Role(String name) {
         this.name = normalizeAndValidate(name);
     }
@@ -61,6 +63,12 @@ public class Role {
        NORMALIZATION & VALIDATION
        ====================================================== */
 
+    /**
+     * Normaliza e valida o nome da role.
+     * @param value Nome da role.
+     * @return Nome validado e normalizado.
+     * @throws IllegalArgumentException se o nome for inválido.
+     */
     private String normalizeAndValidate(String value) {
 
         if (value == null || value.isBlank()) {
@@ -109,7 +117,7 @@ public class Role {
 
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return Objects.hash(id); // Melhor prática para gerar hashCode.
     }
 
     /* ======================================================

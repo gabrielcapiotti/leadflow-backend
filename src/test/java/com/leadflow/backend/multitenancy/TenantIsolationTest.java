@@ -46,16 +46,20 @@ class TenantIsolationTest extends IntegrationTestBase {
 
     @BeforeEach
     void setup() {
-
-        TenantContext.clear();
+        TenantContext.clear();  // Limpar o contexto de tenant
 
         tenantA = testTenantFactory.createTenant("Tenant A");
         tenantB = testTenantFactory.createTenant("Tenant B");
+
+        // Criar os roles para garantir que ROLE_USER exista
+        if (!roleRepository.existsByNameIgnoreCase("ROLE_USER")) {
+            roleRepository.save(new Role("ROLE_USER"));
+        }
     }
 
     @AfterEach
     void cleanup() {
-        TenantContext.clear();
+        TenantContext.clear();  // Limpar o contexto de tenant após cada teste
     }
 
     /* ======================================================
@@ -64,7 +68,6 @@ class TenantIsolationTest extends IntegrationTestBase {
 
     @Test
     void shouldIsolateDataBetweenSchemas() {
-
         // ---------- TENANT A ----------
         TenantContext.setTenant(tenantA.getSchemaName());
 
@@ -111,7 +114,6 @@ class TenantIsolationTest extends IntegrationTestBase {
 
     @Test
     void shouldNotAccessOtherTenantData() {
-
         // ---------- TENANT A ----------
         TenantContext.setTenant(tenantA.getSchemaName());
 

@@ -3,45 +3,45 @@ spring:
     name: leadflow-backend
 
   datasource:
-    url: jdbc:tc:postgresql:15:///leadflow_test
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    url: jdbc:tc:postgresql:15:///leadflow_test  
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver  
     hikari:
-      maximum-pool-size: 5
-      minimum-idle: 1
-      auto-commit: false
+      maximum-pool-size: 5  
+      minimum-idle: 1  
+      auto-commit: false 
 
   sql:
     init:
-      mode: never
+      mode: never  
 
   jpa:
-    open-in-view: false
+    open-in-view: false  
     hibernate:
-      ddl-auto: create
+      ddl-auto: create  
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
-        show_sql: false
-        multiTenancy: SCHEMA
+        dialect: org.hibernate.dialect.PostgreSQLDialect  
+        format_sql: true 
+        show_sql: false  
+        multiTenancy: SCHEMA 
         jdbc:
           lob:
-            non_contextual_creation: true
+            non_contextual_creation: true 
 
   flyway:
-    enabled: false
+    enabled: false  
 
 logging:
   level:
-    root: WARN
-    "[org.hibernate.SQL]": DEBUG
-    "[org.hibernate.orm.jdbc.bind]": TRACE
-    "[org.springframework.test]": WARN
+    root: WARN  
+    "[org.hibernate.SQL]": DEBUG  
+    "[org.hibernate.orm.jdbc.bind]": TRACE  
+    "[org.springframework.test]": WARN 
 
 security:
   jwt:
-    secret: integration-secret-key
-    expiration: 3600000
+    secret: integration-secret-key  
+    expiration: 3600000  
 
 multitenancy:
-  enabled: false
+  enabled: false 

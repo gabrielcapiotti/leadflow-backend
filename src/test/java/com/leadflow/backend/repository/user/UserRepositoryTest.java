@@ -3,10 +3,13 @@ package com.leadflow.backend.repository.user;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.multitenancy.context.TenantContext;
+
 import org.junit.jupiter.api.*;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -15,7 +18,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.*;
 
 @DataJpaTest
-@ActiveProfiles("jpa")
+@ActiveProfiles("test") // 🔥 IMPORTANTE: desativa multitenancy
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class UserRepositoryTest {
 
@@ -30,10 +33,13 @@ class UserRepositoryTest {
     @BeforeEach
     void setUp() {
 
+        // Mesmo com multitenancy desativada,
+        // manter explícito evita comportamento inesperado
         TenantContext.setTenant("public");
 
-        roleRepository.deleteAll();
+        // Ordem correta para evitar FK violation
         userRepository.deleteAll();
+        roleRepository.deleteAll();
 
         role = roleRepository.saveAndFlush(
                 new Role("ROLE_USER")
@@ -54,9 +60,9 @@ class UserRepositoryTest {
         TenantContext.clear();
     }
 
-    /* ==========================
+    /* ======================================================
        FIND ACTIVE BY EMAIL
-       ========================== */
+       ====================================================== */
 
     @Test
     @DisplayName("Should return user when active email exists")
@@ -79,9 +85,9 @@ class UserRepositoryTest {
         assertThat(found).isEmpty();
     }
 
-    /* ==========================
+    /* ======================================================
        EXISTS ACTIVE EMAIL
-       ========================== */
+       ====================================================== */
 
     @Test
     @DisplayName("Should return true for active user")
@@ -111,9 +117,9 @@ class UserRepositoryTest {
         assertThat(exists).isFalse();
     }
 
-    /* ==========================
+    /* ======================================================
        UNIQUE CONSTRAINT
-       ========================== */
+       ====================================================== */
 
     @Test
     @DisplayName("Should not allow duplicate email within same schema")
