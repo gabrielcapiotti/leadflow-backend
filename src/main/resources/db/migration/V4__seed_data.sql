@@ -27,14 +27,7 @@ CREATE SCHEMA IF NOT EXISTS tenant_b;
    ROLES (GLOBAL)
    ====================================================== */
 
-INSERT INTO public.roles (name)
-VALUES ('ROLE_ADMIN')
-ON CONFLICT (name) DO NOTHING;
-
-INSERT INTO public.roles (name)
-VALUES ('ROLE_USER')
-ON CONFLICT (name) DO NOTHING;
-
+-- Removido duplicação de inserções de roles
 
 /* ======================================================
    DEFAULT TENANT DATA (schema: public)
