@@ -2,8 +2,8 @@
    LEAD STATUS HISTORY TABLE
    ====================================================== */
 
-CREATE TABLE IF NOT EXISTS %I.lead_status_history (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE IF NOT EXISTS lead_status_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     lead_id UUID NOT NULL,
     status VARCHAR(30) NOT NULL,
     changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -13,10 +13,10 @@ CREATE TABLE IF NOT EXISTS %I.lead_status_history (
         CHECK (status IN ('NEW', 'CONTACTED', 'QUALIFIED', 'CLOSED')),
     CONSTRAINT fk_lsh_lead
         FOREIGN KEY (lead_id)
-        REFERENCES %I.leads(id)
+        REFERENCES leads(id)
         ON DELETE CASCADE,
     CONSTRAINT fk_lsh_user
         FOREIGN KEY (changed_by)
-        REFERENCES %I.users(id)
+        REFERENCES users(id)
         ON DELETE SET NULL
 );

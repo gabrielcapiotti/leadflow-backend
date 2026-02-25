@@ -2,8 +2,12 @@
    GLOBAL TABLES (PUBLIC SCHEMA)
    ====================================================== */
 
+-- ======================================================
+-- TENANTS
+-- ======================================================
+
 CREATE TABLE IF NOT EXISTS public.tenants (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL,
     schema_name VARCHAR(100) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -16,8 +20,13 @@ CREATE TABLE IF NOT EXISTS public.tenants (
 CREATE INDEX IF NOT EXISTS idx_tenants_schema_name
     ON public.tenants (schema_name);
 
+
+-- ======================================================
+-- ROLES
+-- ======================================================
+
 CREATE TABLE IF NOT EXISTS public.roles (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) NOT NULL UNIQUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP

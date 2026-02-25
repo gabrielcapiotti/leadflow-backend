@@ -3,49 +3,50 @@ spring:
     name: leadflow-backend
 
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
-    driver-class-name: org.postgresql.Driver
+    url: ${DB_URL}                          # URL do banco de dados (por exemplo: jdbc:postgresql://localhost:5432/leadflow)
+    username: ${DB_USER}                     # Nome de usuário do banco de dados
+    password: ${DB_PASSWORD}                 # Senha do banco de dados
+    driver-class-name: org.postgresql.Driver # Driver JDBC para PostgreSQL
     hikari:
-      maximum-pool-size: 15
-      minimum-idle: 5
-      auto-commit: false
+      maximum-pool-size: 15                  # Número máximo de conexões no pool
+      minimum-idle: 5                        # Número mínimo de conexões inativas no pool
+      auto-commit: false                     # Desativa o auto-commit para transações explícitas
 
   jpa:
-    open-in-view: false
+    open-in-view: false                      # Desativa o Open Session in View para evitar conexões abertas durante o ciclo de vida da requisição
     hibernate:
-      ddl-auto: validate  
+      ddl-auto: validate                     # O Hibernate validará a estrutura do banco de dados com as entidades
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: false
-        multiTenancy: SCHEMA
+        dialect: org.hibernate.dialect.PostgreSQLDialect # Dialeto do Hibernate para PostgreSQL
+        format_sql: false                     # Desativa a formatação do SQL gerado
+        multiTenancy: SCHEMA                  # Habilita a multitenancy com suporte a esquemas
         jdbc:
-          time_zone: UTC
+          time_zone: UTC                     # Configuração do fuso horário do banco (UTC)
 
   flyway:
-    enabled: true
-    baseline-on-migrate: true
-    validate-on-migrate: true
+    enabled: true                             # Habilita a execução do Flyway para migrações de banco
+    baseline-on-migrate: true                  # Habilita o baseline quando houver uma migração no banco
+    validate-on-migrate: true                  # Valida as migrações antes de aplicá-las
     locations:
-      - classpath:db/migration/global  
-      - classpath:db/migration/tenants
+      - classpath:db/migration/global         # Caminho das migrações globais (para todas as instâncias)
+      - classpath:db/migration/tenants        # Caminho das migrações específicas para tenants (clientes)
 
 server:
-  port: ${SERVER_PORT:8081}  
+  port: ${SERVER_PORT:8081}                   # Porta do servidor, usa a variável de ambiente ou 8081 por padrão
   servlet:
-    context-path: /api  
+    context-path: /api                        # Caminho base da API (por exemplo: http://localhost:8081/api)
 
 logging:
   level:
-    root: INFO
-    com.leadflow: INFO  
+    root: INFO                                # Nível de log global
+    com.leadflow: INFO                         # Nível de log para a aplicação LeadFlow
+    org.hibernate.SQL: DEBUG                   # Nível de log para SQL gerado pelo Hibernate
 
 security:
   jwt:
-    secret: ${JWT_SECRET}  
-    expiration: ${JWT_EXPIRATION:3600000}  
+    secret: ${JWT_SECRET}                     # Chave secreta para assinatura do JWT (geralmente uma variável de ambiente)
+    expiration: ${JWT_EXPIRATION:3600000}      # Tempo de expiração do token JWT (em milissegundos, 3600000 equivale a 1 hora)
 
 multitenancy:
-  enabled: true  
+  enabled: true                               # Habilita o suporte para multitenancy (múltiplos tenants com diferentes esquemas)

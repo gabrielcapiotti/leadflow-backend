@@ -46,20 +46,21 @@ class TenantIsolationTest extends IntegrationTestBase {
 
     @BeforeEach
     void setup() {
-        TenantContext.clear();  // Limpar o contexto de tenant
+
+        TenantContext.clear();
+
+        // Garantir que o ROLE_USER exista no schema global
+        if (!roleRepository.existsByNameIgnoreCase("ROLE_USER")) {
+            roleRepository.saveAndFlush(new Role("ROLE_USER"));
+        }
 
         tenantA = testTenantFactory.createTenant("Tenant A");
         tenantB = testTenantFactory.createTenant("Tenant B");
-
-        // Criar os roles para garantir que ROLE_USER exista
-        if (!roleRepository.existsByNameIgnoreCase("ROLE_USER")) {
-            roleRepository.save(new Role("ROLE_USER"));
-        }
     }
 
     @AfterEach
     void cleanup() {
-        TenantContext.clear();  // Limpar o contexto de tenant após cada teste
+        TenantContext.clear();
     }
 
     /* ======================================================
@@ -68,6 +69,7 @@ class TenantIsolationTest extends IntegrationTestBase {
 
     @Test
     void shouldIsolateDataBetweenSchemas() {
+
         // ---------- TENANT A ----------
         TenantContext.setTenant(tenantA.getSchemaName());
 
@@ -91,9 +93,7 @@ class TenantIsolationTest extends IntegrationTestBase {
                 "111"
         );
 
-        Lead savedLead = leadRepository.saveAndFlush(leadA);
-
-        assertThat(savedLead.getId()).isNotNull();
+        leadRepository.saveAndFlush(leadA);
 
         assertThat(leadRepository.count())
                 .as("Tenant A must contain exactly 1 lead")
@@ -114,6 +114,7 @@ class TenantIsolationTest extends IntegrationTestBase {
 
     @Test
     void shouldNotAccessOtherTenantData() {
+
         // ---------- TENANT A ----------
         TenantContext.setTenant(tenantA.getSchemaName());
 

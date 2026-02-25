@@ -3,42 +3,47 @@ spring:
     name: leadflow-backend
 
   datasource:
-    url: jdbc:postgresql://localhost:2411/leadflow
-    username: postgres
-    password: venusia
+    url: jdbc:postgresql://localhost:2411/leadflow  # Conexão com o banco de dados
+    username: postgres                            # Usuário do banco
+    password: venusia                             # Senha do banco
+    driver-class-name: org.postgresql.Driver      # Driver JDBC para PostgreSQL
 
   jpa:
-    open-in-view: false
-    show-sql: false
+    open-in-view: false                          # Desabilita o Open Session in View
+    show-sql: false                              # Desativa a exibição do SQL gerado no log
     hibernate:
-      ddl-auto: validate
+      ddl-auto: validate                         # Valida se o banco está consistente com o modelo JPA
     properties:
       hibernate:
-        format_sql: true
-        multiTenancy: SCHEMA
+        format_sql: true                         # Formatação do SQL no log
+        multiTenancy: SCHEMA                      # Configuração para multi-tenancy com esquema
+        jdbc:
+          time_zone: UTC                         # Definindo o fuso horário como UTC
 
   flyway:
-    enabled: true
+    enabled: true                                # Habilita o Flyway para migrações
+    baseline-on-migrate: true                     # Cria um baseline quando migrações são aplicadas
+    validate-on-migrate: true                     # Valida as migrações antes de aplicá-las
     locations:
-      - classpath:db/migration/global
-      - classpath:db/migration/tenants
+      - classpath:db/migration/global            # Caminho das migrações globais
+      - classpath:db/migration/tenants           # Caminho das migrações de tenants
 
 logging:
   level:
-    root: INFO
-    com.leadflow: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.orm.jdbc.bind: TRACE
+    root: INFO                                   # Nível de log global
+    com.leadflow: DEBUG                          # Nível de log para o pacote específico "com.leadflow"
+    org.hibernate.SQL: DEBUG                     # Habilita log do SQL gerado pelo Hibernate
+    org.hibernate.orm.jdbc.bind: TRACE           # Log detalhado sobre a ligação dos parâmetros no Hibernate
 
 server:
-  port: 8081
+  port: 8081                                     # Porta onde o servidor Spring Boot será executado
   servlet:
-    context-path: /api
+    context-path: /api                           # Caminho base da API
 
 multitenancy:
-  enabled: true
+  enabled: true                                  # Ativa o suporte a multi-tenancy (suporte a múltiplos tenants)
 
 security:
   jwt:
-    secret: integration-secret-key
-    expiration: 3600000
+    secret: integration-secret-key               # Chave secreta para JWT (JSON Web Token)
+    expiration: 3600000                          # Tempo de expiração do token JWT (em milissegundos)

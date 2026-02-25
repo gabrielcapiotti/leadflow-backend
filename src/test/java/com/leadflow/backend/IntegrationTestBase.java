@@ -9,16 +9,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-/**
- * Base para testes de integração:
- * - PostgreSQL via Testcontainers
- * - Flyway
- * - Multi-tenancy por schema
- *
- * ✔ Lifecycle gerenciado pelo JUnit
- * ✔ Compatível com CI
- * ✔ Sem resource leak real
- */
 @Testcontainers
 @SpringBootTest
 @ActiveProfiles("integration")
@@ -27,13 +17,11 @@ public abstract class IntegrationTestBase {
     private static final String IMAGE = "postgres:16-alpine";
 
     @Container
-    @SuppressWarnings("resource") // lifecycle gerenciado pelo Testcontainers
     static final PostgreSQLContainer<?> postgres =
             new PostgreSQLContainer<>(IMAGE)
                     .withDatabaseName("leadflow_test")
                     .withUsername("postgres")
                     .withPassword("postgres");
-                    // ⚠ Evite withReuse(true) em CI
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
@@ -48,11 +36,9 @@ public abstract class IntegrationTestBase {
            HIBERNATE
            ============================== */
 
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
+        // 🚨 IMPORTANTE: nunca use validate aqui
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "none");
         registry.add("spring.jpa.open-in-view", () -> "false");
-
-        // ⚠ Multi-tenancy é configurado via HibernatePropertiesCustomizer
-        // NÃO configure provider/resolver aqui.
 
         /* ==============================
            FLYWAY

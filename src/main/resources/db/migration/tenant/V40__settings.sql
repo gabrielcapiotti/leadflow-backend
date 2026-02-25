@@ -2,8 +2,8 @@
    SETTINGS TABLE
    ====================================================== */
 
-CREATE TABLE IF NOT EXISTS %I.settings (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE IF NOT EXISTS settings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL,
     vendor_name VARCHAR(100) NOT NULL,
     whatsapp VARCHAR(15) NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS %I.settings (
     deleted_at TIMESTAMP,
     CONSTRAINT fk_settings_user
         FOREIGN KEY (user_id)
-        REFERENCES %I.users(id)
+        REFERENCES users(id)
         ON DELETE CASCADE,
     CONSTRAINT uq_settings_user UNIQUE (user_id)
 );

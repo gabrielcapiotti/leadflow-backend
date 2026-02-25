@@ -1,8 +1,8 @@
 package com.leadflow.backend.multitenancy;
 
+import com.leadflow.backend.IntegrationTestBase;
 import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.multitenancy.service.TenantService;
-import com.leadflow.backend.support.AbstractIntegrationTest;
 import com.leadflow.backend.util.TestTenantFactory;
 
 import org.junit.jupiter.api.AfterEach;
@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,10 +21,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
-@SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("integration") // 🔥 IMPORTANTE
-class TenantFilterIntegrationTest extends AbstractIntegrationTest {
+@ActiveProfiles("integration")
+class TenantFilterIntegrationTest extends IntegrationTestBase {
 
     @Autowired
     private MockMvc mockMvc;
@@ -41,6 +39,8 @@ class TenantFilterIntegrationTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void setup() {
+
+        // Cria fisicamente o tenant (schema + flyway)
         testTenantFactory.createTenant("Tenant A");
 
         when(tenantService.resolveSchemaByTenantIdentifier(TENANT_IDENTIFIER))

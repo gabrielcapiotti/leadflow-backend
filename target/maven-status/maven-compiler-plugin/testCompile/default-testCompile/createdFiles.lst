@@ -3,7 +3,6 @@ com\leadflow\backend\controller\auth\AuthControllerNegativeTest.class
 com\leadflow\backend\repository\lead\LeadRepositoryTest.class
 com\leadflow\backend\repository\user\UserRepositoryTest.class
 com\leadflow\backend\config\TestSecurityConfig.class
-com\leadflow\backend\support\AbstractIntegrationTest.class
 com\leadflow\backend\controller\lead\LeadControllerTest.class
 com\leadflow\backend\exception\GlobalExceptionHandlerTest$DummyRequest.class
 com\leadflow\backend\multitenancy\TenantIsolationTest.class

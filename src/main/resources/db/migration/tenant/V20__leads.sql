@@ -2,8 +2,8 @@
    LEADS TABLE
    ====================================================== */
 
-CREATE TABLE IF NOT EXISTS %I.leads (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE IF NOT EXISTS leads (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL,
     phone VARCHAR(20),
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS %I.leads (
         CHECK (status IN ('NEW', 'CONTACTED', 'QUALIFIED', 'CLOSED')),
     CONSTRAINT fk_leads_user
         FOREIGN KEY (user_id)
-        REFERENCES %I.users(id)
+        REFERENCES users(id)
         ON DELETE CASCADE,
     CONSTRAINT uq_leads_email_user
         UNIQUE (email, user_id)

@@ -1,33 +1,37 @@
 spring:
   datasource:
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
-    url: jdbc:tc:postgresql:15:///leadflow_test
-    username: postgres
-    password: postgres
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver  # Driver para Testcontainers
+    url: jdbc:tc:postgresql:15:///leadflow_test  # URL do PostgreSQL usando Testcontainers
+    username: postgres  # Usuário para o banco
+    password: postgres  # Senha do banco
 
   jpa:
-    open-in-view: false
-    show-sql: false
+    open-in-view: false  # Desabilita o open-in-view para evitar consultas preguiçosas
+    show-sql: false  # Desabilita exibição de SQL
     hibernate:
-      ddl-auto: validate
+      ddl-auto: validate  # Valida o schema do banco, mas não o altera
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
-        multiTenancy: SCHEMA
+        dialect: org.hibernate.dialect.PostgreSQLDialect  # Dialeto do PostgreSQL para o Hibernate
+        format_sql: true  # Formata o SQL para melhor legibilidade
+        multiTenancy: SCHEMA  # Ativa o multi-tenant com schema por tenant
         jdbc:
-          time_zone: UTC
+          time_zone: UTC  # Configura o fuso horário para UTC
 
   flyway:
-    enabled: true
+    enabled: true  # Habilita o Flyway para migrações
+    baseline-on-migrate: true  # Configura o Flyway para usar baseline em migrações
+    validate-on-migrate: true  # Valida as migrações antes de executar
+    locations:
+      - classpath:db/migration  # Localizações dos scripts de migração
 
 multitenancy:
-  enabled: true
+  enabled: true  # Habilita o multitenancy
 
 logging:
   level:
-    root: WARN
-    org.hibernate.SQL: DEBUG
-    org.hibernate.orm.jdbc.bind: TRACE
-    org.springframework.test.context: INFO
-    org.springframework.security: WARN
+    root: WARN  # Nível de log para a raiz
+    org.hibernate.SQL: DEBUG  # Habilita log para SQL do Hibernate
+    org.hibernate.orm.jdbc.bind: TRACE  # Habilita log para a vinculação de parâmetros no Hibernate
+    org.springframework.test.context: INFO  # Nível de log para testes
+    org.springframework.security: WARN  # Nível de log para segurança

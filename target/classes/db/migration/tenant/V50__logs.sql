@@ -2,8 +2,8 @@
    LOGS TABLE
    ====================================================== */
 
-CREATE TABLE IF NOT EXISTS %I.logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE IF NOT EXISTS logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     level VARCHAR(20) NOT NULL,
     action VARCHAR(100) NOT NULL,
     message TEXT NOT NULL,
@@ -11,6 +11,6 @@ CREATE TABLE IF NOT EXISTS %I.logs (
     user_id UUID,
     CONSTRAINT fk_logs_user
         FOREIGN KEY (user_id)
-        REFERENCES %I.users(id)
+        REFERENCES users(id)
         ON DELETE SET NULL
 );

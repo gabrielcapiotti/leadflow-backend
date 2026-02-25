@@ -6,7 +6,6 @@ import com.leadflow.backend.multitenancy.service.TenantProvisioningService;
 import com.leadflow.backend.repository.tenant.TenantRepository;
 
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class TestTenantFactory {
@@ -31,8 +30,9 @@ public class TestTenantFactory {
      * e retorna a entidade persistida.
      *
      * NÃO altera o TenantContext automaticamente.
+     *
+     * ⚠ NÃO é transacional.
      */
-    @Transactional(transactionManager = "publicTransactionManager")
     public Tenant createTenant(String tenantName) {
 
         if (tenantName == null || tenantName.isBlank()) {
@@ -58,11 +58,6 @@ public class TestTenantFactory {
        CREATE + ACTIVATE
        ====================================================== */
 
-    /**
-     * Cria o tenant e já ativa o schema no TenantContext.
-     * Ideal para testes de isolamento.
-     */
-    @Transactional(transactionManager = "publicTransactionManager")
     public Tenant createAndActivate(String tenantName) {
 
         Tenant tenant = createTenant(tenantName);
