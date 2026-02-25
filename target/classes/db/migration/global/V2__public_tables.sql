@@ -7,7 +7,7 @@
 -- ======================================================
 
 CREATE TABLE IF NOT EXISTS public.tenants (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     schema_name VARCHAR(100) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -26,7 +26,7 @@ CREATE INDEX IF NOT EXISTS idx_tenants_schema_name
 -- ======================================================
 
 CREATE TABLE IF NOT EXISTS public.roles (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP

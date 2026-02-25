@@ -3,7 +3,7 @@
    ====================================================== */
 
 CREATE TABLE IF NOT EXISTS settings (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY,
     user_id UUID NOT NULL,
     vendor_name VARCHAR(100) NOT NULL,
     whatsapp VARCHAR(15) NOT NULL,

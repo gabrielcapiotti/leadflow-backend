@@ -3,7 +3,7 @@
    ====================================================== */
 
 CREATE TABLE IF NOT EXISTS leads (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL,
     phone VARCHAR(20),

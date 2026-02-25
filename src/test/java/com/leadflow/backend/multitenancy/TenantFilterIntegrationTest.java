@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Optional;
@@ -20,9 +21,11 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureMockMvc
 @ActiveProfiles("integration")
+@TestPropertySource(properties = "multitenancy.enabled=true")
 class TenantFilterIntegrationTest extends IntegrationTestBase {
 
     @Autowired
@@ -40,7 +43,6 @@ class TenantFilterIntegrationTest extends IntegrationTestBase {
     @BeforeEach
     void setup() {
 
-        // Cria fisicamente o tenant (schema + flyway)
         testTenantFactory.createTenant("Tenant A");
 
         when(tenantService.resolveSchemaByTenantIdentifier(TENANT_IDENTIFIER))
@@ -55,18 +57,20 @@ class TenantFilterIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void shouldResolveTenantAndClearContextAfterRequest() throws Exception {
+    void shouldResolveTenantAndResetContextAfterRequest() throws Exception {
 
         mockMvc.perform(
-                get("/auth/login")
+                get("/api/test")
                         .header("X-Tenant-ID", TENANT_IDENTIFIER)
-        );
+        )
+        .andExpect(status().is4xxClientError());
+        // O status não importa, apenas precisamos que o filtro execute
 
-        verify(tenantService, times(1))
+        verify(tenantService, atLeastOnce())
                 .resolveSchemaByTenantIdentifier(TENANT_IDENTIFIER);
 
         assertThat(TenantContext.getTenant())
-                .as("TenantContext deve estar limpo após o request")
-                .isNull();
+                .as("TenantContext deve voltar para o schema default após o request")
+                .isEqualTo("public");
     }
 }

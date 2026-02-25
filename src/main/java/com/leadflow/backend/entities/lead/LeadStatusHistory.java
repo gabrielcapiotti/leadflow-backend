@@ -24,9 +24,15 @@ public class LeadStatusHistory {
        ====================================================== */
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(nullable = false, updatable = false)
     private UUID id;
+
+    @PrePersist
+    public void prePersist() {
+        if (id == null) {
+            id = UUID.randomUUID();
+        }
+    }
 
     /* ======================================================
        RELATIONSHIPS

@@ -3,7 +3,7 @@
    ====================================================== */
 
 CREATE TABLE IF NOT EXISTS logs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY,
     level VARCHAR(20) NOT NULL,
     action VARCHAR(100) NOT NULL,
     message TEXT NOT NULL,

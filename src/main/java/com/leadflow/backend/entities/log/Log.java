@@ -18,8 +18,15 @@ import java.util.UUID;
 public class Log {
 
     @Id
-    @GeneratedValue
+    @Column(nullable = false, updatable = false)
     private UUID id;
+
+    @PrePersist
+    public void prePersist() {
+        if (id == null) {
+            id = UUID.randomUUID();
+        }
+    }
 
     /*
      * Usuário que realizou a ação (pode ser null – ex: sistema)

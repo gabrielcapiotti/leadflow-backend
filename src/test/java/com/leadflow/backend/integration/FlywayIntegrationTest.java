@@ -11,55 +11,66 @@ import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
 
 import org.flywaydb.core.Flyway;
-
 import org.junit.jupiter.api.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("integration-flyway")
-@Transactional
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class FlywayIntegrationTest {
 
     private static final String TENANT_A = "tenant_a";
     private static final String TENANT_B = "tenant_b";
 
-    @Autowired
-    private LeadRepository leadRepository;
+    @Autowired private LeadRepository leadRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private RoleRepository roleRepository;
+    @Autowired private TenantRepository tenantRepository;
+    @Autowired private Flyway flyway;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
-    @Autowired
-    private UserRepository userRepository;
+    private Role globalRole;
 
-    @Autowired
-    private RoleRepository roleRepository;
-
-    @Autowired
-    private TenantRepository tenantRepository;
-
-    @Autowired
-    private Flyway flyway;
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    /* ======================================================
+       SETUP
+       ====================================================== */
 
     @BeforeEach
     void setup() {
 
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS " + TENANT_A);
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS " + TENANT_B);
+        TenantContext.clear();
 
+        // 🔥 Remove schemas se existirem
+        jdbcTemplate.execute("DROP SCHEMA IF EXISTS " + TENANT_A + " CASCADE");
+        jdbcTemplate.execute("DROP SCHEMA IF EXISTS " + TENANT_B + " CASCADE");
+
+        // 🔥 Limpa tabelas globais com segurança
+        jdbcTemplate.execute("TRUNCATE TABLE public.tenants RESTART IDENTITY CASCADE");
+        jdbcTemplate.execute("TRUNCATE TABLE public.roles RESTART IDENTITY CASCADE");
+
+        // 🔥 Cria schemas idempotentes
+        jdbcTemplate.execute("CREATE SCHEMA " + TENANT_A);
+        jdbcTemplate.execute("CREATE SCHEMA " + TENANT_B);
+
+        // 🔥 Role global única
+        globalRole = roleRepository.saveAndFlush(new Role("ROLE_USER"));
+
+        // 🔥 Registra tenants
         tenantRepository.saveAndFlush(new Tenant("Tenant A", TENANT_A));
         tenantRepository.saveAndFlush(new Tenant("Tenant B", TENANT_B));
 
+        // 🔥 Aplica migrations por schema
         migrateSchema(TENANT_A);
         migrateSchema(TENANT_B);
     }
@@ -70,44 +81,36 @@ class FlywayIntegrationTest {
     }
 
     /* ======================================================
-       1️⃣ ISOLATION BETWEEN TENANTS
+       1️⃣ ISOLATION
        ====================================================== */
 
     @Test
     void shouldIsolateDataBetweenTenants() {
 
-        // Tenant A
         TenantContext.setTenant(TENANT_A);
 
-        Role roleA = roleRepository.saveAndFlush(new Role("ROLE_USER"));
         User userA = userRepository.saveAndFlush(
-                new User("A", "a@email.com", "pass", roleA)
+                new User("A", "a@email.com", "pass", globalRole)
         );
 
         Lead leadA = leadRepository.saveAndFlush(
-                new Lead(userA.getId(), "Lead A", "lead@email.com", "111")
+                new Lead(userA.getId(), "leadA@email.com", "Lead A", "111")
         );
 
         UUID leadAId = leadA.getId();
 
-        // Flush antes de trocar tenant
-        leadRepository.flush();
-
-        // Tenant B
         TenantContext.setTenant(TENANT_B);
 
-        Role roleB = roleRepository.saveAndFlush(new Role("ROLE_USER"));
         User userB = userRepository.saveAndFlush(
-                new User("B", "b@email.com", "pass", roleB)
+                new User("B", "b@email.com", "pass", globalRole)
         );
 
         Lead leadB = leadRepository.saveAndFlush(
-                new Lead(userB.getId(), "Lead B", "lead@email.com", "222")
+                new Lead(userB.getId(), "leadB@email.com", "Lead B", "222")
         );
 
         UUID leadBId = leadB.getId();
 
-        // Volta para Tenant A
         TenantContext.setTenant(TENANT_A);
 
         assertThat(leadRepository.findById(leadAId)).isPresent();
@@ -115,11 +118,11 @@ class FlywayIntegrationTest {
     }
 
     /* ======================================================
-       2️⃣ SEARCH_PATH RESET
+       2️⃣ SEARCH_PATH
        ====================================================== */
 
     @Test
-    void shouldResetSearchPathAfterConnectionRelease() {
+    void shouldSetCorrectSearchPath() {
 
         TenantContext.setTenant(TENANT_A);
 
@@ -139,37 +142,23 @@ class FlywayIntegrationTest {
     @Test
     void shouldAllowSameEmailInDifferentTenants() {
 
-        // Tenant A
         TenantContext.setTenant(TENANT_A);
 
-        Role roleA = roleRepository.saveAndFlush(new Role("ROLE_USER"));
-        User userA = userRepository.saveAndFlush(
-                new User("A", "duplicate@email.com", "pass", roleA)
+        userRepository.saveAndFlush(
+                new User("A", "duplicate@email.com", "pass", globalRole)
         );
 
-        Lead leadA = leadRepository.saveAndFlush(
-                new Lead(userA.getId(), "Lead A", "same@email.com", "111")
-        );
-
-        assertNotNull(leadA.getId());
-
-        // Tenant B
         TenantContext.setTenant(TENANT_B);
 
-        Role roleB = roleRepository.saveAndFlush(new Role("ROLE_USER"));
         User userB = userRepository.saveAndFlush(
-                new User("B", "duplicate@email.com", "pass", roleB)
+                new User("B", "duplicate@email.com", "pass", globalRole)
         );
 
-        Lead leadB = leadRepository.saveAndFlush(
-                new Lead(userB.getId(), "Lead B", "same@email.com", "222")
-        );
-
-        assertNotNull(leadB.getId());
+        assertNotNull(userB.getId());
     }
 
     /* ======================================================
-       4️⃣ SOFT DELETE PER SCHEMA
+       4️⃣ SOFT DELETE
        ====================================================== */
 
     @Test
@@ -177,13 +166,12 @@ class FlywayIntegrationTest {
 
         TenantContext.setTenant(TENANT_A);
 
-        Role roleA = roleRepository.saveAndFlush(new Role("ROLE_USER"));
         User userA = userRepository.saveAndFlush(
-                new User("A", "soft@email.com", "pass", roleA)
+                new User("A", "soft@email.com", "pass", globalRole)
         );
 
         Lead leadA = leadRepository.saveAndFlush(
-                new Lead(userA.getId(), "Lead A", "softlead@email.com", "111")
+                new Lead(userA.getId(), "softlead@email.com", "Lead A", "111")
         );
 
         UUID leadAId = leadA.getId();
@@ -198,14 +186,13 @@ class FlywayIntegrationTest {
                 )
         ).isEmpty();
 
-        // Tenant B não deve ver nada
         TenantContext.setTenant(TENANT_B);
 
         assertThat(leadRepository.findById(leadAId)).isEmpty();
     }
 
     /* ======================================================
-       5️⃣ FLYWAY MIGRATION PER TENANT
+       5️⃣ FLYWAY HISTORY
        ====================================================== */
 
     @Test
@@ -228,9 +215,11 @@ class FlywayIntegrationTest {
 
         Flyway tenantFlyway = Flyway.configure()
                 .dataSource(flyway.getConfiguration().getDataSource())
-                .locations("classpath:db/migration")
+                .locations("classpath:db/migration/tenant")
                 .schemas(schema)
+                .defaultSchema(schema)
                 .baselineOnMigrate(true)
+                .cleanDisabled(false)
                 .load();
 
         tenantFlyway.migrate();

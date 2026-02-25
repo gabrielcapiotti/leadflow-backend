@@ -13,7 +13,6 @@ import javax.sql.DataSource;
 import java.util.regex.Pattern;
 
 @Service
-@Transactional(transactionManager = "publicTransactionManager")
 public class TenantProvisioningService {
 
     private static final Logger logger =
@@ -53,11 +52,14 @@ public class TenantProvisioningService {
 
         try {
 
+            // 🔥 1 - Criar schema (sem transação Spring)
             createSchema(schemaName);
 
+            // 🔥 2 - Rodar Flyway no schema do tenant
             runTenantMigrations(schemaName);
 
-            registerTenant(tenantName, schemaName);
+            // 🔥 3 - Registrar tenant (transação isolada)
+            registerTenantTransactional(tenantName, schemaName);
 
             logger.info("Tenant successfully provisioned: {}", schemaName);
 
@@ -91,7 +93,7 @@ public class TenantProvisioningService {
         }
     }
 
-    /* ================= FLYWAY (TENANT ONLY) ================= */
+    /* ================= FLYWAY ================= */
 
     private void runTenantMigrations(String schemaName) {
 
@@ -108,7 +110,11 @@ public class TenantProvisioningService {
 
     /* ================= REGISTER ================= */
 
-    private void registerTenant(String tenantName, String schemaName) {
+    @Transactional(transactionManager = "publicTransactionManager")
+    protected void registerTenantTransactional(
+            String tenantName,
+            String schemaName
+    ) {
 
         Tenant tenant = new Tenant(
                 tenantName.trim(),

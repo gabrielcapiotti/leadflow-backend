@@ -3,7 +3,7 @@
    ====================================================== */
 
 CREATE TABLE IF NOT EXISTS lead_status_history (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY,
     lead_id UUID NOT NULL,
     status VARCHAR(30) NOT NULL,
     changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -49,14 +49,12 @@ public class TenantFilter extends OncePerRequestFilter {
 
         DispatcherType dispatcherType = request.getDispatcherType();
 
-        // Evita execução duplicada
         if (dispatcherType == DispatcherType.ASYNC ||
             dispatcherType == DispatcherType.ERROR) {
             return true;
         }
 
         String path = request.getRequestURI();
-
         if (path == null) {
             return true;
         }
@@ -88,16 +86,18 @@ public class TenantFilter extends OncePerRequestFilter {
                     request.getRequestURI()
             );
 
-            response.sendError(
-                    HttpServletResponse.SC_BAD_REQUEST,
-                    "Missing " + TENANT_HEADER + " header"
-            );
+            if (!response.isCommitted()) {
+                response.sendError(
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        "Missing " + TENANT_HEADER + " header"
+                );
+            }
             return;
         }
 
-        try {
+        String normalizedTenant = tenantIdentifier.trim();
 
-            String normalizedTenant = tenantIdentifier.trim();
+        try {
 
             Optional<String> schemaOptional =
                     tenantService.resolveSchemaByTenantIdentifier(normalizedTenant);
@@ -106,16 +106,18 @@ public class TenantFilter extends OncePerRequestFilter {
 
                 logger.warn("Invalid tenant identifier: {}", normalizedTenant);
 
-                response.sendError(
-                        HttpServletResponse.SC_NOT_FOUND,
-                        "Tenant not found"
-                );
+                if (!response.isCommitted()) {
+                    response.sendError(
+                            HttpServletResponse.SC_NOT_FOUND,
+                            "Tenant not found"
+                    );
+                }
                 return;
             }
 
             String schemaName = schemaOptional.get();
 
-            // Proteção contra schema injection
+            // Segurança contra schema injection
             tenantService.validateSchemaName(schemaName);
 
             TenantContext.setTenant(schemaName);
@@ -126,7 +128,8 @@ public class TenantFilter extends OncePerRequestFilter {
 
         } catch (Exception ex) {
 
-            logger.error("Tenant resolution failed", ex);
+            logger.error("Tenant resolution failed for identifier {}",
+                    normalizedTenant, ex);
 
             if (!response.isCommitted()) {
                 response.sendError(

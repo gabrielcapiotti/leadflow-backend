@@ -11,7 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@ActiveProfiles("integration")
+@ActiveProfiles("integration-flyway")
 @AutoConfigureMockMvc
 class ExampleIntegrationTest {
 
