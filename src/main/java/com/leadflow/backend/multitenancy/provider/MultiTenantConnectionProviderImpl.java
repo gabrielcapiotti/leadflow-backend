@@ -3,7 +3,6 @@ package com.leadflow.backend.multitenancy.provider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -11,24 +10,25 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
-@Primary
 @Component
 public class MultiTenantConnectionProviderImpl
         implements MultiTenantConnectionProvider<String> {
 
-    private static final Logger logger = LoggerFactory.getLogger(MultiTenantConnectionProviderImpl.class);
+    private static final Logger log =
+            LoggerFactory.getLogger(MultiTenantConnectionProviderImpl.class);
 
     private static final String DEFAULT_SCHEMA = "public";
+
+    private static final Pattern VALID_SCHEMA =
+            Pattern.compile("^[a-z0-9_]+$");
+
     private final DataSource dataSource;
 
     public MultiTenantConnectionProviderImpl(DataSource dataSource) {
         this.dataSource = dataSource;
     }
-
-    /* ======================================================
-       HIBERNATE REQUIRED METHODS
-       ====================================================== */
 
     @Override
     public Connection getAnyConnection() throws SQLException {
@@ -42,34 +42,30 @@ public class MultiTenantConnectionProviderImpl
 
     @Override
     public Connection getConnection(String tenantIdentifier) throws SQLException {
-        // Obter conexão
+
         Connection connection = getAnyConnection();
 
-        // Resolver e validar o schema do tenant
         String schema = resolveSchema(tenantIdentifier);
 
-        try {
-            ensureSchemaExists(connection, schema);
-
-            // Configura o schema específico para o tenant
-            connection.setSchema(schema);
-            logger.trace("Connection switched to schema: {}", schema);
-
-            return connection;
-
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("SET search_path TO " + schema);
+            log.trace("Switched connection to schema: {}", schema);
         } catch (SQLException ex) {
             connection.close();
-            throw new SQLException("Failed to obtain connection for schema: " + schema, ex);
+            throw new SQLException("Failed to switch schema to: " + schema, ex);
         }
+
+        return connection;
     }
 
     @Override
-    public void releaseConnection(String tenantIdentifier, Connection connection) throws SQLException {
-        try {
-            // Restaurar para o schema default após uso
-            connection.setSchema(DEFAULT_SCHEMA);
+    public void releaseConnection(String tenantIdentifier, Connection connection)
+            throws SQLException {
+
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("SET search_path TO " + DEFAULT_SCHEMA);
         } catch (SQLException ex) {
-            logger.error("Failed to reset schema to default", ex);
+            log.error("Failed to reset schema to default", ex);
         } finally {
             connection.close();
         }
@@ -95,36 +91,18 @@ public class MultiTenantConnectionProviderImpl
         throw new IllegalArgumentException("Cannot unwrap to: " + unwrapType);
     }
 
-    /* ======================================================
-       INTERNAL LOGIC
-       ====================================================== */
-
     private String resolveSchema(String tenantIdentifier) {
-        // Garantir que o tenant identifier seja minúsculo e válido
+
         if (Objects.isNull(tenantIdentifier) || tenantIdentifier.isBlank()) {
             return DEFAULT_SCHEMA;
         }
 
-        String normalizedTenant = tenantIdentifier.trim().toLowerCase();
+        String normalized = tenantIdentifier.trim().toLowerCase();
 
-        if (!normalizedTenant.matches("^[a-z0-9_]+$")) {
-            throw new IllegalArgumentException("Invalid tenant identifier: " + normalizedTenant);
+        if (!VALID_SCHEMA.matcher(normalized).matches()) {
+            throw new IllegalArgumentException("Invalid tenant identifier: " + normalized);
         }
 
-        return normalizedTenant;
-    }
-
-    /**
-     * Garante que o schema exista.
-     * Necessário para Testcontainers e DataJpaTest.
-     */
-    private void ensureSchemaExists(Connection connection, String schema) throws SQLException {
-        if (DEFAULT_SCHEMA.equals(schema)) {
-            return;
-        }
-
-        try (Statement stmt = connection.createStatement()) {
-            stmt.execute("CREATE SCHEMA IF NOT EXISTS " + schema);
-        }
+        return normalized;
     }
 }

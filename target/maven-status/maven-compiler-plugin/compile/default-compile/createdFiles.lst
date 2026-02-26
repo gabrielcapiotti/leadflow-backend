@@ -44,6 +44,7 @@ com\leadflow\backend\controller\auth\AuthController.class
 com\leadflow\backend\controller\role\RoleController.class
 com\leadflow\backend\dto\settings\SettingResponse.class
 com\leadflow\backend\dto\role\RoleResponse.class
+com\leadflow\backend\MultiTenantConnectionProviderImpl.class
 com\leadflow\backend\controller\lead\LeadController.class
 com\leadflow\backend\service\lead\LeadService.class
 com\leadflow\backend\entities\lead\LeadStatusHistory.class

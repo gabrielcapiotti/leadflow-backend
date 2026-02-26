@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: leadflow_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: leadflow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf
+    command: >
+      postgres -c config_file=/etc/postgresql/postgresql.conf
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - leadflow_net
+
+  pgbackrest:
+    image: crunchydata/crunchy-pgbackrest:latest
+    container_name: leadflow_pgbackrest
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGBACKREST_STANZA: leadflow
+      PGBACKREST_PG1_HOST: postgres
+      PGBACKREST_PG1_PORT: 5432
+      PGBACKREST_PG1_USER: postgres
+      PGBACKREST_REPO1_PATH: /backups
+      PGBACKREST_REPO1_TYPE: posix
+      PGBACKREST_LOG_PATH: /var/log/pgbackrest
+    volumes:
+      - postgres_data:/var/lib/postgresql/data:ro
+      - pgbackrest_data:/backups
+      - pgbackrest_logs:/var/log/pgbackrest
+      - ./pgbackrest.conf:/etc/pgbackrest/pgbackrest.conf
+      - pgbackrest_spool:/var/spool/pgbackrest
+    entrypoint: >
+      sh -c "
+      pgbackrest --stanza=leadflow stanza-create &&
+      pgbackrest --stanza=leadflow check &&
+      tail -f /dev/null
+      "
+    networks:
+      - leadflow_net
+
+volumes:
+  postgres_data:
+  pgbackrest_data:
+  pgbackrest_logs:
+  pgbackrest_spool:
+
+networks:
+  leadflow_net:
+    driver: bridge
