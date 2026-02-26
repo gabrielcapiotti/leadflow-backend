@@ -1,11 +1,11 @@
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\BaseIntegrationTest.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\controller\auth\AuthControllerTest.java
-C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\integration\ExampleIntegrationTest.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\IntegrationTestBase.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\repository\user\UserRepositoryTest.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\repository\user\RoleRepositoryTest.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\exception\GlobalExceptionHandlerTest.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\controller\lead\LeadControllerTest.java
+C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\integration\FlywayTestBase.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\repository\lead\LeadRepositoryTest.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\repository\lead\TenantRepositoryTestHelper.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\controller\user\UserControllerTest.java

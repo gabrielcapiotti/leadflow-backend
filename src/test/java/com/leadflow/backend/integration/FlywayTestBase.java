@@ -1,4 +1,4 @@
-package com.leadflow.backend;
+package com.leadflow.backend.integration;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -10,8 +10,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
 @SpringBootTest
-@ActiveProfiles("integration")
-public abstract class IntegrationTestBase {
+@ActiveProfiles("integration-flyway")
+public abstract class FlywayTestBase {
 
     private static final String IMAGE = "postgres:16-alpine";
 
@@ -38,15 +38,16 @@ public abstract class IntegrationTestBase {
            HIBERNATE
            ============================== */
 
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
-        registry.add("spring.jpa.open-in-view", () -> "false");
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "none");
         registry.add("spring.jpa.properties.hibernate.multiTenancy", () -> "SCHEMA");
 
         /* ==============================
-           FLYWAY DESABILITADO
+           FLYWAY ATIVADO
            ============================== */
 
-        registry.add("spring.flyway.enabled", () -> "false");
+        registry.add("spring.flyway.enabled", () -> "true");
+        registry.add("spring.flyway.baseline-on-migrate", () -> "true");
+        registry.add("spring.flyway.clean-disabled", () -> "false");
 
         registry.add("spring.test.database.replace", () -> "none");
         registry.add("multitenancy.enabled", () -> "true");

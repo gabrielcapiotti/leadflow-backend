@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.UUID;
@@ -41,6 +42,9 @@ class TenantIsolationTest extends IntegrationTestBase {
     @Autowired
     private TestTenantFactory testTenantFactory;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     private Tenant tenantA;
     private Tenant tenantB;
 
@@ -49,13 +53,18 @@ class TenantIsolationTest extends IntegrationTestBase {
 
         TenantContext.clear();
 
-        // Garantir que o ROLE_USER exista no schema global
+        tenantA = testTenantFactory.createTenant("Tenant A");
+        tenantB = testTenantFactory.createTenant("Tenant B");
+
+        // 🔥 Garantia física de schema (essencial para H2 / integração)
+        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS " + tenantA.getSchemaName());
+        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS " + tenantB.getSchemaName());
+
+        // ROLE_USER precisa existir no schema global (public)
+        TenantContext.clear();
         if (!roleRepository.existsByNameIgnoreCase("ROLE_USER")) {
             roleRepository.saveAndFlush(new Role("ROLE_USER"));
         }
-
-        tenantA = testTenantFactory.createTenant("Tenant A");
-        tenantB = testTenantFactory.createTenant("Tenant B");
     }
 
     @AfterEach
@@ -139,7 +148,6 @@ class TenantIsolationTest extends IntegrationTestBase {
         );
 
         Lead savedLead = leadRepository.saveAndFlush(leadA);
-
         UUID savedLeadId = savedLead.getId();
 
         // ---------- TENANT B ----------
