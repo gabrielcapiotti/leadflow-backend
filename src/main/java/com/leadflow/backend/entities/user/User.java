@@ -21,6 +21,13 @@ import java.util.UUID;
 public class User {
 
     /* ======================================================
+       CONFIGURAÇÕES DE SEGURANÇA
+       ====================================================== */
+
+    private static final int MAX_FAILED_ATTEMPTS = 5;
+    private static final int LOCK_DURATION_MINUTES = 15;
+
+    /* ======================================================
        ID
        ====================================================== */
 
@@ -47,6 +54,16 @@ public class User {
 
     @Column(nullable = false, length = 255)
     private String password;
+
+    /* ======================================================
+       BLOQUEIO DE LOGIN
+       ====================================================== */
+
+    @Column(name = "failed_attempts", nullable = false)
+    private int failedAttempts = 0;
+
+    @Column(name = "lock_until")
+    private LocalDateTime lockUntil;
 
     /* ======================================================
        RELATIONSHIPS
@@ -135,6 +152,9 @@ public class User {
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public LocalDateTime getDeletedAt() { return deletedAt; }
 
+    public int getFailedAttempts() { return failedAttempts; }
+    public LocalDateTime getLockUntil() { return lockUntil; }
+
     /* ======================================================
        DOMAIN METHODS
        ====================================================== */
@@ -160,12 +180,42 @@ public class User {
         this.role = newRole;
     }
 
-    public void changePassword(String encryptedPassword) {
-        if (encryptedPassword == null || encryptedPassword.isBlank())
+    public void changePassword(String encodedPassword) {
+        if (encodedPassword == null || encodedPassword.isBlank()) {
             throw new IllegalArgumentException("Password cannot be blank");
-
-        this.password = encryptedPassword;
+        }
+        this.password = encodedPassword;
     }
+
+    /* ======================================================
+       LOGIN SECURITY DOMAIN LOGIC
+       ====================================================== */
+
+    public void registerFailedLogin() {
+
+        if (isAccountLocked()) {
+            return;
+        }
+
+        this.failedAttempts++;
+
+        if (this.failedAttempts >= MAX_FAILED_ATTEMPTS) {
+            this.lockUntil = LocalDateTime.now().plusMinutes(LOCK_DURATION_MINUTES);
+        }
+    }
+
+    public void resetLoginAttempts() {
+        this.failedAttempts = 0;
+        this.lockUntil = null;
+    }
+
+    public boolean isAccountLocked() {
+        return lockUntil != null && lockUntil.isAfter(LocalDateTime.now());
+    }
+
+    /* ======================================================
+       SOFT DELETE
+       ====================================================== */
 
     public void softDelete() {
         if (this.deletedAt == null) {

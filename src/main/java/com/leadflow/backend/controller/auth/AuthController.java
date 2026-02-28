@@ -8,6 +8,9 @@ import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.auth.AuthService;
+import com.leadflow.domain.auth.dto.ForgotPasswordRequest;
+import com.leadflow.domain.auth.dto.ResetPasswordRequest;
+import com.leadflow.domain.auth.service.PasswordResetService;
 
 import jakarta.validation.Valid;
 
@@ -24,13 +27,16 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtService jwtService;
+    private final PasswordResetService passwordResetService;
 
     public AuthController(
             AuthService authService,
-            JwtService jwtService
+            JwtService jwtService,
+            PasswordResetService passwordResetService
     ) {
         this.authService = authService;
         this.jwtService = jwtService;
+        this.passwordResetService = passwordResetService;
     }
 
     /* ======================================================
@@ -107,6 +113,42 @@ public class AuthController {
         );
 
         return ResponseEntity.ok(response);
+    }
+
+    /* ======================================================
+       FORGOT PASSWORD
+       ====================================================== */
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request
+    ) {
+
+        requireTenant();
+
+        passwordResetService.requestPasswordReset(request.getEmail());
+
+        // Sempre retorna 200 para evitar enumeração de usuários
+        return ResponseEntity.ok().build();
+    }
+
+    /* ======================================================
+       RESET PASSWORD
+       ====================================================== */
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request
+    ) {
+
+        requireTenant();
+
+        passwordResetService.resetPassword(
+                request.getToken(),
+                request.getNewPassword()
+        );
+
+        return ResponseEntity.ok().build();
     }
 
     /* ======================================================

@@ -27,9 +27,9 @@ public class GlobalExceptionHandler {
     private static final Logger log =
             LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    /* ==========================
+    /* ======================================================
        VALIDATION (@Valid Body)
-       ========================== */
+       ====================================================== */
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidation(
@@ -49,9 +49,9 @@ public class GlobalExceptionHandler {
         );
     }
 
-    /* ==========================
+    /* ======================================================
        VALIDATION (RequestParam / PathVariable)
-       ========================== */
+       ====================================================== */
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleConstraintViolation(
@@ -70,9 +70,9 @@ public class GlobalExceptionHandler {
         );
     }
 
-    /* ==========================
+    /* ======================================================
        BUSINESS RULES
-       ========================== */
+       ====================================================== */
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiErrorResponse> handleIllegalArgument(
@@ -91,23 +91,33 @@ public class GlobalExceptionHandler {
             IllegalStateException ex
     ) {
 
+        String message = ex.getMessage() != null ? ex.getMessage() : "Invalid state";
+
+        if (message.toLowerCase().contains("locked")) {
+            return buildResponse(
+                    HttpStatus.LOCKED,
+                    "Account Locked",
+                    message
+            );
+        }
+
         return buildResponse(
                 HttpStatus.CONFLICT,
                 "Invalid State",
-                ex.getMessage()
+                message
         );
     }
 
-    /* ==========================
+    /* ======================================================
        DATABASE
-       ========================== */
+       ====================================================== */
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleDataIntegrity(
             DataIntegrityViolationException ex
     ) {
 
-        log.warn("Data integrity violation", ex);
+        log.warn("Data integrity violation detected");
 
         return buildResponse(
                 HttpStatus.CONFLICT,
@@ -116,9 +126,9 @@ public class GlobalExceptionHandler {
         );
     }
 
-    /* ==========================
-       SECURITY (Controller-level)
-       ========================== */
+    /* ======================================================
+       SECURITY
+       ====================================================== */
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiErrorResponse> handleBadCredentials() {
@@ -150,14 +160,12 @@ public class GlobalExceptionHandler {
         );
     }
 
-    /* ==========================
+    /* ======================================================
        MALFORMED JSON
-       ========================== */
+       ====================================================== */
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiErrorResponse> handleInvalidJson(
-            HttpMessageNotReadableException ex
-    ) {
+    public ResponseEntity<ApiErrorResponse> handleInvalidJson() {
 
         return buildResponse(
                 HttpStatus.BAD_REQUEST,
@@ -166,16 +174,16 @@ public class GlobalExceptionHandler {
         );
     }
 
-    /* ==========================
-       FALLBACK (SAFE)
-       ========================== */
+    /* ======================================================
+       FALLBACK
+       ====================================================== */
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ApiErrorResponse> handleRuntime(
-            RuntimeException ex
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiErrorResponse> handleUnexpected(
+            Exception ex
     ) {
 
-        log.error("Unexpected runtime error", ex);
+        log.error("Unexpected internal error", ex);
 
         return buildResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
@@ -184,9 +192,9 @@ public class GlobalExceptionHandler {
         );
     }
 
-    /* ==========================
+    /* ======================================================
        HELPER
-       ========================== */
+       ====================================================== */
 
     private ResponseEntity<ApiErrorResponse> buildResponse(
             HttpStatus status,
