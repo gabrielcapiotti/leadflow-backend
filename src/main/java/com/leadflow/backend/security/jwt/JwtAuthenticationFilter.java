@@ -16,6 +16,9 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.UUID;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -58,16 +61,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     }
 
                     UUID expectedUserId = customUser.getId();
-                    String headerTenant = TenantContext.getTenant();
+                    String currentTenant = TenantContext.getTenant();
 
-                    boolean valid = jwtService.isTokenValid(
+                    boolean baseValid = jwtService.isTokenValid(
                             token,
                             userDetails,
                             expectedUserId,
-                            headerTenant
+                            currentTenant
                     );
 
-                    if (valid) {
+                    if (baseValid && isTokenStillValidAfterPasswordChange(token, customUser)) {
 
                         UsernamePasswordAuthenticationToken authToken =
                                 new UsernamePasswordAuthenticationToken(
@@ -87,12 +90,46 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
 
             } catch (Exception ignored) {
-                // Token inválido → não autentica
+                // Token inválido ou manipulado → não autentica
             }
         }
 
         filterChain.doFilter(request, response);
     }
+
+    /* ======================================================
+       JWT INVALIDATION LOGIC
+       ====================================================== */
+
+    private boolean isTokenStillValidAfterPasswordChange(
+            String token,
+            CustomUserDetails userDetails
+    ) {
+
+        Date issuedAt = jwtService.extractIssuedAt(token);
+
+        if (issuedAt == null) {
+            return false;
+        }
+
+        LocalDateTime tokenIssuedAt =
+                issuedAt.toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDateTime();
+
+        LocalDateTime credentialsUpdatedAt =
+                userDetails.getCredentialsUpdatedAt();
+
+        if (credentialsUpdatedAt == null) {
+            return true;
+        }
+
+        return !tokenIssuedAt.isBefore(credentialsUpdatedAt);
+    }
+
+    /* ======================================================
+       TOKEN EXTRACTION
+       ====================================================== */
 
     private String extractToken(HttpServletRequest request) {
 

@@ -1,10 +1,12 @@
 package com.leadflow.backend.security;
 
 import com.leadflow.backend.entities.user.User;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -16,7 +18,11 @@ public final class CustomUserDetails implements UserDetails {
     private final String email;
     private final String password;
     private final String role;
+
     private final boolean enabled;
+    private final boolean accountNonLocked;
+
+    private final LocalDateTime credentialsUpdatedAt;
 
     public CustomUserDetails(User user) {
 
@@ -36,7 +42,10 @@ public final class CustomUserDetails implements UserDetails {
         this.email = user.getEmail();
         this.password = user.getPassword();
         this.role = normalizeRole(user.getRole().getName());
-        this.enabled = user.getDeletedAt() == null;
+
+        this.enabled = !user.isDeleted();
+        this.accountNonLocked = !user.isAccountLocked();
+        this.credentialsUpdatedAt = user.getCredentialsUpdatedAt();
     }
 
     /* ======================================================
@@ -59,11 +68,15 @@ public final class CustomUserDetails implements UserDetails {
     }
 
     /* ======================================================
-       GETTERS CUSTOM
+       CUSTOM GETTERS
        ====================================================== */
 
     public UUID getId() {
         return id;
+    }
+
+    public LocalDateTime getCredentialsUpdatedAt() {
+        return credentialsUpdatedAt;
     }
 
     /* ======================================================
@@ -87,17 +100,17 @@ public final class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return true;
+        return true; // Não usamos expiração por tempo
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return accountNonLocked;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true;
+        return true; // Controlado via JWT iat
     }
 
     @Override

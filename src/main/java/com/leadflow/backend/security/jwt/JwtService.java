@@ -1,8 +1,10 @@
 package com.leadflow.backend.security.jwt;
 
 import com.leadflow.backend.entities.user.User;
+
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,52 +22,61 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
+    private static final Logger logger =
+            LoggerFactory.getLogger(JwtService.class);
 
     private final Key signingKey;
     private final long expirationMillis;
     private final String issuer;
     private final Clock clock;
 
-    /* ========================= CONSTRUCTOR (SPRING) ========================= */
+    /* ======================================================
+       CONSTRUCTOR (SPRING)
+       ====================================================== */
 
     public JwtService(
             @Value("${security.jwt.secret}") String secret,
             @Value("${security.jwt.expiration}") long expirationMillis,
             @Value("${security.jwt.issuer:leadflow}") String issuer,
-            Clock clock // Dependency injection for Clock, easier to test
+            Clock clock
     ) {
-        this.signingKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+
+        if (secret == null || secret.length() < 32) {
+            throw new IllegalArgumentException("JWT secret must be at least 256 bits");
+        }
+
+        this.signingKey =
+                Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+
         this.expirationMillis = expirationMillis;
         this.issuer = issuer;
-        this.clock = clock != null ? clock : Clock.systemUTC(); // Default to UTC if null
+        this.clock = clock != null ? clock : Clock.systemUTC();
     }
 
-    /* ========================= CONSTRUCTOR (TEST) ========================= */
-
-    // Construtor para testes
-    public JwtService() {
-        this.signingKey = Keys.hmacShaKeyFor("defaultsecretdefaultsecretdefaultsecret".getBytes(StandardCharsets.UTF_8)); // Chave default para testes
-        this.expirationMillis = 3600000; // 1 hora
-        this.issuer = "leadflow";
-        this.clock = Clock.systemUTC(); // Usando UTC como padrão
-    }
-
-    /* ========================= TOKEN GENERATION ========================= */
+    /* ======================================================
+       TOKEN GENERATION
+       ====================================================== */
 
     public String generateToken(User user, String tenantSchema) {
 
-        if (user == null || user.getId() == null || user.getRole() == null) {
-            throw new IllegalStateException("Invalid user for token generation");
+        if (user == null ||
+            user.getId() == null ||
+            user.getRole() == null) {
+
+            throw new IllegalStateException(
+                    "Invalid user for token generation"
+            );
         }
 
         if (tenantSchema == null || tenantSchema.isBlank()) {
-            throw new IllegalArgumentException("Tenant schema cannot be blank");
+            throw new IllegalArgumentException(
+                    "Tenant schema cannot be blank"
+            );
         }
 
         Instant now = Instant.now(clock);
 
-        String token = Jwts.builder()
+        return Jwts.builder()
                 .setId(UUID.randomUUID().toString())
                 .setSubject(user.getEmail())
                 .setIssuer(issuer)
@@ -76,34 +87,30 @@ public class JwtService {
                 .claim("tenant", tenantSchema.trim().toLowerCase())
                 .signWith(signingKey, SignatureAlgorithm.HS256)
                 .compact();
-
-        logger.debug("Generated JWT token for user: {}", user.getEmail()); // Log para rastrear a geração do token
-
-        return token;
     }
 
-    /* ========================= BASIC VALIDATION ========================= */
+    /* ======================================================
+       BASIC VALIDATION
+       ====================================================== */
 
     public boolean isValid(String token) {
 
         if (token == null || token.isBlank()) {
-            logger.warn("Received null or blank token");
             return false;
         }
 
         try {
             extractAllClaims(token);
             return true;
-        } catch (ExpiredJwtException e) {
-            logger.warn("JWT expired");
         } catch (JwtException | IllegalArgumentException e) {
-            logger.warn("Invalid JWT");
+            logger.warn("Invalid JWT: {}", e.getMessage());
+            return false;
         }
-
-        return false;
     }
 
-    /* ========================= CONTEXT VALIDATION ========================= */
+    /* ======================================================
+       CONTEXT VALIDATION
+       ====================================================== */
 
     public boolean isTokenValid(
             String token,
@@ -117,29 +124,29 @@ public class JwtService {
         }
 
         try {
+
             String email = extractEmail(token);
             UUID tokenUserId = extractUserId(token);
             String tokenTenant = extractTenant(token);
 
             return email.equals(userDetails.getUsername())
                     && tokenUserId.equals(expectedUserId)
-                    && tokenTenant.equalsIgnoreCase(expectedTenant)
-                    && !isTokenExpired(token);
+                    && tokenTenant.equalsIgnoreCase(expectedTenant);
 
         } catch (Exception e) {
-            logger.error("Error validating token context", e);
+            logger.warn("Token context validation failed");
             return false;
         }
     }
 
-    private boolean isTokenExpired(String token) {
-        Date expiration = extractExpiration(token);
-        return expiration.before(Date.from(Instant.now(clock)));
-    }
+    /* ======================================================
+       CLAIM EXTRACTION
+       ====================================================== */
 
-    /* ========================= CLAIM EXTRACTION ========================= */
-
-    public <T> T extractClaim(String token, Function<Claims, T> resolver) {
+    public <T> T extractClaim(
+            String token,
+            Function<Claims, T> resolver
+    ) {
         return resolver.apply(extractAllClaims(token));
     }
 
@@ -148,26 +155,37 @@ public class JwtService {
     }
 
     public UUID extractUserId(String token) {
-        String value = extractClaim(token, claims -> claims.get("userId", String.class));
+        String value = extractClaim(token,
+                claims -> claims.get("userId", String.class));
+
         if (value == null) {
             throw new IllegalArgumentException("userId claim missing");
         }
+
         return UUID.fromString(value);
     }
 
     public String extractRole(String token) {
-        return extractClaim(token, claims -> claims.get("role", String.class));
+        return extractClaim(token,
+                claims -> claims.get("role", String.class));
     }
 
     public String extractTenant(String token) {
-        return extractClaim(token, claims -> claims.get("tenant", String.class));
+        return extractClaim(token,
+                claims -> claims.get("tenant", String.class));
+    }
+
+    public Date extractIssuedAt(String token) {
+        return extractClaim(token, Claims::getIssuedAt);
     }
 
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    /* ========================= INTERNAL PARSE ========================= */
+    /* ======================================================
+       INTERNAL PARSE
+       ====================================================== */
 
     private Claims extractAllClaims(String token) {
 
@@ -175,7 +193,8 @@ public class JwtService {
                 .setSigningKey(signingKey)
                 .requireIssuer(issuer)
                 .setAllowedClockSkewSeconds(30)
-                .setClock(() -> Date.from(Instant.now(clock)))
+                .setClock(() ->
+                        Date.from(Instant.now(clock)))
                 .build()
                 .parseClaimsJws(token)
                 .getBody();

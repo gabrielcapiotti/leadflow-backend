@@ -21,7 +21,7 @@ import java.util.UUID;
 public class User {
 
     /* ======================================================
-       CONFIGURAÇÕES DE SEGURANÇA
+       SECURITY CONFIG
        ====================================================== */
 
     private static final int MAX_FAILED_ATTEMPTS = 5;
@@ -43,7 +43,7 @@ public class User {
     }
 
     /* ======================================================
-       FIELDS
+       CORE FIELDS
        ====================================================== */
 
     @Column(nullable = false, length = 150)
@@ -56,7 +56,14 @@ public class User {
     private String password;
 
     /* ======================================================
-       BLOQUEIO DE LOGIN
+       JWT INVALIDATION CONTROL
+       ====================================================== */
+
+    @Column(name = "credentials_updated_at")
+    private LocalDateTime credentialsUpdatedAt;
+
+    /* ======================================================
+       LOGIN LOCK CONTROL
        ====================================================== */
 
     @Column(name = "failed_attempts", nullable = false)
@@ -96,9 +103,7 @@ public class User {
        CONSTRUCTORS
        ====================================================== */
 
-    protected User() {
-        // Required by JPA
-    }
+    protected User() {}
 
     public User(String name,
                 String email,
@@ -111,6 +116,7 @@ public class User {
         this.email = normalizeEmail(email);
         this.password = encryptedPassword;
         this.role = role;
+        this.credentialsUpdatedAt = LocalDateTime.now();
     }
 
     /* ======================================================
@@ -148,10 +154,10 @@ public class User {
     public String getEmail() { return email; }
     public String getPassword() { return password; }
     public Role getRole() { return role; }
+    public LocalDateTime getCredentialsUpdatedAt() { return credentialsUpdatedAt; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public LocalDateTime getDeletedAt() { return deletedAt; }
-
     public int getFailedAttempts() { return failedAttempts; }
     public LocalDateTime getLockUntil() { return lockUntil; }
 
@@ -178,29 +184,39 @@ public class User {
             throw new IllegalArgumentException("Role cannot be null");
 
         this.role = newRole;
+
+        // Segurança: invalida JWT ao trocar role
+        this.credentialsUpdatedAt = LocalDateTime.now();
     }
 
     public void changePassword(String encodedPassword) {
-        if (encodedPassword == null || encodedPassword.isBlank()) {
+
+        if (encodedPassword == null || encodedPassword.isBlank())
             throw new IllegalArgumentException("Password cannot be blank");
-        }
+
         this.password = encodedPassword;
+
+        // 🔒 INVALIDA TODOS JWT
+        this.credentialsUpdatedAt = LocalDateTime.now();
     }
 
     /* ======================================================
-       LOGIN SECURITY DOMAIN LOGIC
+       LOGIN SECURITY
        ====================================================== */
 
     public void registerFailedLogin() {
 
-        if (isAccountLocked()) {
+        if (isAccountLocked())
             return;
-        }
 
         this.failedAttempts++;
 
         if (this.failedAttempts >= MAX_FAILED_ATTEMPTS) {
-            this.lockUntil = LocalDateTime.now().plusMinutes(LOCK_DURATION_MINUTES);
+            this.lockUntil =
+                    LocalDateTime.now().plusMinutes(LOCK_DURATION_MINUTES);
+
+            // Opcional: também invalida JWT
+            this.credentialsUpdatedAt = LocalDateTime.now();
         }
     }
 
@@ -210,7 +226,8 @@ public class User {
     }
 
     public boolean isAccountLocked() {
-        return lockUntil != null && lockUntil.isAfter(LocalDateTime.now());
+        return lockUntil != null &&
+               lockUntil.isAfter(LocalDateTime.now());
     }
 
     /* ======================================================
@@ -220,11 +237,15 @@ public class User {
     public void softDelete() {
         if (this.deletedAt == null) {
             this.deletedAt = LocalDateTime.now();
+
+            // Segurança: invalida JWT ao deletar
+            this.credentialsUpdatedAt = LocalDateTime.now();
         }
     }
 
     public void restore() {
         this.deletedAt = null;
+        this.credentialsUpdatedAt = LocalDateTime.now();
     }
 
     public boolean isDeleted() {
@@ -232,7 +253,7 @@ public class User {
     }
 
     /* ======================================================
-       EQUALS & HASHCODE (Hibernate-safe)
+       EQUALS & HASHCODE
        ====================================================== */
 
     @Override
