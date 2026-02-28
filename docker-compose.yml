@@ -1,0 +1,29 @@
+services:
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: leadflow_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: leadflow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      AWS_ACCESS_KEY_ID: 
+      AWS_SECRET_ACCESS_KEY:
+      AWS_DEFAULT_REGION: us-east-2
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./pgbackrest.conf:/etc/pgbackrest/pgbackrest.conf
+    command: >
+      sh -c "
+      apk add --no-cache pgbackrest &&
+      postgres
+      "
+    networks:
+      - leadflow_net
+
+volumes:
+  postgres_data:
+
+networks:
+  leadflow_net:

@@ -1,0 +1,15 @@
+FROM postgres:15
+
+RUN apt-get update && \
+    apt-get install -y openssh-server pgbackrest && \
+    mkdir /var/run/sshd
+
+RUN echo "PermitRootLogin no" >> /etc/ssh/sshd_config
+RUN echo "PasswordAuthentication no" >> /etc/ssh/sshd_config
+RUN echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config
+
+RUN mkdir -p /var/lib/postgresql/.ssh && \
+    chown -R postgres:postgres /var/lib/postgresql/.ssh && \
+    chmod 700 /var/lib/postgresql/.ssh
+
+EXPOSE 22

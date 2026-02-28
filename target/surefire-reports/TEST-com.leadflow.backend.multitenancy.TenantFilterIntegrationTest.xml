@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.leadflow.backend.multitenancy.TenantIsolationTest" time="1.503" tests="2" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.leadflow.backend.multitenancy.TenantFilterIntegrationTest" time="4.406" tests="1" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="17"/>
     <property name="sun.cpu.isalist" value="amd64"/>
@@ -49,7 +49,7 @@
     <property name="localRepository" value="C:\Users\Gabri\.m2\repository"/>
     <property name="java.vendor.url.bug" value="https://github.com/microsoft/openjdk/issues"/>
     <property name="java.io.tmpdir" value="C:\Users\Gabri\AppData\Local\Temp\"/>
-    <property name="com.zaxxer.hikari.pool_number" value="3"/>
+    <property name="com.zaxxer.hikari.pool_number" value="2"/>
     <property name="java.version" value="17.0.16"/>
     <property name="user.dir" value="C:\Users\Gabri\OneDrive\Área de Trabalho\leadflow-backend"/>
     <property name="os.arch" value="amd64"/>
@@ -67,9 +67,8 @@
     <property name="java.class.version" value="61.0"/>
     <property name="LOGGED_APPLICATION_NAME" value="[leadflow-backend] "/>
   </properties>
-  <testcase name="shouldIsolateDataBetweenSchemas" classname="com.leadflow.backend.multitenancy.TenantIsolationTest" time="0.496">
-    <system-out><![CDATA[2026-02-26T18:36:37.803-03:00  INFO 25584 --- [leadflow-backend] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.leadflow.backend.BackendApplication for test class com.leadflow.backend.multitenancy.TenantIsolationTest
-
+  <testcase name="shouldResolveTenantAndResetContextAfterRequest" classname="com.leadflow.backend.multitenancy.TenantFilterIntegrationTest" time="0.696">
+    <system-out><![CDATA[
   .   ____          _            __ _ _
  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
 ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
@@ -79,18 +78,18 @@
 
  :: Spring Boot ::               (v3.5.10)
 
-2026-02-26T18:36:37.839-03:00  INFO 25584 --- [leadflow-backend] [           main] c.l.b.multitenancy.TenantIsolationTest   : Starting TenantIsolationTest using Java 17.0.16 with PID 25584 (started by Gabri in C:\Users\Gabri\OneDrive\Área de Trabalho\leadflow-backend)
-2026-02-26T18:36:37.839-03:00  INFO 25584 --- [leadflow-backend] [           main] c.l.b.multitenancy.TenantIsolationTest   : The following 1 profile is active: "integration"
-2026-02-26T18:36:38.046-03:00  INFO 25584 --- [leadflow-backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2026-02-26T18:36:38.059-03:00  INFO 25584 --- [leadflow-backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 11 ms. Found 7 JPA repository interfaces.
-2026-02-26T18:36:38.160-03:00  INFO 25584 --- [leadflow-backend] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: tenant]
-2026-02-26T18:36:38.164-03:00  INFO 25584 --- [leadflow-backend] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
-2026-02-26T18:36:38.174-03:00  INFO 25584 --- [leadflow-backend] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
-2026-02-26T18:36:38.174-03:00  INFO 25584 --- [leadflow-backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-3 - Starting...
-2026-02-26T18:36:38.189-03:00  INFO 25584 --- [leadflow-backend] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-3 - Added connection org.postgresql.jdbc.PgConnection@53b7e674
-2026-02-26T18:36:38.189-03:00  INFO 25584 --- [leadflow-backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-3 - Start completed.
-2026-02-26T18:36:38.194-03:00  WARN 25584 --- [leadflow-backend] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2026-02-26T18:36:38.198-03:00  INFO 25584 --- [leadflow-backend] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+2026-02-26T18:36:35.911-03:00  INFO 25584 --- [leadflow-backend] [           main] c.l.b.m.TenantFilterIntegrationTest      : Starting TenantFilterIntegrationTest using Java 17.0.16 with PID 25584 (started by Gabri in C:\Users\Gabri\OneDrive\Área de Trabalho\leadflow-backend)
+2026-02-26T18:36:35.912-03:00  INFO 25584 --- [leadflow-backend] [           main] c.l.b.m.TenantFilterIntegrationTest      : The following 1 profile is active: "integration"
+2026-02-26T18:36:36.220-03:00  INFO 25584 --- [leadflow-backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-02-26T18:36:36.239-03:00  INFO 25584 --- [leadflow-backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 16 ms. Found 7 JPA repository interfaces.
+2026-02-26T18:36:36.431-03:00  INFO 25584 --- [leadflow-backend] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: tenant]
+2026-02-26T18:36:36.435-03:00  INFO 25584 --- [leadflow-backend] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-02-26T18:36:36.444-03:00  INFO 25584 --- [leadflow-backend] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-02-26T18:36:36.444-03:00  INFO 25584 --- [leadflow-backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Starting...
+2026-02-26T18:36:36.479-03:00  INFO 25584 --- [leadflow-backend] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-2 - Added connection org.postgresql.jdbc.PgConnection@3fa69edd
+2026-02-26T18:36:36.479-03:00  INFO 25584 --- [leadflow-backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Start completed.
+2026-02-26T18:36:36.485-03:00  WARN 25584 --- [leadflow-backend] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-02-26T18:36:36.490-03:00  INFO 25584 --- [leadflow-backend] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
 	Database JDBC URL [undefined/unknown]
 	Database driver: undefined/unknown
 	Database version: 16.12
@@ -98,40 +97,40 @@
 	Isolation level: undefined/unknown
 	Minimum pool size: undefined/unknown
 	Maximum pool size: undefined/unknown
-2026-02-26T18:36:38.281-03:00  INFO 25584 --- [leadflow-backend] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2026-02-26T18:36:38.281-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.562-03:00  INFO 25584 --- [leadflow-backend] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-02-26T18:36:36.562-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     set client_min_messages = WARNING
-2026-02-26T18:36:38.281-03:00  INFO 25584 --- [leadflow-backend] [           main] org.hibernate.orm.connections.access     : HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$MultiTenantConnectionProviderJdbcConnectionAccess@467ba23] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
-2026-02-26T18:36:38.282-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.562-03:00  INFO 25584 --- [leadflow-backend] [           main] org.hibernate.orm.connections.access     : HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$MultiTenantConnectionProviderJdbcConnectionAccess@24b0c539] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
+2026-02-26T18:36:36.563-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     drop table if exists public.roles cascade
-2026-02-26T18:36:38.290-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.565-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     drop table if exists public.tenants cascade
-2026-02-26T18:36:38.294-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.566-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     alter table if exists lead_status_history 
        drop constraint if exists fk_lsh_user
-2026-02-26T18:36:38.298-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.567-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     alter table if exists lead_status_history 
        drop constraint if exists fk_lsh_lead
-2026-02-26T18:36:38.301-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.569-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     alter table if exists logs 
        drop constraint if exists fk_logs_user
-2026-02-26T18:36:38.304-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.570-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     alter table if exists settings 
        drop constraint if exists fk_settings_user
-2026-02-26T18:36:38.308-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.571-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     alter table if exists users 
        drop constraint if exists fk_users_role
-2026-02-26T18:36:38.309-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.572-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     drop table if exists lead_status_history cascade
-2026-02-26T18:36:38.313-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.574-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     drop table if exists leads cascade
-2026-02-26T18:36:38.318-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.574-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     drop table if exists logs cascade
-2026-02-26T18:36:38.324-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.575-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     drop table if exists settings cascade
-2026-02-26T18:36:38.328-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.576-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     drop table if exists users cascade
-2026-02-26T18:36:38.332-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.577-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     create table public.roles (
         created_at timestamp(6) not null,
         updated_at timestamp(6) not null,
@@ -140,8 +139,8 @@
         primary key (id),
         constraint uk_roles_name unique (name)
     )
-2026-02-26T18:36:38.332-03:00  INFO 25584 --- [leadflow-backend] [           main] org.hibernate.orm.connections.access     : HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$MultiTenantConnectionProviderJdbcConnectionAccess@d1fb877] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
-2026-02-26T18:36:38.339-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.577-03:00  INFO 25584 --- [leadflow-backend] [           main] org.hibernate.orm.connections.access     : HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$MultiTenantConnectionProviderJdbcConnectionAccess@1dd84464] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
+2026-02-26T18:36:36.586-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     create table public.tenants (
         created_at timestamp(6) not null,
         deleted_at timestamp(6),
@@ -152,10 +151,10 @@
         primary key (id),
         constraint uk_tenants_schema_name unique (schema_name)
     )
-2026-02-26T18:36:38.342-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.591-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     create index idx_tenants_schema_name 
        on public.tenants (schema_name)
-2026-02-26T18:36:38.344-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.593-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     create table lead_status_history (
         changed_at timestamp(6) not null,
         changed_by uuid,
@@ -164,7 +163,7 @@
         status varchar(30) not null check (status in ('NEW','CONTACTED','QUALIFIED','CLOSED')),
         primary key (id)
     )
-2026-02-26T18:36:38.348-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.599-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     create table leads (
         created_at timestamp(6) not null,
         deleted_at timestamp(6),
@@ -178,7 +177,7 @@
         primary key (id),
         constraint uk_leads_email_user unique (email, user_id)
     )
-2026-02-26T18:36:38.354-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.605-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     create table logs (
         created_at timestamp(6) not null,
         id uuid not null,
@@ -186,7 +185,7 @@
         action TEXT not null,
         primary key (id)
     )
-2026-02-26T18:36:38.358-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.609-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     create table settings (
         created_at timestamp(6) not null,
         deleted_at timestamp(6),
@@ -200,7 +199,7 @@
         welcome_message TEXT,
         primary key (id)
     )
-2026-02-26T18:36:38.362-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.614-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     create table users (
         created_at timestamp(6) not null,
         deleted_at timestamp(6),
@@ -213,64 +212,64 @@
         primary key (id),
         constraint uq_users_email unique (email)
     )
-2026-02-26T18:36:38.367-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.621-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     create index idx_lsh_lead_id 
        on lead_status_history (lead_id)
-2026-02-26T18:36:38.369-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.623-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     create index idx_lsh_lead_changed_at 
        on lead_status_history (lead_id, changed_at)
-2026-02-26T18:36:38.371-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.626-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     create index idx_leads_email 
        on leads (email)
-2026-02-26T18:36:38.374-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.628-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     create index idx_leads_user 
        on leads (user_id)
-2026-02-26T18:36:38.375-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.630-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     create index idx_leads_user_email 
        on leads (user_id, email)
-2026-02-26T18:36:38.377-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.632-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     create index idx_logs_user_id 
        on logs (user_id)
-2026-02-26T18:36:38.379-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.634-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     create index idx_logs_created_at 
        on logs (created_at)
-2026-02-26T18:36:38.381-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.636-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     create index idx_settings_user 
        on settings (user_id)
-2026-02-26T18:36:38.382-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.640-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     create index idx_users_email 
        on users (email)
-2026-02-26T18:36:38.383-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.642-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     alter table if exists lead_status_history 
        add constraint fk_lsh_user 
        foreign key (changed_by) 
        references users
-2026-02-26T18:36:38.388-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.648-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     alter table if exists lead_status_history 
        add constraint fk_lsh_lead 
        foreign key (lead_id) 
        references leads
-2026-02-26T18:36:38.391-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.653-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     alter table if exists logs 
        add constraint fk_logs_user 
        foreign key (user_id) 
        references users
-2026-02-26T18:36:38.394-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.657-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     alter table if exists settings 
        add constraint fk_settings_user 
        foreign key (user_id) 
        references users
-2026-02-26T18:36:38.397-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.661-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     alter table if exists users 
        add constraint fk_users_role 
        foreign key (role_id) 
        references public.roles
-2026-02-26T18:36:38.400-03:00  INFO 25584 --- [leadflow-backend] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'tenant'
-2026-02-26T18:36:38.404-03:00  INFO 25584 --- [leadflow-backend] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: public]
-2026-02-26T18:36:38.406-03:00  INFO 25584 --- [leadflow-backend] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
-2026-02-26T18:36:38.413-03:00  INFO 25584 --- [leadflow-backend] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
-2026-02-26T18:36:38.414-03:00  WARN 25584 --- [leadflow-backend] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2026-02-26T18:36:38.416-03:00  INFO 25584 --- [leadflow-backend] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+2026-02-26T18:36:36.666-03:00  INFO 25584 --- [leadflow-backend] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'tenant'
+2026-02-26T18:36:36.672-03:00  INFO 25584 --- [leadflow-backend] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: public]
+2026-02-26T18:36:36.676-03:00  INFO 25584 --- [leadflow-backend] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-02-26T18:36:36.684-03:00  INFO 25584 --- [leadflow-backend] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-02-26T18:36:36.687-03:00  WARN 25584 --- [leadflow-backend] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-02-26T18:36:36.691-03:00  INFO 25584 --- [leadflow-backend] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
 	Database JDBC URL [undefined/unknown]
 	Database driver: undefined/unknown
 	Database version: 16.12
@@ -278,12 +277,13 @@
 	Isolation level: undefined/unknown
 	Minimum pool size: undefined/unknown
 	Maximum pool size: undefined/unknown
-2026-02-26T18:36:38.430-03:00  INFO 25584 --- [leadflow-backend] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2026-02-26T18:36:38.430-03:00  INFO 25584 --- [leadflow-backend] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'public'
-2026-02-26T18:36:38.543-03:00  INFO 25584 --- [leadflow-backend] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name userDetailsServiceImpl
-2026-02-26T18:36:38.646-03:00  INFO 25584 --- [leadflow-backend] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
-2026-02-26T18:36:38.744-03:00  INFO 25584 --- [leadflow-backend] [           main] c.l.b.multitenancy.TenantIsolationTest   : Started TenantIsolationTest in 0.939 seconds (process running for 18.985)
-2026-02-26T18:36:38.751-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:36.712-03:00  INFO 25584 --- [leadflow-backend] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-02-26T18:36:36.712-03:00  INFO 25584 --- [leadflow-backend] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'public'
+2026-02-26T18:36:36.887-03:00  INFO 25584 --- [leadflow-backend] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name userDetailsServiceImpl
+2026-02-26T18:36:36.992-03:00  INFO 25584 --- [leadflow-backend] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-02-26T18:36:37.084-03:00  INFO 25584 --- [leadflow-backend] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-02-26T18:36:37.097-03:00  INFO 25584 --- [leadflow-backend] [           main] c.l.b.m.TenantFilterIntegrationTest      : Started TenantFilterIntegrationTest in 1.244 seconds (process running for 17.338)
+2026-02-26T18:36:37.264-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     select
         t1_0.id 
     from
@@ -292,27 +292,33 @@
         upper(t1_0.schema_name)=upper(?) 
     fetch
         first ? rows only
-2026-02-26T18:36:38.752-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:VARCHAR) <- [tenant_a]
-2026-02-26T18:36:38.752-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:INTEGER) <- [1]
-2026-02-26T18:36:38.767-03:00  INFO 25584 --- [leadflow-backend] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://localhost:51125/leadflow_test?loggerLevel=OFF (PostgreSQL 16.12)
-2026-02-26T18:36:38.795-03:00  INFO 25584 --- [leadflow-backend] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 6 migrations (execution time 00:00.013s)
-2026-02-26T18:36:38.813-03:00  INFO 25584 --- [leadflow-backend] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "tenant_a": 50
-2026-02-26T18:36:38.815-03:00  INFO 25584 --- [leadflow-backend] [           main] o.f.core.internal.command.DbMigrate      : Schema "tenant_a" is up to date. No migration necessary.
-2026-02-26T18:36:38.822-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:37.274-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:VARCHAR) <- [tenant_a]
+2026-02-26T18:36:37.275-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:INTEGER) <- [1]
+2026-02-26T18:36:37.397-03:00  INFO 25584 --- [leadflow-backend] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://localhost:51125/leadflow_test?loggerLevel=OFF (PostgreSQL 16.12)
+2026-02-26T18:36:37.451-03:00  INFO 25584 --- [leadflow-backend] [           main] o.f.core.internal.database.base.Schema   : Creating schema "tenant_a" ...
+2026-02-26T18:36:37.459-03:00  INFO 25584 --- [leadflow-backend] [           main] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table "tenant_a"."flyway_schema_history" ...
+2026-02-26T18:36:37.524-03:00  INFO 25584 --- [leadflow-backend] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "tenant_a": null
+2026-02-26T18:36:37.531-03:00  INFO 25584 --- [leadflow-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "tenant_a" to version "10 - users"
+2026-02-26T18:36:37.558-03:00  INFO 25584 --- [leadflow-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "tenant_a" to version "20 - leads"
+2026-02-26T18:36:37.582-03:00  INFO 25584 --- [leadflow-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "tenant_a" to version "30 - lead status history"
+2026-02-26T18:36:37.604-03:00  INFO 25584 --- [leadflow-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "tenant_a" to version "40 - settings"
+2026-02-26T18:36:37.624-03:00  INFO 25584 --- [leadflow-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "tenant_a" to version "50 - logs"
+2026-02-26T18:36:37.645-03:00  INFO 25584 --- [leadflow-backend] [           main] o.f.core.internal.command.DbMigrate      : Successfully applied 5 migrations to schema "tenant_a", now at version v50 (execution time 00:00.049s)
+2026-02-26T18:36:37.692-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     insert 
     into
         public.tenants
         (created_at, deleted_at, name, schema_name, updated_at, id) 
     values
         (?, ?, ?, ?, ?, ?)
-2026-02-26T18:36:38.824-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:38.822447]
-2026-02-26T18:36:38.824-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:TIMESTAMP) <- [null]
-2026-02-26T18:36:38.824-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [Tenant A]
-2026-02-26T18:36:38.824-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [tenant_a]
-2026-02-26T18:36:38.824-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:TIMESTAMP) <- [2026-02-26T18:36:38.822447]
-2026-02-26T18:36:38.824-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:UUID) <- [34db9071-6385-4669-ad37-d3d459856a16]
-2026-02-26T18:36:38.828-03:00  INFO 25584 --- [leadflow-backend] [           main] c.l.b.m.s.TenantProvisioningService      : Tenant successfully provisioned: tenant_a
-2026-02-26T18:36:38.831-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+2026-02-26T18:36:37.695-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:37.685552]
+2026-02-26T18:36:37.695-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:TIMESTAMP) <- [null]
+2026-02-26T18:36:37.696-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [Tenant A]
+2026-02-26T18:36:37.696-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [tenant_a]
+2026-02-26T18:36:37.696-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:TIMESTAMP) <- [2026-02-26T18:36:37.685552]
+2026-02-26T18:36:37.696-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:UUID) <- [f8209799-1da3-4a9c-91bd-702ccee4b994]
+2026-02-26T18:36:37.702-03:00  INFO 25584 --- [leadflow-backend] [           main] c.l.b.m.s.TenantProvisioningService      : Tenant successfully provisioned: tenant_a
+2026-02-26T18:36:37.708-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
     select
         t1_0.id,
         t1_0.created_at,
@@ -325,273 +331,7 @@
     where
         upper(t1_0.name)=upper(?) 
         and t1_0.deleted_at is null
-2026-02-26T18:36:38.832-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:VARCHAR) <- [Tenant A]
-2026-02-26T18:36:38.837-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
-    select
-        t1_0.id 
-    from
-        public.tenants t1_0 
-    where
-        upper(t1_0.schema_name)=upper(?) 
-    fetch
-        first ? rows only
-2026-02-26T18:36:38.838-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:VARCHAR) <- [tenant_b]
-2026-02-26T18:36:38.839-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:INTEGER) <- [1]
-2026-02-26T18:36:38.853-03:00  INFO 25584 --- [leadflow-backend] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://localhost:51125/leadflow_test?loggerLevel=OFF (PostgreSQL 16.12)
-2026-02-26T18:36:38.866-03:00  INFO 25584 --- [leadflow-backend] [           main] o.f.core.internal.database.base.Schema   : Creating schema "tenant_b" ...
-2026-02-26T18:36:38.871-03:00  INFO 25584 --- [leadflow-backend] [           main] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table "tenant_b"."flyway_schema_history" ...
-2026-02-26T18:36:38.896-03:00  INFO 25584 --- [leadflow-backend] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "tenant_b": null
-2026-02-26T18:36:38.900-03:00  INFO 25584 --- [leadflow-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "tenant_b" to version "10 - users"
-2026-02-26T18:36:38.925-03:00  INFO 25584 --- [leadflow-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "tenant_b" to version "20 - leads"
-2026-02-26T18:36:38.947-03:00  INFO 25584 --- [leadflow-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "tenant_b" to version "30 - lead status history"
-2026-02-26T18:36:38.967-03:00  INFO 25584 --- [leadflow-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "tenant_b" to version "40 - settings"
-2026-02-26T18:36:38.987-03:00  INFO 25584 --- [leadflow-backend] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "tenant_b" to version "50 - logs"
-2026-02-26T18:36:39.002-03:00  INFO 25584 --- [leadflow-backend] [           main] o.f.core.internal.command.DbMigrate      : Successfully applied 5 migrations to schema "tenant_b", now at version v50 (execution time 00:00.047s)
-2026-02-26T18:36:39.007-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
-    insert 
-    into
-        public.tenants
-        (created_at, deleted_at, name, schema_name, updated_at, id) 
-    values
-        (?, ?, ?, ?, ?, ?)
-2026-02-26T18:36:39.008-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.006508]
-2026-02-26T18:36:39.008-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:TIMESTAMP) <- [null]
-2026-02-26T18:36:39.008-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [Tenant B]
-2026-02-26T18:36:39.008-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [tenant_b]
-2026-02-26T18:36:39.008-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:TIMESTAMP) <- [2026-02-26T18:36:39.007517]
-2026-02-26T18:36:39.008-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:UUID) <- [a4e09e5f-7bef-40e6-943f-317f1a162aee]
-2026-02-26T18:36:39.012-03:00  INFO 25584 --- [leadflow-backend] [           main] c.l.b.m.s.TenantProvisioningService      : Tenant successfully provisioned: tenant_b
-2026-02-26T18:36:39.013-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
-    select
-        t1_0.id,
-        t1_0.created_at,
-        t1_0.deleted_at,
-        t1_0.name,
-        t1_0.schema_name,
-        t1_0.updated_at 
-    from
-        public.tenants t1_0 
-    where
-        upper(t1_0.name)=upper(?) 
-        and t1_0.deleted_at is null
-2026-02-26T18:36:39.013-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:VARCHAR) <- [Tenant B]
-2026-02-26T18:36:39.021-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
-    select
-        r1_0.id 
-    from
-        public.roles r1_0 
-    where
-        upper(r1_0.name)=upper(?) 
-    fetch
-        first ? rows only
-2026-02-26T18:36:39.021-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:VARCHAR) <- [ROLE_USER]
-2026-02-26T18:36:39.021-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:INTEGER) <- [1]
-2026-02-26T18:36:39.026-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
-    insert 
-    into
-        public.roles
-        (created_at, name, updated_at, id) 
-    values
-        (?, ?, ?, ?)
-2026-02-26T18:36:39.027-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.025833]
-2026-02-26T18:36:39.027-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:VARCHAR) <- [ROLE_USER]
-2026-02-26T18:36:39.027-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:TIMESTAMP) <- [2026-02-26T18:36:39.026349]
-2026-02-26T18:36:39.027-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:UUID) <- [3ed5f185-d246-48cb-a7d0-c4979e560a6a]
-2026-02-26T18:36:39.032-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
-    select
-        r1_0.id,
-        r1_0.created_at,
-        r1_0.name,
-        r1_0.updated_at 
-    from
-        public.roles r1_0 
-    where
-        upper(r1_0.name)=upper(?)
-2026-02-26T18:36:39.034-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:VARCHAR) <- [ROLE_USER]
-2026-02-26T18:36:39.040-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
-    select
-        null,
-        r1_0.created_at,
-        r1_0.name,
-        r1_0.updated_at 
-    from
-        public.roles r1_0 
-    where
-        r1_0.id=?
-2026-02-26T18:36:39.041-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:UUID) <- [3ed5f185-d246-48cb-a7d0-c4979e560a6a]
-2026-02-26T18:36:39.043-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
-    insert 
-    into
-        users
-        (created_at, deleted_at, email, name, password, role_id, updated_at, id) 
-    values
-        (?, ?, ?, ?, ?, ?, ?, ?)
-2026-02-26T18:36:39.044-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.043535]
-2026-02-26T18:36:39.044-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:TIMESTAMP) <- [null]
-2026-02-26T18:36:39.044-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [a_235d1c40-0e1a-482e-8e61-e8bc774f1375@mail.com]
-2026-02-26T18:36:39.044-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [User A]
-2026-02-26T18:36:39.044-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:VARCHAR) <- [pass]
-2026-02-26T18:36:39.044-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:UUID) <- [3ed5f185-d246-48cb-a7d0-c4979e560a6a]
-2026-02-26T18:36:39.044-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (7:TIMESTAMP) <- [2026-02-26T18:36:39.043535]
-2026-02-26T18:36:39.044-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (8:UUID) <- [8e97822a-e0fb-46e7-bc26-a4572e1614f5]
-2026-02-26T18:36:39.048-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
-    insert 
-    into
-        leads
-        (created_at, deleted_at, email, name, phone, status, updated_at, user_id, id) 
-    values
-        (?, ?, ?, ?, ?, ?, ?, ?, ?)
-2026-02-26T18:36:39.049-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.048914]
-2026-02-26T18:36:39.049-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:TIMESTAMP) <- [null]
-2026-02-26T18:36:39.049-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [lead_a_d212258d-f208-41b1-81c4-cb06a8df3274@mail.com]
-2026-02-26T18:36:39.049-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [Lead A]
-2026-02-26T18:36:39.049-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:VARCHAR) <- [111]
-2026-02-26T18:36:39.049-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:VARCHAR) <- [NEW]
-2026-02-26T18:36:39.049-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (7:TIMESTAMP) <- [2026-02-26T18:36:39.048914]
-2026-02-26T18:36:39.049-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (8:UUID) <- [8e97822a-e0fb-46e7-bc26-a4572e1614f5]
-2026-02-26T18:36:39.050-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (9:UUID) <- [39de0f52-0be2-49c2-a8d4-ab02d858afbc]
-2026-02-26T18:36:39.227-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
-    select
-        count(*) 
-    from
-        leads l1_0
-2026-02-26T18:36:39.236-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
-    select
-        count(*) 
-    from
-        leads l1_0
-]]></system-out>
-  </testcase>
-  <testcase name="shouldNotAccessOtherTenantData" classname="com.leadflow.backend.multitenancy.TenantIsolationTest" time="0.056">
-    <system-out><![CDATA[2026-02-26T18:36:39.245-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
-    select
-        t1_0.id 
-    from
-        public.tenants t1_0 
-    where
-        upper(t1_0.schema_name)=upper(?) 
-    fetch
-        first ? rows only
-2026-02-26T18:36:39.246-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:VARCHAR) <- [tenant_a]
-2026-02-26T18:36:39.246-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:INTEGER) <- [1]
-2026-02-26T18:36:39.251-03:00  INFO 25584 --- [leadflow-backend] [           main] c.l.b.m.s.TenantProvisioningService      : Tenant already provisioned: tenant_a
-2026-02-26T18:36:39.252-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
-    select
-        t1_0.id,
-        t1_0.created_at,
-        t1_0.deleted_at,
-        t1_0.name,
-        t1_0.schema_name,
-        t1_0.updated_at 
-    from
-        public.tenants t1_0 
-    where
-        upper(t1_0.name)=upper(?) 
-        and t1_0.deleted_at is null
-2026-02-26T18:36:39.253-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:VARCHAR) <- [Tenant A]
-2026-02-26T18:36:39.257-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
-    select
-        t1_0.id 
-    from
-        public.tenants t1_0 
-    where
-        upper(t1_0.schema_name)=upper(?) 
-    fetch
-        first ? rows only
-2026-02-26T18:36:39.258-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:VARCHAR) <- [tenant_b]
-2026-02-26T18:36:39.258-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:INTEGER) <- [1]
-2026-02-26T18:36:39.259-03:00  INFO 25584 --- [leadflow-backend] [           main] c.l.b.m.s.TenantProvisioningService      : Tenant already provisioned: tenant_b
-2026-02-26T18:36:39.259-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
-    select
-        t1_0.id,
-        t1_0.created_at,
-        t1_0.deleted_at,
-        t1_0.name,
-        t1_0.schema_name,
-        t1_0.updated_at 
-    from
-        public.tenants t1_0 
-    where
-        upper(t1_0.name)=upper(?) 
-        and t1_0.deleted_at is null
-2026-02-26T18:36:39.262-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:VARCHAR) <- [Tenant B]
-2026-02-26T18:36:39.269-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
-    select
-        r1_0.id 
-    from
-        public.roles r1_0 
-    where
-        upper(r1_0.name)=upper(?) 
-    fetch
-        first ? rows only
-2026-02-26T18:36:39.270-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:VARCHAR) <- [ROLE_USER]
-2026-02-26T18:36:39.271-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:INTEGER) <- [1]
-2026-02-26T18:36:39.275-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
-    select
-        r1_0.id,
-        r1_0.created_at,
-        r1_0.name,
-        r1_0.updated_at 
-    from
-        public.roles r1_0 
-    where
-        upper(r1_0.name)=upper(?)
-2026-02-26T18:36:39.276-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:VARCHAR) <- [ROLE_USER]
-2026-02-26T18:36:39.279-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
-    select
-        null,
-        r1_0.created_at,
-        r1_0.name,
-        r1_0.updated_at 
-    from
-        public.roles r1_0 
-    where
-        r1_0.id=?
-2026-02-26T18:36:39.280-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:UUID) <- [3ed5f185-d246-48cb-a7d0-c4979e560a6a]
-2026-02-26T18:36:39.281-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
-    insert 
-    into
-        users
-        (created_at, deleted_at, email, name, password, role_id, updated_at, id) 
-    values
-        (?, ?, ?, ?, ?, ?, ?, ?)
-2026-02-26T18:36:39.281-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.281985]
-2026-02-26T18:36:39.281-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:TIMESTAMP) <- [null]
-2026-02-26T18:36:39.281-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [b_108063a0-ce16-45d8-90b5-9e97ac387e42@mail.com]
-2026-02-26T18:36:39.281-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [User B]
-2026-02-26T18:36:39.281-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:VARCHAR) <- [pass]
-2026-02-26T18:36:39.282-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:UUID) <- [3ed5f185-d246-48cb-a7d0-c4979e560a6a]
-2026-02-26T18:36:39.282-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (7:TIMESTAMP) <- [2026-02-26T18:36:39.281985]
-2026-02-26T18:36:39.282-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (8:UUID) <- [9c9b97bb-1d87-47fb-aa20-1c9d3dd60c01]
-2026-02-26T18:36:39.286-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
-    insert 
-    into
-        leads
-        (created_at, deleted_at, email, name, phone, status, updated_at, user_id, id) 
-    values
-        (?, ?, ?, ?, ?, ?, ?, ?, ?)
-2026-02-26T18:36:39.287-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.286787]
-2026-02-26T18:36:39.288-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:TIMESTAMP) <- [null]
-2026-02-26T18:36:39.288-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [lead_b_2c0a43a1-9992-4596-8c55-7cce93b1c9e2@mail.com]
-2026-02-26T18:36:39.288-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [Lead A]
-2026-02-26T18:36:39.288-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:VARCHAR) <- [111]
-2026-02-26T18:36:39.288-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:VARCHAR) <- [NEW]
-2026-02-26T18:36:39.288-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (7:TIMESTAMP) <- [2026-02-26T18:36:39.286787]
-2026-02-26T18:36:39.288-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (8:UUID) <- [9c9b97bb-1d87-47fb-aa20-1c9d3dd60c01]
-2026-02-26T18:36:39.288-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (9:UUID) <- [8df1d490-d6a3-44f5-b500-50d65f542373]
-2026-02-26T18:36:39.294-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
-    select
-        l1_0.id,
-        l1_0.created_at,
-        l1_0.deleted_at,
-        l1_0.email,
-        l1_0.name,
-        l1_0.phone,
-        l1_0.status,
-        l1_0.updated_at,
-        l1_0.user_id 
-    from
-        leads l1_0
+2026-02-26T18:36:37.710-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:VARCHAR) <- [Tenant A]
 ]]></system-out>
   </testcase>
 </testsuite>

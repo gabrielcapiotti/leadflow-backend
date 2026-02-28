@@ -1,0 +1,1060 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.leadflow.backend.repository.lead.LeadRepositoryTest" time="0.608" tests="5" errors="0" skipped="0" failures="0">
+  <properties>
+    <property name="java.specification.version" value="17"/>
+    <property name="sun.cpu.isalist" value="amd64"/>
+    <property name="sun.jnu.encoding" value="Cp1252"/>
+    <property name="java.class.path" value="C:\Users\Gabri\OneDrive\Área de Trabalho\leadflow-backend\target\test-classes;C:\Users\Gabri\OneDrive\Área de Trabalho\leadflow-backend\target\classes;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter-web\3.5.10\spring-boot-starter-web-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter\3.5.10\spring-boot-starter-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot\3.5.10\spring-boot-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-autoconfigure\3.5.10\spring-boot-autoconfigure-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter-logging\3.5.10\spring-boot-starter-logging-3.5.10.jar;C:\Users\Gabri\.m2\repository\ch\qos\logback\logback-classic\1.5.25\logback-classic-1.5.25.jar;C:\Users\Gabri\.m2\repository\ch\qos\logback\logback-core\1.5.25\logback-core-1.5.25.jar;C:\Users\Gabri\.m2\repository\org\apache\logging\log4j\log4j-to-slf4j\2.24.3\log4j-to-slf4j-2.24.3.jar;C:\Users\Gabri\.m2\repository\org\apache\logging\log4j\log4j-api\2.24.3\log4j-api-2.24.3.jar;C:\Users\Gabri\.m2\repository\org\slf4j\jul-to-slf4j\2.0.17\jul-to-slf4j-2.0.17.jar;C:\Users\Gabri\.m2\repository\jakarta\annotation\jakarta.annotation-api\2.1.1\jakarta.annotation-api-2.1.1.jar;C:\Users\Gabri\.m2\repository\org\yaml\snakeyaml\2.4\snakeyaml-2.4.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter-json\3.5.10\spring-boot-starter-json-3.5.10.jar;C:\Users\Gabri\.m2\repository\com\fasterxml\jackson\datatype\jackson-datatype-jdk8\2.19.4\jackson-datatype-jdk8-2.19.4.jar;C:\Users\Gabri\.m2\repository\com\fasterxml\jackson\module\jackson-module-parameter-names\2.19.4\jackson-module-parameter-names-2.19.4.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter-tomcat\3.5.10\spring-boot-starter-tomcat-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\apache\tomcat\embed\tomcat-embed-core\10.1.50\tomcat-embed-core-10.1.50.jar;C:\Users\Gabri\.m2\repository\org\apache\tomcat\embed\tomcat-embed-websocket\10.1.50\tomcat-embed-websocket-10.1.50.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-web\6.2.15\spring-web-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-beans\6.2.15\spring-beans-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-webmvc\6.2.15\spring-webmvc-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-context\6.2.15\spring-context-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-expression\6.2.15\spring-expression-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter-data-jpa\3.5.10\spring-boot-starter-data-jpa-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter-jdbc\3.5.10\spring-boot-starter-jdbc-3.5.10.jar;C:\Users\Gabri\.m2\repository\com\zaxxer\HikariCP\6.3.3\HikariCP-6.3.3.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-jdbc\6.2.15\spring-jdbc-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\hibernate\orm\hibernate-core\6.6.41.Final\hibernate-core-6.6.41.Final.jar;C:\Users\Gabri\.m2\repository\jakarta\persistence\jakarta.persistence-api\3.1.0\jakarta.persistence-api-3.1.0.jar;C:\Users\Gabri\.m2\repository\jakarta\transaction\jakarta.transaction-api\2.0.1\jakarta.transaction-api-2.0.1.jar;C:\Users\Gabri\.m2\repository\org\jboss\logging\jboss-logging\3.6.1.Final\jboss-logging-3.6.1.Final.jar;C:\Users\Gabri\.m2\repository\org\hibernate\common\hibernate-commons-annotations\7.0.3.Final\hibernate-commons-annotations-7.0.3.Final.jar;C:\Users\Gabri\.m2\repository\io\smallrye\jandex\3.2.0\jandex-3.2.0.jar;C:\Users\Gabri\.m2\repository\com\fasterxml\classmate\1.7.3\classmate-1.7.3.jar;C:\Users\Gabri\.m2\repository\net\bytebuddy\byte-buddy\1.17.8\byte-buddy-1.17.8.jar;C:\Users\Gabri\.m2\repository\org\glassfish\jaxb\jaxb-runtime\4.0.6\jaxb-runtime-4.0.6.jar;C:\Users\Gabri\.m2\repository\org\glassfish\jaxb\jaxb-core\4.0.6\jaxb-core-4.0.6.jar;C:\Users\Gabri\.m2\repository\org\eclipse\angus\angus-activation\2.0.3\angus-activation-2.0.3.jar;C:\Users\Gabri\.m2\repository\org\glassfish\jaxb\txw2\4.0.6\txw2-4.0.6.jar;C:\Users\Gabri\.m2\repository\com\sun\istack\istack-commons-runtime\4.1.2\istack-commons-runtime-4.1.2.jar;C:\Users\Gabri\.m2\repository\jakarta\inject\jakarta.inject-api\2.0.1\jakarta.inject-api-2.0.1.jar;C:\Users\Gabri\.m2\repository\org\antlr\antlr4-runtime\4.13.0\antlr4-runtime-4.13.0.jar;C:\Users\Gabri\.m2\repository\org\springframework\data\spring-data-jpa\3.5.8\spring-data-jpa-3.5.8.jar;C:\Users\Gabri\.m2\repository\org\springframework\data\spring-data-commons\3.5.8\spring-data-commons-3.5.8.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-orm\6.2.15\spring-orm-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-tx\6.2.15\spring-tx-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-aspects\6.2.15\spring-aspects-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\aspectj\aspectjweaver\1.9.25.1\aspectjweaver-1.9.25.1.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter-security\3.5.10\spring-boot-starter-security-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-aop\6.2.15\spring-aop-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\springframework\security\spring-security-config\6.5.7\spring-security-config-6.5.7.jar;C:\Users\Gabri\.m2\repository\org\springframework\security\spring-security-web\6.5.7\spring-security-web-6.5.7.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter-validation\3.5.10\spring-boot-starter-validation-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\apache\tomcat\embed\tomcat-embed-el\10.1.50\tomcat-embed-el-10.1.50.jar;C:\Users\Gabri\.m2\repository\org\hibernate\validator\hibernate-validator\8.0.3.Final\hibernate-validator-8.0.3.Final.jar;C:\Users\Gabri\.m2\repository\jakarta\validation\jakarta.validation-api\3.0.2\jakarta.validation-api-3.0.2.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter-actuator\3.5.10\spring-boot-starter-actuator-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-actuator-autoconfigure\3.5.10\spring-boot-actuator-autoconfigure-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-actuator\3.5.10\spring-boot-actuator-3.5.10.jar;C:\Users\Gabri\.m2\repository\io\micrometer\micrometer-observation\1.15.8\micrometer-observation-1.15.8.jar;C:\Users\Gabri\.m2\repository\io\micrometer\micrometer-commons\1.15.8\micrometer-commons-1.15.8.jar;C:\Users\Gabri\.m2\repository\io\micrometer\micrometer-jakarta9\1.15.8\micrometer-jakarta9-1.15.8.jar;C:\Users\Gabri\.m2\repository\io\micrometer\micrometer-core\1.15.8\micrometer-core-1.15.8.jar;C:\Users\Gabri\.m2\repository\org\hdrhistogram\HdrHistogram\2.2.2\HdrHistogram-2.2.2.jar;C:\Users\Gabri\.m2\repository\org\latencyutils\LatencyUtils\2.0.3\LatencyUtils-2.0.3.jar;C:\Users\Gabri\.m2\repository\org\postgresql\postgresql\42.7.9\postgresql-42.7.9.jar;C:\Users\Gabri\.m2\repository\org\checkerframework\checker-qual\3.52.0\checker-qual-3.52.0.jar;C:\Users\Gabri\.m2\repository\org\flywaydb\flyway-core\11.7.2\flyway-core-11.7.2.jar;C:\Users\Gabri\.m2\repository\com\fasterxml\jackson\dataformat\jackson-dataformat-toml\2.19.4\jackson-dataformat-toml-2.19.4.jar;C:\Users\Gabri\.m2\repository\com\fasterxml\jackson\core\jackson-core\2.19.4\jackson-core-2.19.4.jar;C:\Users\Gabri\.m2\repository\com\fasterxml\jackson\datatype\jackson-datatype-jsr310\2.19.4\jackson-datatype-jsr310-2.19.4.jar;C:\Users\Gabri\.m2\repository\com\fasterxml\jackson\core\jackson-annotations\2.19.4\jackson-annotations-2.19.4.jar;C:\Users\Gabri\.m2\repository\org\flywaydb\flyway-database-postgresql\11.7.2\flyway-database-postgresql-11.7.2.jar;C:\Users\Gabri\.m2\repository\io\jsonwebtoken\jjwt-api\0.11.5\jjwt-api-0.11.5.jar;C:\Users\Gabri\.m2\repository\io\jsonwebtoken\jjwt-impl\0.11.5\jjwt-impl-0.11.5.jar;C:\Users\Gabri\.m2\repository\io\jsonwebtoken\jjwt-jackson\0.11.5\jjwt-jackson-0.11.5.jar;C:\Users\Gabri\.m2\repository\com\fasterxml\jackson\core\jackson-databind\2.19.4\jackson-databind-2.19.4.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter-test\3.5.10\spring-boot-starter-test-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-test\3.5.10\spring-boot-test-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-test-autoconfigure\3.5.10\spring-boot-test-autoconfigure-3.5.10.jar;C:\Users\Gabri\.m2\repository\com\jayway\jsonpath\json-path\2.9.0\json-path-2.9.0.jar;C:\Users\Gabri\.m2\repository\jakarta\xml\bind\jakarta.xml.bind-api\4.0.4\jakarta.xml.bind-api-4.0.4.jar;C:\Users\Gabri\.m2\repository\jakarta\activation\jakarta.activation-api\2.1.4\jakarta.activation-api-2.1.4.jar;C:\Users\Gabri\.m2\repository\net\minidev\json-smart\2.5.2\json-smart-2.5.2.jar;C:\Users\Gabri\.m2\repository\net\minidev\accessors-smart\2.5.2\accessors-smart-2.5.2.jar;C:\Users\Gabri\.m2\repository\org\ow2\asm\asm\9.7.1\asm-9.7.1.jar;C:\Users\Gabri\.m2\repository\org\assertj\assertj-core\3.27.6\assertj-core-3.27.6.jar;C:\Users\Gabri\.m2\repository\org\awaitility\awaitility\4.2.2\awaitility-4.2.2.jar;C:\Users\Gabri\.m2\repository\org\hamcrest\hamcrest\3.0\hamcrest-3.0.jar;C:\Users\Gabri\.m2\repository\org\junit\jupiter\junit-jupiter\5.12.2\junit-jupiter-5.12.2.jar;C:\Users\Gabri\.m2\repository\org\junit\jupiter\junit-jupiter-api\5.12.2\junit-jupiter-api-5.12.2.jar;C:\Users\Gabri\.m2\repository\org\opentest4j\opentest4j\1.3.0\opentest4j-1.3.0.jar;C:\Users\Gabri\.m2\repository\org\junit\platform\junit-platform-commons\1.12.2\junit-platform-commons-1.12.2.jar;C:\Users\Gabri\.m2\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;C:\Users\Gabri\.m2\repository\org\junit\jupiter\junit-jupiter-params\5.12.2\junit-jupiter-params-5.12.2.jar;C:\Users\Gabri\.m2\repository\org\junit\jupiter\junit-jupiter-engine\5.12.2\junit-jupiter-engine-5.12.2.jar;C:\Users\Gabri\.m2\repository\org\junit\platform\junit-platform-engine\1.12.2\junit-platform-engine-1.12.2.jar;C:\Users\Gabri\.m2\repository\org\mockito\mockito-core\5.17.0\mockito-core-5.17.0.jar;C:\Users\Gabri\.m2\repository\net\bytebuddy\byte-buddy-agent\1.17.8\byte-buddy-agent-1.17.8.jar;C:\Users\Gabri\.m2\repository\org\objenesis\objenesis\3.3\objenesis-3.3.jar;C:\Users\Gabri\.m2\repository\org\mockito\mockito-junit-jupiter\5.17.0\mockito-junit-jupiter-5.17.0.jar;C:\Users\Gabri\.m2\repository\org\skyscreamer\jsonassert\1.5.3\jsonassert-1.5.3.jar;C:\Users\Gabri\.m2\repository\com\vaadin\external\google\android-json\0.0.20131108.vaadin1\android-json-0.0.20131108.vaadin1.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-core\6.2.15\spring-core-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-jcl\6.2.15\spring-jcl-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-test\6.2.15\spring-test-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\xmlunit\xmlunit-core\2.10.4\xmlunit-core-2.10.4.jar;C:\Users\Gabri\.m2\repository\org\springframework\security\spring-security-test\6.5.7\spring-security-test-6.5.7.jar;C:\Users\Gabri\.m2\repository\org\springframework\security\spring-security-core\6.5.7\spring-security-core-6.5.7.jar;C:\Users\Gabri\.m2\repository\org\springframework\security\spring-security-crypto\6.5.7\spring-security-crypto-6.5.7.jar;C:\Users\Gabri\.m2\repository\com\h2database\h2\2.3.232\h2-2.3.232.jar;C:\Users\Gabri\.m2\repository\org\testcontainers\testcontainers\1.19.7\testcontainers-1.19.7.jar;C:\Users\Gabri\.m2\repository\junit\junit\4.13.2\junit-4.13.2.jar;C:\Users\Gabri\.m2\repository\org\hamcrest\hamcrest-core\3.0\hamcrest-core-3.0.jar;C:\Users\Gabri\.m2\repository\org\slf4j\slf4j-api\2.0.17\slf4j-api-2.0.17.jar;C:\Users\Gabri\.m2\repository\org\apache\commons\commons-compress\1.24.0\commons-compress-1.24.0.jar;C:\Users\Gabri\.m2\repository\org\rnorth\duct-tape\duct-tape\1.0.8\duct-tape-1.0.8.jar;C:\Users\Gabri\.m2\repository\org\jetbrains\annotations\17.0.0\annotations-17.0.0.jar;C:\Users\Gabri\.m2\repository\com\github\docker-java\docker-java-api\3.3.6\docker-java-api-3.3.6.jar;C:\Users\Gabri\.m2\repository\com\github\docker-java\docker-java-transport-zerodep\3.3.6\docker-java-transport-zerodep-3.3.6.jar;C:\Users\Gabri\.m2\repository\com\github\docker-java\docker-java-transport\3.3.6\docker-java-transport-3.3.6.jar;C:\Users\Gabri\.m2\repository\net\java\dev\jna\jna\5.13.0\jna-5.13.0.jar;C:\Users\Gabri\.m2\repository\org\testcontainers\postgresql\1.19.7\postgresql-1.19.7.jar;C:\Users\Gabri\.m2\repository\org\testcontainers\jdbc\1.19.7\jdbc-1.19.7.jar;C:\Users\Gabri\.m2\repository\org\testcontainers\database-commons\1.19.7\database-commons-1.19.7.jar;C:\Users\Gabri\.m2\repository\org\testcontainers\junit-jupiter\1.19.7\junit-jupiter-1.19.7.jar;C:\Users\Gabri\.m2\repository\org\projectlombok\lombok\1.18.30\lombok-1.18.30.jar;"/>
+    <property name="java.vm.vendor" value="Microsoft"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="user.variant" value=""/>
+    <property name="java.vendor.url" value="https://www.microsoft.com"/>
+    <property name="user.timezone" value="America/Sao_Paulo"/>
+    <property name="org.jboss.logging.provider" value="slf4j"/>
+    <property name="os.name" value="Windows 11"/>
+    <property name="java.vm.specification.version" value="17"/>
+    <property name="APPLICATION_NAME" value="leadflow-backend"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="user.country" value="BR"/>
+    <property name="sun.boot.library.path" value="C:\Users\Gabri\.jdk\jdk-17.0.16\bin"/>
+    <property name="sun.java.command" value="C:\Users\Gabri\AppData\Local\Temp\surefire1969926441148146492\surefirebooter-20260226183619643_3.jar C:\Users\Gabri\AppData\Local\Temp\surefire1969926441148146492 2026-02-26T18-36-19_447-jvmRun1 surefire-20260226183619643_1tmp surefire_0-20260226183619643_2tmp"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="surefire.test.class.path" value="C:\Users\Gabri\OneDrive\Área de Trabalho\leadflow-backend\target\test-classes;C:\Users\Gabri\OneDrive\Área de Trabalho\leadflow-backend\target\classes;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter-web\3.5.10\spring-boot-starter-web-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter\3.5.10\spring-boot-starter-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot\3.5.10\spring-boot-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-autoconfigure\3.5.10\spring-boot-autoconfigure-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter-logging\3.5.10\spring-boot-starter-logging-3.5.10.jar;C:\Users\Gabri\.m2\repository\ch\qos\logback\logback-classic\1.5.25\logback-classic-1.5.25.jar;C:\Users\Gabri\.m2\repository\ch\qos\logback\logback-core\1.5.25\logback-core-1.5.25.jar;C:\Users\Gabri\.m2\repository\org\apache\logging\log4j\log4j-to-slf4j\2.24.3\log4j-to-slf4j-2.24.3.jar;C:\Users\Gabri\.m2\repository\org\apache\logging\log4j\log4j-api\2.24.3\log4j-api-2.24.3.jar;C:\Users\Gabri\.m2\repository\org\slf4j\jul-to-slf4j\2.0.17\jul-to-slf4j-2.0.17.jar;C:\Users\Gabri\.m2\repository\jakarta\annotation\jakarta.annotation-api\2.1.1\jakarta.annotation-api-2.1.1.jar;C:\Users\Gabri\.m2\repository\org\yaml\snakeyaml\2.4\snakeyaml-2.4.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter-json\3.5.10\spring-boot-starter-json-3.5.10.jar;C:\Users\Gabri\.m2\repository\com\fasterxml\jackson\datatype\jackson-datatype-jdk8\2.19.4\jackson-datatype-jdk8-2.19.4.jar;C:\Users\Gabri\.m2\repository\com\fasterxml\jackson\module\jackson-module-parameter-names\2.19.4\jackson-module-parameter-names-2.19.4.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter-tomcat\3.5.10\spring-boot-starter-tomcat-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\apache\tomcat\embed\tomcat-embed-core\10.1.50\tomcat-embed-core-10.1.50.jar;C:\Users\Gabri\.m2\repository\org\apache\tomcat\embed\tomcat-embed-websocket\10.1.50\tomcat-embed-websocket-10.1.50.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-web\6.2.15\spring-web-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-beans\6.2.15\spring-beans-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-webmvc\6.2.15\spring-webmvc-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-context\6.2.15\spring-context-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-expression\6.2.15\spring-expression-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter-data-jpa\3.5.10\spring-boot-starter-data-jpa-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter-jdbc\3.5.10\spring-boot-starter-jdbc-3.5.10.jar;C:\Users\Gabri\.m2\repository\com\zaxxer\HikariCP\6.3.3\HikariCP-6.3.3.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-jdbc\6.2.15\spring-jdbc-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\hibernate\orm\hibernate-core\6.6.41.Final\hibernate-core-6.6.41.Final.jar;C:\Users\Gabri\.m2\repository\jakarta\persistence\jakarta.persistence-api\3.1.0\jakarta.persistence-api-3.1.0.jar;C:\Users\Gabri\.m2\repository\jakarta\transaction\jakarta.transaction-api\2.0.1\jakarta.transaction-api-2.0.1.jar;C:\Users\Gabri\.m2\repository\org\jboss\logging\jboss-logging\3.6.1.Final\jboss-logging-3.6.1.Final.jar;C:\Users\Gabri\.m2\repository\org\hibernate\common\hibernate-commons-annotations\7.0.3.Final\hibernate-commons-annotations-7.0.3.Final.jar;C:\Users\Gabri\.m2\repository\io\smallrye\jandex\3.2.0\jandex-3.2.0.jar;C:\Users\Gabri\.m2\repository\com\fasterxml\classmate\1.7.3\classmate-1.7.3.jar;C:\Users\Gabri\.m2\repository\net\bytebuddy\byte-buddy\1.17.8\byte-buddy-1.17.8.jar;C:\Users\Gabri\.m2\repository\org\glassfish\jaxb\jaxb-runtime\4.0.6\jaxb-runtime-4.0.6.jar;C:\Users\Gabri\.m2\repository\org\glassfish\jaxb\jaxb-core\4.0.6\jaxb-core-4.0.6.jar;C:\Users\Gabri\.m2\repository\org\eclipse\angus\angus-activation\2.0.3\angus-activation-2.0.3.jar;C:\Users\Gabri\.m2\repository\org\glassfish\jaxb\txw2\4.0.6\txw2-4.0.6.jar;C:\Users\Gabri\.m2\repository\com\sun\istack\istack-commons-runtime\4.1.2\istack-commons-runtime-4.1.2.jar;C:\Users\Gabri\.m2\repository\jakarta\inject\jakarta.inject-api\2.0.1\jakarta.inject-api-2.0.1.jar;C:\Users\Gabri\.m2\repository\org\antlr\antlr4-runtime\4.13.0\antlr4-runtime-4.13.0.jar;C:\Users\Gabri\.m2\repository\org\springframework\data\spring-data-jpa\3.5.8\spring-data-jpa-3.5.8.jar;C:\Users\Gabri\.m2\repository\org\springframework\data\spring-data-commons\3.5.8\spring-data-commons-3.5.8.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-orm\6.2.15\spring-orm-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-tx\6.2.15\spring-tx-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-aspects\6.2.15\spring-aspects-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\aspectj\aspectjweaver\1.9.25.1\aspectjweaver-1.9.25.1.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter-security\3.5.10\spring-boot-starter-security-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-aop\6.2.15\spring-aop-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\springframework\security\spring-security-config\6.5.7\spring-security-config-6.5.7.jar;C:\Users\Gabri\.m2\repository\org\springframework\security\spring-security-web\6.5.7\spring-security-web-6.5.7.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter-validation\3.5.10\spring-boot-starter-validation-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\apache\tomcat\embed\tomcat-embed-el\10.1.50\tomcat-embed-el-10.1.50.jar;C:\Users\Gabri\.m2\repository\org\hibernate\validator\hibernate-validator\8.0.3.Final\hibernate-validator-8.0.3.Final.jar;C:\Users\Gabri\.m2\repository\jakarta\validation\jakarta.validation-api\3.0.2\jakarta.validation-api-3.0.2.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter-actuator\3.5.10\spring-boot-starter-actuator-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-actuator-autoconfigure\3.5.10\spring-boot-actuator-autoconfigure-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-actuator\3.5.10\spring-boot-actuator-3.5.10.jar;C:\Users\Gabri\.m2\repository\io\micrometer\micrometer-observation\1.15.8\micrometer-observation-1.15.8.jar;C:\Users\Gabri\.m2\repository\io\micrometer\micrometer-commons\1.15.8\micrometer-commons-1.15.8.jar;C:\Users\Gabri\.m2\repository\io\micrometer\micrometer-jakarta9\1.15.8\micrometer-jakarta9-1.15.8.jar;C:\Users\Gabri\.m2\repository\io\micrometer\micrometer-core\1.15.8\micrometer-core-1.15.8.jar;C:\Users\Gabri\.m2\repository\org\hdrhistogram\HdrHistogram\2.2.2\HdrHistogram-2.2.2.jar;C:\Users\Gabri\.m2\repository\org\latencyutils\LatencyUtils\2.0.3\LatencyUtils-2.0.3.jar;C:\Users\Gabri\.m2\repository\org\postgresql\postgresql\42.7.9\postgresql-42.7.9.jar;C:\Users\Gabri\.m2\repository\org\checkerframework\checker-qual\3.52.0\checker-qual-3.52.0.jar;C:\Users\Gabri\.m2\repository\org\flywaydb\flyway-core\11.7.2\flyway-core-11.7.2.jar;C:\Users\Gabri\.m2\repository\com\fasterxml\jackson\dataformat\jackson-dataformat-toml\2.19.4\jackson-dataformat-toml-2.19.4.jar;C:\Users\Gabri\.m2\repository\com\fasterxml\jackson\core\jackson-core\2.19.4\jackson-core-2.19.4.jar;C:\Users\Gabri\.m2\repository\com\fasterxml\jackson\datatype\jackson-datatype-jsr310\2.19.4\jackson-datatype-jsr310-2.19.4.jar;C:\Users\Gabri\.m2\repository\com\fasterxml\jackson\core\jackson-annotations\2.19.4\jackson-annotations-2.19.4.jar;C:\Users\Gabri\.m2\repository\org\flywaydb\flyway-database-postgresql\11.7.2\flyway-database-postgresql-11.7.2.jar;C:\Users\Gabri\.m2\repository\io\jsonwebtoken\jjwt-api\0.11.5\jjwt-api-0.11.5.jar;C:\Users\Gabri\.m2\repository\io\jsonwebtoken\jjwt-impl\0.11.5\jjwt-impl-0.11.5.jar;C:\Users\Gabri\.m2\repository\io\jsonwebtoken\jjwt-jackson\0.11.5\jjwt-jackson-0.11.5.jar;C:\Users\Gabri\.m2\repository\com\fasterxml\jackson\core\jackson-databind\2.19.4\jackson-databind-2.19.4.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-starter-test\3.5.10\spring-boot-starter-test-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-test\3.5.10\spring-boot-test-3.5.10.jar;C:\Users\Gabri\.m2\repository\org\springframework\boot\spring-boot-test-autoconfigure\3.5.10\spring-boot-test-autoconfigure-3.5.10.jar;C:\Users\Gabri\.m2\repository\com\jayway\jsonpath\json-path\2.9.0\json-path-2.9.0.jar;C:\Users\Gabri\.m2\repository\jakarta\xml\bind\jakarta.xml.bind-api\4.0.4\jakarta.xml.bind-api-4.0.4.jar;C:\Users\Gabri\.m2\repository\jakarta\activation\jakarta.activation-api\2.1.4\jakarta.activation-api-2.1.4.jar;C:\Users\Gabri\.m2\repository\net\minidev\json-smart\2.5.2\json-smart-2.5.2.jar;C:\Users\Gabri\.m2\repository\net\minidev\accessors-smart\2.5.2\accessors-smart-2.5.2.jar;C:\Users\Gabri\.m2\repository\org\ow2\asm\asm\9.7.1\asm-9.7.1.jar;C:\Users\Gabri\.m2\repository\org\assertj\assertj-core\3.27.6\assertj-core-3.27.6.jar;C:\Users\Gabri\.m2\repository\org\awaitility\awaitility\4.2.2\awaitility-4.2.2.jar;C:\Users\Gabri\.m2\repository\org\hamcrest\hamcrest\3.0\hamcrest-3.0.jar;C:\Users\Gabri\.m2\repository\org\junit\jupiter\junit-jupiter\5.12.2\junit-jupiter-5.12.2.jar;C:\Users\Gabri\.m2\repository\org\junit\jupiter\junit-jupiter-api\5.12.2\junit-jupiter-api-5.12.2.jar;C:\Users\Gabri\.m2\repository\org\opentest4j\opentest4j\1.3.0\opentest4j-1.3.0.jar;C:\Users\Gabri\.m2\repository\org\junit\platform\junit-platform-commons\1.12.2\junit-platform-commons-1.12.2.jar;C:\Users\Gabri\.m2\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;C:\Users\Gabri\.m2\repository\org\junit\jupiter\junit-jupiter-params\5.12.2\junit-jupiter-params-5.12.2.jar;C:\Users\Gabri\.m2\repository\org\junit\jupiter\junit-jupiter-engine\5.12.2\junit-jupiter-engine-5.12.2.jar;C:\Users\Gabri\.m2\repository\org\junit\platform\junit-platform-engine\1.12.2\junit-platform-engine-1.12.2.jar;C:\Users\Gabri\.m2\repository\org\mockito\mockito-core\5.17.0\mockito-core-5.17.0.jar;C:\Users\Gabri\.m2\repository\net\bytebuddy\byte-buddy-agent\1.17.8\byte-buddy-agent-1.17.8.jar;C:\Users\Gabri\.m2\repository\org\objenesis\objenesis\3.3\objenesis-3.3.jar;C:\Users\Gabri\.m2\repository\org\mockito\mockito-junit-jupiter\5.17.0\mockito-junit-jupiter-5.17.0.jar;C:\Users\Gabri\.m2\repository\org\skyscreamer\jsonassert\1.5.3\jsonassert-1.5.3.jar;C:\Users\Gabri\.m2\repository\com\vaadin\external\google\android-json\0.0.20131108.vaadin1\android-json-0.0.20131108.vaadin1.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-core\6.2.15\spring-core-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-jcl\6.2.15\spring-jcl-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\springframework\spring-test\6.2.15\spring-test-6.2.15.jar;C:\Users\Gabri\.m2\repository\org\xmlunit\xmlunit-core\2.10.4\xmlunit-core-2.10.4.jar;C:\Users\Gabri\.m2\repository\org\springframework\security\spring-security-test\6.5.7\spring-security-test-6.5.7.jar;C:\Users\Gabri\.m2\repository\org\springframework\security\spring-security-core\6.5.7\spring-security-core-6.5.7.jar;C:\Users\Gabri\.m2\repository\org\springframework\security\spring-security-crypto\6.5.7\spring-security-crypto-6.5.7.jar;C:\Users\Gabri\.m2\repository\com\h2database\h2\2.3.232\h2-2.3.232.jar;C:\Users\Gabri\.m2\repository\org\testcontainers\testcontainers\1.19.7\testcontainers-1.19.7.jar;C:\Users\Gabri\.m2\repository\junit\junit\4.13.2\junit-4.13.2.jar;C:\Users\Gabri\.m2\repository\org\hamcrest\hamcrest-core\3.0\hamcrest-core-3.0.jar;C:\Users\Gabri\.m2\repository\org\slf4j\slf4j-api\2.0.17\slf4j-api-2.0.17.jar;C:\Users\Gabri\.m2\repository\org\apache\commons\commons-compress\1.24.0\commons-compress-1.24.0.jar;C:\Users\Gabri\.m2\repository\org\rnorth\duct-tape\duct-tape\1.0.8\duct-tape-1.0.8.jar;C:\Users\Gabri\.m2\repository\org\jetbrains\annotations\17.0.0\annotations-17.0.0.jar;C:\Users\Gabri\.m2\repository\com\github\docker-java\docker-java-api\3.3.6\docker-java-api-3.3.6.jar;C:\Users\Gabri\.m2\repository\com\github\docker-java\docker-java-transport-zerodep\3.3.6\docker-java-transport-zerodep-3.3.6.jar;C:\Users\Gabri\.m2\repository\com\github\docker-java\docker-java-transport\3.3.6\docker-java-transport-3.3.6.jar;C:\Users\Gabri\.m2\repository\net\java\dev\jna\jna\5.13.0\jna-5.13.0.jar;C:\Users\Gabri\.m2\repository\org\testcontainers\postgresql\1.19.7\postgresql-1.19.7.jar;C:\Users\Gabri\.m2\repository\org\testcontainers\jdbc\1.19.7\jdbc-1.19.7.jar;C:\Users\Gabri\.m2\repository\org\testcontainers\database-commons\1.19.7\database-commons-1.19.7.jar;C:\Users\Gabri\.m2\repository\org\testcontainers\junit-jupiter\1.19.7\junit-jupiter-1.19.7.jar;C:\Users\Gabri\.m2\repository\org\projectlombok\lombok\1.18.30\lombok-1.18.30.jar;"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="C:\Users\Gabri"/>
+    <property name="user.language" value="pt"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.version.date" value="2025-07-15"/>
+    <property name="java.home" value="C:\Users\Gabri\.jdk\jdk-17.0.16"/>
+    <property name="file.separator" value="\"/>
+    <property name="basedir" value="C:\Users\Gabri\OneDrive\Área de Trabalho\leadflow-backend"/>
+    <property name="java.vm.compressedOopsMode" value="Zero based"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="FILE_LOG_CHARSET" value="windows-1252"/>
+    <property name="java.awt.headless" value="true"/>
+    <property name="surefire.real.class.path" value="C:\Users\Gabri\AppData\Local\Temp\surefire1969926441148146492\surefirebooter-20260226183619643_3.jar"/>
+    <property name="user.script" value=""/>
+    <property name="polyglot.engine.WarnInterpreterOnly" value="false"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="java.runtime.version" value="17.0.16+8-LTS"/>
+    <property name="user.name" value="Gabri"/>
+    <property name="path.separator" value=";"/>
+    <property name="os.version" value="10.0"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="Cp1252"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="java.vendor.version" value="Microsoft-11926163"/>
+    <property name="localRepository" value="C:\Users\Gabri\.m2\repository"/>
+    <property name="java.vendor.url.bug" value="https://github.com/microsoft/openjdk/issues"/>
+    <property name="java.io.tmpdir" value="C:\Users\Gabri\AppData\Local\Temp\"/>
+    <property name="com.zaxxer.hikari.pool_number" value="4"/>
+    <property name="java.version" value="17.0.16"/>
+    <property name="user.dir" value="C:\Users\Gabri\OneDrive\Área de Trabalho\leadflow-backend"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="PID" value="25584"/>
+    <property name="sun.os.patch.level" value=""/>
+    <property name="CONSOLE_LOG_CHARSET" value="windows-1252"/>
+    <property name="native.encoding" value="Cp1252"/>
+    <property name="java.library.path" value="C:\Users\Gabri\.jdk\jdk-17.0.16\bin;C:\WINDOWS\Sun\Java\bin;C:\WINDOWS\system32;C:\WINDOWS;c:\Users\Gabri\AppData\Roaming\Code\User\globalStorage\github.copilot-chat\debugCommand;c:\Users\Gabri\AppData\Roaming\Code\User\globalStorage\github.copilot-chat\copilotCli;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\Users\Gabri\Downloads\jdk-23.0.1\bin;C:\ProgramData\chocolatey\bin;C:\Program Files\nodejs\;C:\Usuários\Gabri\postgresql_17\bin;C:\Users\Gabri\Downloads\maven-mvnd-1.0.2-windows-amd64\maven-mvnd-1.0.2-windows-amd64\bin;C:\Users\Gabri\Downloads\apache-maven-3.9.9\bin;C:\Program Files\dotnet\;C:\Program Files\PostgreSQL\18\bin;;C:\Program Files\Docker\Docker\resources\bin;C:\Users\Gabri\.jdk\jdk-17.0.16\bin;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\Users\Gabri\Downloads\jdk-23.0.1\bin;C:\ProgramData\chocolatey\bin;C:\Program Files\nodejs\;C:\Usuários\Gabri\postgresql_17\bin;C:\Users\Gabri\Downloads\maven-mvnd-1.0.2-windows-amd64\maven-mvnd-1.0.2-windows-amd64\bin;C:\Users\Gabri\Downloads\apache-maven-3.9.9\bin;C:\Program Files\dotnet\;C:\Program Files\PostgreSQL\18\bin;;C:\Program Files\Docker\Docker\resources\bin;C:\Users\Gabri\AppData\Local\Programs\Microsoft VS Code\bin;c:\Users\Gabri\.vscode\extensions\vscjava.vscode-java-debug-0.58.5\bundled\scripts\noConfigScripts;."/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="java.vendor" value="Microsoft"/>
+    <property name="java.vm.version" value="17.0.16+8-LTS"/>
+    <property name="java.specification.maintenance.version" value="1"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="java.class.version" value="61.0"/>
+    <property name="LOGGED_APPLICATION_NAME" value="[leadflow-backend] "/>
+  </properties>
+  <testcase name="shouldFindByUserIdAndDeletedAtIsNull" classname="com.leadflow.backend.repository.lead.LeadRepositoryTest" time="0.049">
+    <system-out><![CDATA[2026-02-26T18:36:39.332-03:00  INFO 25584 --- [leadflow-backend] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.leadflow.backend.BackendApplication for test class com.leadflow.backend.repository.lead.LeadRepositoryTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::               (v3.5.10)
+
+2026-02-26T18:36:39.356-03:00  INFO 25584 --- [leadflow-backend] [           main] c.l.b.r.lead.LeadRepositoryTest          : Starting LeadRepositoryTest using Java 17.0.16 with PID 25584 (started by Gabri in C:\Users\Gabri\OneDrive\Área de Trabalho\leadflow-backend)
+2026-02-26T18:36:39.356-03:00  INFO 25584 --- [leadflow-backend] [           main] c.l.b.r.lead.LeadRepositoryTest          : The following 1 profile is active: "test"
+2026-02-26T18:36:39.540-03:00  WARN 25584 --- [leadflow-backend] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-02-26T18:36:39.608-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    set client_min_messages = WARNING
+Hibernate: 
+    set client_min_messages = WARNING
+2026-02-26T18:36:39.611-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    drop table if exists public.roles cascade
+Hibernate: 
+    drop table if exists public.roles cascade
+2026-02-26T18:36:39.614-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    drop table if exists public.tenants cascade
+Hibernate: 
+    drop table if exists public.tenants cascade
+2026-02-26T18:36:39.616-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    alter table if exists lead_status_history 
+       drop constraint if exists fk_lsh_user
+Hibernate: 
+    alter table if exists lead_status_history 
+       drop constraint if exists fk_lsh_user
+2026-02-26T18:36:39.618-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    alter table if exists lead_status_history 
+       drop constraint if exists fk_lsh_lead
+Hibernate: 
+    alter table if exists lead_status_history 
+       drop constraint if exists fk_lsh_lead
+2026-02-26T18:36:39.620-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    alter table if exists logs 
+       drop constraint if exists fk_logs_user
+Hibernate: 
+    alter table if exists logs 
+       drop constraint if exists fk_logs_user
+2026-02-26T18:36:39.621-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    alter table if exists settings 
+       drop constraint if exists fk_settings_user
+Hibernate: 
+    alter table if exists settings 
+       drop constraint if exists fk_settings_user
+2026-02-26T18:36:39.622-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    alter table if exists users 
+       drop constraint if exists fk_users_role
+Hibernate: 
+    alter table if exists users 
+       drop constraint if exists fk_users_role
+2026-02-26T18:36:39.623-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    drop table if exists lead_status_history cascade
+Hibernate: 
+    drop table if exists lead_status_history cascade
+2026-02-26T18:36:39.625-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    drop table if exists leads cascade
+Hibernate: 
+    drop table if exists leads cascade
+2026-02-26T18:36:39.627-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    drop table if exists logs cascade
+Hibernate: 
+    drop table if exists logs cascade
+2026-02-26T18:36:39.629-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    drop table if exists settings cascade
+Hibernate: 
+    drop table if exists settings cascade
+2026-02-26T18:36:39.631-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    drop table if exists users cascade
+Hibernate: 
+    drop table if exists users cascade
+2026-02-26T18:36:39.633-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    create table public.roles (
+        created_at timestamp(6) not null,
+        updated_at timestamp(6) not null,
+        id uuid not null,
+        name varchar(50) not null,
+        primary key (id),
+        constraint uk_roles_name unique (name)
+    )
+Hibernate: 
+    create table public.roles (
+        created_at timestamp(6) not null,
+        updated_at timestamp(6) not null,
+        id uuid not null,
+        name varchar(50) not null,
+        primary key (id),
+        constraint uk_roles_name unique (name)
+    )
+2026-02-26T18:36:39.636-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    create table public.tenants (
+        created_at timestamp(6) not null,
+        deleted_at timestamp(6),
+        updated_at timestamp(6) not null,
+        id uuid not null,
+        name varchar(100) not null,
+        schema_name varchar(100) not null,
+        primary key (id),
+        constraint uk_tenants_schema_name unique (schema_name)
+    )
+Hibernate: 
+    create table public.tenants (
+        created_at timestamp(6) not null,
+        deleted_at timestamp(6),
+        updated_at timestamp(6) not null,
+        id uuid not null,
+        name varchar(100) not null,
+        schema_name varchar(100) not null,
+        primary key (id),
+        constraint uk_tenants_schema_name unique (schema_name)
+    )
+2026-02-26T18:36:39.638-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    create index idx_tenants_schema_name 
+       on public.tenants (schema_name)
+Hibernate: 
+    create index idx_tenants_schema_name 
+       on public.tenants (schema_name)
+2026-02-26T18:36:39.640-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    create table lead_status_history (
+        changed_at timestamp(6) not null,
+        changed_by uuid,
+        id uuid not null,
+        lead_id uuid not null,
+        status varchar(30) not null check (status in ('NEW','CONTACTED','QUALIFIED','CLOSED')),
+        primary key (id)
+    )
+Hibernate: 
+    create table lead_status_history (
+        changed_at timestamp(6) not null,
+        changed_by uuid,
+        id uuid not null,
+        lead_id uuid not null,
+        status varchar(30) not null check (status in ('NEW','CONTACTED','QUALIFIED','CLOSED')),
+        primary key (id)
+    )
+2026-02-26T18:36:39.643-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    create table leads (
+        created_at timestamp(6) not null,
+        deleted_at timestamp(6),
+        updated_at timestamp(6) not null,
+        id uuid not null,
+        user_id uuid not null,
+        phone varchar(20),
+        status varchar(30) not null check (status in ('NEW','CONTACTED','QUALIFIED','CLOSED')),
+        email varchar(150) not null,
+        name varchar(150) not null,
+        primary key (id),
+        constraint uk_leads_email_user unique (email, user_id)
+    )
+Hibernate: 
+    create table leads (
+        created_at timestamp(6) not null,
+        deleted_at timestamp(6),
+        updated_at timestamp(6) not null,
+        id uuid not null,
+        user_id uuid not null,
+        phone varchar(20),
+        status varchar(30) not null check (status in ('NEW','CONTACTED','QUALIFIED','CLOSED')),
+        email varchar(150) not null,
+        name varchar(150) not null,
+        primary key (id),
+        constraint uk_leads_email_user unique (email, user_id)
+    )
+2026-02-26T18:36:39.645-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    create table logs (
+        created_at timestamp(6) not null,
+        id uuid not null,
+        user_id uuid,
+        action TEXT not null,
+        primary key (id)
+    )
+Hibernate: 
+    create table logs (
+        created_at timestamp(6) not null,
+        id uuid not null,
+        user_id uuid,
+        action TEXT not null,
+        primary key (id)
+    )
+2026-02-26T18:36:39.647-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    create table settings (
+        created_at timestamp(6) not null,
+        deleted_at timestamp(6),
+        updated_at timestamp(6) not null,
+        whatsapp varchar(15) not null,
+        id uuid not null,
+        user_id uuid not null,
+        company_name varchar(100),
+        vendor_name varchar(100) not null,
+        logo TEXT,
+        welcome_message TEXT,
+        primary key (id)
+    )
+Hibernate: 
+    create table settings (
+        created_at timestamp(6) not null,
+        deleted_at timestamp(6),
+        updated_at timestamp(6) not null,
+        whatsapp varchar(15) not null,
+        id uuid not null,
+        user_id uuid not null,
+        company_name varchar(100),
+        vendor_name varchar(100) not null,
+        logo TEXT,
+        welcome_message TEXT,
+        primary key (id)
+    )
+2026-02-26T18:36:39.649-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    create table users (
+        created_at timestamp(6) not null,
+        deleted_at timestamp(6),
+        updated_at timestamp(6) not null,
+        id uuid not null,
+        role_id uuid not null,
+        email varchar(150) not null,
+        name varchar(150) not null,
+        password varchar(255) not null,
+        primary key (id),
+        constraint uq_users_email unique (email)
+    )
+Hibernate: 
+    create table users (
+        created_at timestamp(6) not null,
+        deleted_at timestamp(6),
+        updated_at timestamp(6) not null,
+        id uuid not null,
+        role_id uuid not null,
+        email varchar(150) not null,
+        name varchar(150) not null,
+        password varchar(255) not null,
+        primary key (id),
+        constraint uq_users_email unique (email)
+    )
+2026-02-26T18:36:39.652-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    create index idx_lsh_lead_id 
+       on lead_status_history (lead_id)
+Hibernate: 
+    create index idx_lsh_lead_id 
+       on lead_status_history (lead_id)
+2026-02-26T18:36:39.654-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    create index idx_lsh_lead_changed_at 
+       on lead_status_history (lead_id, changed_at)
+Hibernate: 
+    create index idx_lsh_lead_changed_at 
+       on lead_status_history (lead_id, changed_at)
+2026-02-26T18:36:39.656-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    create index idx_leads_email 
+       on leads (email)
+Hibernate: 
+    create index idx_leads_email 
+       on leads (email)
+2026-02-26T18:36:39.657-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    create index idx_leads_user 
+       on leads (user_id)
+Hibernate: 
+    create index idx_leads_user 
+       on leads (user_id)
+2026-02-26T18:36:39.658-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    create index idx_leads_user_email 
+       on leads (user_id, email)
+Hibernate: 
+    create index idx_leads_user_email 
+       on leads (user_id, email)
+2026-02-26T18:36:39.660-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    create index idx_logs_user_id 
+       on logs (user_id)
+Hibernate: 
+    create index idx_logs_user_id 
+       on logs (user_id)
+2026-02-26T18:36:39.662-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    create index idx_logs_created_at 
+       on logs (created_at)
+Hibernate: 
+    create index idx_logs_created_at 
+       on logs (created_at)
+2026-02-26T18:36:39.663-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    create index idx_settings_user 
+       on settings (user_id)
+Hibernate: 
+    create index idx_settings_user 
+       on settings (user_id)
+2026-02-26T18:36:39.664-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    create index idx_users_email 
+       on users (email)
+Hibernate: 
+    create index idx_users_email 
+       on users (email)
+2026-02-26T18:36:39.666-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    alter table if exists lead_status_history 
+       add constraint fk_lsh_user 
+       foreign key (changed_by) 
+       references users
+Hibernate: 
+    alter table if exists lead_status_history 
+       add constraint fk_lsh_user 
+       foreign key (changed_by) 
+       references users
+2026-02-26T18:36:39.668-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    alter table if exists lead_status_history 
+       add constraint fk_lsh_lead 
+       foreign key (lead_id) 
+       references leads
+Hibernate: 
+    alter table if exists lead_status_history 
+       add constraint fk_lsh_lead 
+       foreign key (lead_id) 
+       references leads
+2026-02-26T18:36:39.670-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    alter table if exists logs 
+       add constraint fk_logs_user 
+       foreign key (user_id) 
+       references users
+Hibernate: 
+    alter table if exists logs 
+       add constraint fk_logs_user 
+       foreign key (user_id) 
+       references users
+2026-02-26T18:36:39.671-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    alter table if exists settings 
+       add constraint fk_settings_user 
+       foreign key (user_id) 
+       references users
+Hibernate: 
+    alter table if exists settings 
+       add constraint fk_settings_user 
+       foreign key (user_id) 
+       references users
+2026-02-26T18:36:39.673-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    alter table if exists users 
+       add constraint fk_users_role 
+       foreign key (role_id) 
+       references public.roles
+Hibernate: 
+    alter table if exists users 
+       add constraint fk_users_role 
+       foreign key (role_id) 
+       references public.roles
+2026-02-26T18:36:39.751-03:00  INFO 25584 --- [leadflow-backend] [           main] c.l.b.r.lead.LeadRepositoryTest          : Started LeadRepositoryTest in 0.416 seconds (process running for 19.992)
+2026-02-26T18:36:39.759-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    select
+        r1_0.id,
+        r1_0.created_at,
+        r1_0.name,
+        r1_0.updated_at 
+    from
+        public.roles r1_0 
+    where
+        upper(r1_0.name)=upper(?)
+Hibernate: 
+    select
+        r1_0.id,
+        r1_0.created_at,
+        r1_0.name,
+        r1_0.updated_at 
+    from
+        public.roles r1_0 
+    where
+        upper(r1_0.name)=upper(?)
+2026-02-26T18:36:39.760-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:VARCHAR) <- [ROLE_USER]
+2026-02-26T18:36:39.763-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    insert 
+    into
+        public.roles
+        (created_at, name, updated_at, id) 
+    values
+        (?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        public.roles
+        (created_at, name, updated_at, id) 
+    values
+        (?, ?, ?, ?)
+2026-02-26T18:36:39.763-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.763363]
+2026-02-26T18:36:39.763-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:VARCHAR) <- [ROLE_USER]
+2026-02-26T18:36:39.763-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:TIMESTAMP) <- [2026-02-26T18:36:39.763363]
+2026-02-26T18:36:39.764-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:UUID) <- [8510cd18-2ec5-4c06-80e4-aad44b36ed16]
+2026-02-26T18:36:39.768-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    insert 
+    into
+        users
+        (created_at, deleted_at, email, name, password, role_id, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        users
+        (created_at, deleted_at, email, name, password, role_id, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-26T18:36:39.768-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.768184]
+2026-02-26T18:36:39.768-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:TIMESTAMP) <- [null]
+2026-02-26T18:36:39.768-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [user_37d613ab-d423-4506-b359-245aea8d44e3@example.com]
+2026-02-26T18:36:39.768-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [Test User]
+2026-02-26T18:36:39.769-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:VARCHAR) <- [password]
+2026-02-26T18:36:39.769-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:UUID) <- [8510cd18-2ec5-4c06-80e4-aad44b36ed16]
+2026-02-26T18:36:39.769-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (7:TIMESTAMP) <- [2026-02-26T18:36:39.768184]
+2026-02-26T18:36:39.769-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (8:UUID) <- [cd2a56f2-5648-4513-9f30-58c160b0db6f]
+2026-02-26T18:36:39.773-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    insert 
+    into
+        leads
+        (created_at, deleted_at, email, name, phone, status, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        leads
+        (created_at, deleted_at, email, name, phone, status, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-26T18:36:39.773-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.773082]
+2026-02-26T18:36:39.773-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:TIMESTAMP) <- [null]
+2026-02-26T18:36:39.773-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [lead1_53d6fe21-502a-482a-9fd0-d1122729056b@example.com]
+2026-02-26T18:36:39.773-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [Lead 1]
+2026-02-26T18:36:39.773-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:VARCHAR) <- [123]
+2026-02-26T18:36:39.773-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:VARCHAR) <- [NEW]
+2026-02-26T18:36:39.773-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (7:TIMESTAMP) <- [2026-02-26T18:36:39.773082]
+2026-02-26T18:36:39.774-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (8:UUID) <- [cd2a56f2-5648-4513-9f30-58c160b0db6f]
+2026-02-26T18:36:39.774-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (9:UUID) <- [8e803a25-9c08-497e-906d-67177f5b72a9]
+2026-02-26T18:36:39.776-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    insert 
+    into
+        leads
+        (created_at, deleted_at, email, name, phone, status, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        leads
+        (created_at, deleted_at, email, name, phone, status, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-26T18:36:39.777-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.776913]
+2026-02-26T18:36:39.777-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:TIMESTAMP) <- [null]
+2026-02-26T18:36:39.777-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [lead2_55461d19-5fae-4cc2-b1a9-44b9636749ed@example.com]
+2026-02-26T18:36:39.777-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [Lead 2]
+2026-02-26T18:36:39.777-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:VARCHAR) <- [456]
+2026-02-26T18:36:39.777-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:VARCHAR) <- [NEW]
+2026-02-26T18:36:39.777-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (7:TIMESTAMP) <- [2026-02-26T18:36:39.776913]
+2026-02-26T18:36:39.777-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (8:UUID) <- [cd2a56f2-5648-4513-9f30-58c160b0db6f]
+2026-02-26T18:36:39.777-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (9:UUID) <- [4af398b2-3302-479c-8e69-f4035afa7353]
+2026-02-26T18:36:39.783-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    select
+        l1_0.id,
+        l1_0.created_at,
+        l1_0.deleted_at,
+        l1_0.email,
+        l1_0.name,
+        l1_0.phone,
+        l1_0.status,
+        l1_0.updated_at,
+        l1_0.user_id 
+    from
+        leads l1_0 
+    where
+        l1_0.user_id=? 
+        and l1_0.deleted_at is null
+Hibernate: 
+    select
+        l1_0.id,
+        l1_0.created_at,
+        l1_0.deleted_at,
+        l1_0.email,
+        l1_0.name,
+        l1_0.phone,
+        l1_0.status,
+        l1_0.updated_at,
+        l1_0.user_id 
+    from
+        leads l1_0 
+    where
+        l1_0.user_id=? 
+        and l1_0.deleted_at is null
+2026-02-26T18:36:39.784-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:UUID) <- [cd2a56f2-5648-4513-9f30-58c160b0db6f]
+]]></system-out>
+  </testcase>
+  <testcase name="shouldExcludeSoftDeletedLeads" classname="com.leadflow.backend.repository.lead.LeadRepositoryTest" time="0.032">
+    <system-out><![CDATA[2026-02-26T18:36:39.804-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    select
+        r1_0.id,
+        r1_0.created_at,
+        r1_0.name,
+        r1_0.updated_at 
+    from
+        public.roles r1_0 
+    where
+        upper(r1_0.name)=upper(?)
+Hibernate: 
+    select
+        r1_0.id,
+        r1_0.created_at,
+        r1_0.name,
+        r1_0.updated_at 
+    from
+        public.roles r1_0 
+    where
+        upper(r1_0.name)=upper(?)
+2026-02-26T18:36:39.804-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:VARCHAR) <- [ROLE_USER]
+2026-02-26T18:36:39.807-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    insert 
+    into
+        public.roles
+        (created_at, name, updated_at, id) 
+    values
+        (?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        public.roles
+        (created_at, name, updated_at, id) 
+    values
+        (?, ?, ?, ?)
+2026-02-26T18:36:39.807-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.807213]
+2026-02-26T18:36:39.807-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:VARCHAR) <- [ROLE_USER]
+2026-02-26T18:36:39.807-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:TIMESTAMP) <- [2026-02-26T18:36:39.807213]
+2026-02-26T18:36:39.807-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:UUID) <- [72068dbf-b697-40b9-9581-b66b4f04fff9]
+2026-02-26T18:36:39.809-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    insert 
+    into
+        users
+        (created_at, deleted_at, email, name, password, role_id, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        users
+        (created_at, deleted_at, email, name, password, role_id, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-26T18:36:39.810-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.809816]
+2026-02-26T18:36:39.810-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:TIMESTAMP) <- [null]
+2026-02-26T18:36:39.810-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [user_9af3d68e-c4ed-491b-9dc8-210eeefaf7ff@example.com]
+2026-02-26T18:36:39.810-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [Test User]
+2026-02-26T18:36:39.810-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:VARCHAR) <- [password]
+2026-02-26T18:36:39.810-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:UUID) <- [72068dbf-b697-40b9-9581-b66b4f04fff9]
+2026-02-26T18:36:39.810-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (7:TIMESTAMP) <- [2026-02-26T18:36:39.809816]
+2026-02-26T18:36:39.810-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (8:UUID) <- [80375bd1-f1ab-41d4-bb50-839c0a7b2f79]
+2026-02-26T18:36:39.813-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    insert 
+    into
+        leads
+        (created_at, deleted_at, email, name, phone, status, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        leads
+        (created_at, deleted_at, email, name, phone, status, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-26T18:36:39.813-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.813001]
+2026-02-26T18:36:39.813-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:TIMESTAMP) <- [null]
+2026-02-26T18:36:39.814-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [soft_e8af2f11-ae02-46ad-bc07-deec31157861@example.com]
+2026-02-26T18:36:39.814-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [Lead]
+2026-02-26T18:36:39.814-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:VARCHAR) <- [123456789]
+2026-02-26T18:36:39.814-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:VARCHAR) <- [NEW]
+2026-02-26T18:36:39.814-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (7:TIMESTAMP) <- [2026-02-26T18:36:39.813001]
+2026-02-26T18:36:39.814-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (8:UUID) <- [80375bd1-f1ab-41d4-bb50-839c0a7b2f79]
+2026-02-26T18:36:39.814-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (9:UUID) <- [8851c284-1cd0-49f6-a015-f7318d9ea016]
+2026-02-26T18:36:39.823-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    update
+        leads 
+    set
+        deleted_at=?,
+        email=?,
+        name=?,
+        phone=?,
+        status=?,
+        updated_at=?,
+        user_id=? 
+    where
+        id=?
+Hibernate: 
+    update
+        leads 
+    set
+        deleted_at=?,
+        email=?,
+        name=?,
+        phone=?,
+        status=?,
+        updated_at=?,
+        user_id=? 
+    where
+        id=?
+2026-02-26T18:36:39.823-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.816216]
+2026-02-26T18:36:39.824-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:VARCHAR) <- [soft_e8af2f11-ae02-46ad-bc07-deec31157861@example.com]
+2026-02-26T18:36:39.824-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [Lead]
+2026-02-26T18:36:39.824-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [123456789]
+2026-02-26T18:36:39.824-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:VARCHAR) <- [NEW]
+2026-02-26T18:36:39.824-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:TIMESTAMP) <- [2026-02-26T18:36:39.820362]
+2026-02-26T18:36:39.824-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (7:UUID) <- [80375bd1-f1ab-41d4-bb50-839c0a7b2f79]
+2026-02-26T18:36:39.824-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (8:UUID) <- [8851c284-1cd0-49f6-a015-f7318d9ea016]
+2026-02-26T18:36:39.829-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    select
+        l1_0.id,
+        l1_0.created_at,
+        l1_0.deleted_at,
+        l1_0.email,
+        l1_0.name,
+        l1_0.phone,
+        l1_0.status,
+        l1_0.updated_at,
+        l1_0.user_id 
+    from
+        leads l1_0 
+    where
+        l1_0.user_id=? 
+        and l1_0.deleted_at is null
+Hibernate: 
+    select
+        l1_0.id,
+        l1_0.created_at,
+        l1_0.deleted_at,
+        l1_0.email,
+        l1_0.name,
+        l1_0.phone,
+        l1_0.status,
+        l1_0.updated_at,
+        l1_0.user_id 
+    from
+        leads l1_0 
+    where
+        l1_0.user_id=? 
+        and l1_0.deleted_at is null
+2026-02-26T18:36:39.829-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:UUID) <- [80375bd1-f1ab-41d4-bb50-839c0a7b2f79]
+]]></system-out>
+  </testcase>
+  <testcase name="shouldSaveAndRetrieveLead" classname="com.leadflow.backend.repository.lead.LeadRepositoryTest" time="0.023">
+    <system-out><![CDATA[2026-02-26T18:36:39.838-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    select
+        r1_0.id,
+        r1_0.created_at,
+        r1_0.name,
+        r1_0.updated_at 
+    from
+        public.roles r1_0 
+    where
+        upper(r1_0.name)=upper(?)
+Hibernate: 
+    select
+        r1_0.id,
+        r1_0.created_at,
+        r1_0.name,
+        r1_0.updated_at 
+    from
+        public.roles r1_0 
+    where
+        upper(r1_0.name)=upper(?)
+2026-02-26T18:36:39.838-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:VARCHAR) <- [ROLE_USER]
+2026-02-26T18:36:39.841-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    insert 
+    into
+        public.roles
+        (created_at, name, updated_at, id) 
+    values
+        (?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        public.roles
+        (created_at, name, updated_at, id) 
+    values
+        (?, ?, ?, ?)
+2026-02-26T18:36:39.841-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.841781]
+2026-02-26T18:36:39.841-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:VARCHAR) <- [ROLE_USER]
+2026-02-26T18:36:39.841-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:TIMESTAMP) <- [2026-02-26T18:36:39.841781]
+2026-02-26T18:36:39.842-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:UUID) <- [234b7ff9-4637-4e9c-a3c7-7b1b2285d0ce]
+2026-02-26T18:36:39.844-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    insert 
+    into
+        users
+        (created_at, deleted_at, email, name, password, role_id, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        users
+        (created_at, deleted_at, email, name, password, role_id, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-26T18:36:39.844-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.844441]
+2026-02-26T18:36:39.844-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:TIMESTAMP) <- [null]
+2026-02-26T18:36:39.844-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [user_5873add2-b2ba-493c-9c5d-97b865d89052@example.com]
+2026-02-26T18:36:39.844-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [Test User]
+2026-02-26T18:36:39.844-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:VARCHAR) <- [password]
+2026-02-26T18:36:39.844-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:UUID) <- [234b7ff9-4637-4e9c-a3c7-7b1b2285d0ce]
+2026-02-26T18:36:39.844-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (7:TIMESTAMP) <- [2026-02-26T18:36:39.844441]
+2026-02-26T18:36:39.844-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (8:UUID) <- [7b5a2aee-0d6d-4e30-a51c-603d0046bdf8]
+2026-02-26T18:36:39.848-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    insert 
+    into
+        leads
+        (created_at, deleted_at, email, name, phone, status, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        leads
+        (created_at, deleted_at, email, name, phone, status, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-26T18:36:39.848-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.847522]
+2026-02-26T18:36:39.848-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:TIMESTAMP) <- [null]
+2026-02-26T18:36:39.848-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [lead_39d2fce8-c6ef-4620-b5fa-74ab964d587b@example.com]
+2026-02-26T18:36:39.848-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [Test Lead]
+2026-02-26T18:36:39.848-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:VARCHAR) <- [123456789]
+2026-02-26T18:36:39.848-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:VARCHAR) <- [NEW]
+2026-02-26T18:36:39.848-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (7:TIMESTAMP) <- [2026-02-26T18:36:39.848054]
+2026-02-26T18:36:39.848-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (8:UUID) <- [7b5a2aee-0d6d-4e30-a51c-603d0046bdf8]
+2026-02-26T18:36:39.848-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (9:UUID) <- [a4a98c56-bcfa-47a9-83e8-2c8067e98d98]
+]]></system-out>
+  </testcase>
+  <testcase name="shouldNotAllowDuplicateEmailPerUser" classname="com.leadflow.backend.repository.lead.LeadRepositoryTest" time="0.029">
+    <system-out><![CDATA[2026-02-26T18:36:39.861-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    select
+        r1_0.id,
+        r1_0.created_at,
+        r1_0.name,
+        r1_0.updated_at 
+    from
+        public.roles r1_0 
+    where
+        upper(r1_0.name)=upper(?)
+Hibernate: 
+    select
+        r1_0.id,
+        r1_0.created_at,
+        r1_0.name,
+        r1_0.updated_at 
+    from
+        public.roles r1_0 
+    where
+        upper(r1_0.name)=upper(?)
+2026-02-26T18:36:39.862-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:VARCHAR) <- [ROLE_USER]
+2026-02-26T18:36:39.865-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    insert 
+    into
+        public.roles
+        (created_at, name, updated_at, id) 
+    values
+        (?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        public.roles
+        (created_at, name, updated_at, id) 
+    values
+        (?, ?, ?, ?)
+2026-02-26T18:36:39.865-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.865075]
+2026-02-26T18:36:39.865-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:VARCHAR) <- [ROLE_USER]
+2026-02-26T18:36:39.865-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:TIMESTAMP) <- [2026-02-26T18:36:39.865075]
+2026-02-26T18:36:39.865-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:UUID) <- [2f880e50-b962-42db-af26-413d2b59aac0]
+2026-02-26T18:36:39.868-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    insert 
+    into
+        users
+        (created_at, deleted_at, email, name, password, role_id, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        users
+        (created_at, deleted_at, email, name, password, role_id, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-26T18:36:39.868-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.868374]
+2026-02-26T18:36:39.868-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:TIMESTAMP) <- [null]
+2026-02-26T18:36:39.868-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [user_142de3ab-9bb6-46a4-9e79-c69da491ce17@example.com]
+2026-02-26T18:36:39.868-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [Test User]
+2026-02-26T18:36:39.869-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:VARCHAR) <- [password]
+2026-02-26T18:36:39.869-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:UUID) <- [2f880e50-b962-42db-af26-413d2b59aac0]
+2026-02-26T18:36:39.869-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (7:TIMESTAMP) <- [2026-02-26T18:36:39.868374]
+2026-02-26T18:36:39.869-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (8:UUID) <- [3876cdb5-2e88-4218-9f96-6f8e30bac7eb]
+2026-02-26T18:36:39.871-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    insert 
+    into
+        leads
+        (created_at, deleted_at, email, name, phone, status, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        leads
+        (created_at, deleted_at, email, name, phone, status, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-26T18:36:39.872-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.871997]
+2026-02-26T18:36:39.872-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:TIMESTAMP) <- [null]
+2026-02-26T18:36:39.872-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [duplicate_1fba17e8-6c32-417a-84ab-ac253078ba48@example.com]
+2026-02-26T18:36:39.872-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [Lead 1]
+2026-02-26T18:36:39.872-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:VARCHAR) <- [111]
+2026-02-26T18:36:39.872-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:VARCHAR) <- [NEW]
+2026-02-26T18:36:39.872-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (7:TIMESTAMP) <- [2026-02-26T18:36:39.871997]
+2026-02-26T18:36:39.872-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (8:UUID) <- [3876cdb5-2e88-4218-9f96-6f8e30bac7eb]
+2026-02-26T18:36:39.872-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (9:UUID) <- [67a6bd4c-4230-42d8-833c-df1eff52f98b]
+2026-02-26T18:36:39.875-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    insert 
+    into
+        leads
+        (created_at, deleted_at, email, name, phone, status, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        leads
+        (created_at, deleted_at, email, name, phone, status, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-26T18:36:39.876-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.875669]
+2026-02-26T18:36:39.876-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:TIMESTAMP) <- [null]
+2026-02-26T18:36:39.876-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [duplicate_1fba17e8-6c32-417a-84ab-ac253078ba48@example.com]
+2026-02-26T18:36:39.876-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [Lead 2]
+2026-02-26T18:36:39.876-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:VARCHAR) <- [222]
+2026-02-26T18:36:39.876-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:VARCHAR) <- [NEW]
+2026-02-26T18:36:39.876-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (7:TIMESTAMP) <- [2026-02-26T18:36:39.875669]
+2026-02-26T18:36:39.876-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (8:UUID) <- [3876cdb5-2e88-4218-9f96-6f8e30bac7eb]
+2026-02-26T18:36:39.876-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (9:UUID) <- [cd304834-7e9a-4b07-9791-cfc18388501f]
+2026-02-26T18:36:39.879-03:00  WARN 25584 --- [leadflow-backend] [           main] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Error: 0, SQLState: 23505
+2026-02-26T18:36:39.879-03:00 ERROR 25584 --- [leadflow-backend] [           main] o.h.engine.jdbc.spi.SqlExceptionHelper   : ERROR: duplicate key value violates unique constraint "uk_leads_email_user"
+  Detalhe: Key (email, user_id)=(duplicate_1fba17e8-6c32-417a-84ab-ac253078ba48@example.com, 3876cdb5-2e88-4218-9f96-6f8e30bac7eb) already exists.
+]]></system-out>
+  </testcase>
+  <testcase name="shouldCountByStatusAndDeletedAtIsNull" classname="com.leadflow.backend.repository.lead.LeadRepositoryTest" time="0.019">
+    <system-out><![CDATA[2026-02-26T18:36:39.892-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    select
+        r1_0.id,
+        r1_0.created_at,
+        r1_0.name,
+        r1_0.updated_at 
+    from
+        public.roles r1_0 
+    where
+        upper(r1_0.name)=upper(?)
+Hibernate: 
+    select
+        r1_0.id,
+        r1_0.created_at,
+        r1_0.name,
+        r1_0.updated_at 
+    from
+        public.roles r1_0 
+    where
+        upper(r1_0.name)=upper(?)
+2026-02-26T18:36:39.892-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:VARCHAR) <- [ROLE_USER]
+2026-02-26T18:36:39.894-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    insert 
+    into
+        public.roles
+        (created_at, name, updated_at, id) 
+    values
+        (?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        public.roles
+        (created_at, name, updated_at, id) 
+    values
+        (?, ?, ?, ?)
+2026-02-26T18:36:39.894-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.894335]
+2026-02-26T18:36:39.894-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:VARCHAR) <- [ROLE_USER]
+2026-02-26T18:36:39.894-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:TIMESTAMP) <- [2026-02-26T18:36:39.894335]
+2026-02-26T18:36:39.894-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:UUID) <- [305bd48a-5226-4f01-a178-1b0bfe2fcdc3]
+2026-02-26T18:36:39.896-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    insert 
+    into
+        users
+        (created_at, deleted_at, email, name, password, role_id, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        users
+        (created_at, deleted_at, email, name, password, role_id, updated_at, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-26T18:36:39.896-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.896421]
+2026-02-26T18:36:39.896-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:TIMESTAMP) <- [null]
+2026-02-26T18:36:39.896-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [user_7fdb5e97-2ffa-42a5-b2d3-870fc4eea736@example.com]
+2026-02-26T18:36:39.896-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [Test User]
+2026-02-26T18:36:39.896-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:VARCHAR) <- [password]
+2026-02-26T18:36:39.896-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:UUID) <- [305bd48a-5226-4f01-a178-1b0bfe2fcdc3]
+2026-02-26T18:36:39.896-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (7:TIMESTAMP) <- [2026-02-26T18:36:39.896421]
+2026-02-26T18:36:39.896-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (8:UUID) <- [abe37615-69cb-4212-81b6-fb60b7b1cc12]
+2026-02-26T18:36:39.899-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    insert 
+    into
+        leads
+        (created_at, deleted_at, email, name, phone, status, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        leads
+        (created_at, deleted_at, email, name, phone, status, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-26T18:36:39.899-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.899065]
+2026-02-26T18:36:39.899-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:TIMESTAMP) <- [null]
+2026-02-26T18:36:39.899-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [c1_99a23262-8d89-4e9a-a7ae-88262110e517@example.com]
+2026-02-26T18:36:39.899-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [Lead 1]
+2026-02-26T18:36:39.899-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:VARCHAR) <- [123]
+2026-02-26T18:36:39.899-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:VARCHAR) <- [NEW]
+2026-02-26T18:36:39.899-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (7:TIMESTAMP) <- [2026-02-26T18:36:39.899065]
+2026-02-26T18:36:39.899-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (8:UUID) <- [abe37615-69cb-4212-81b6-fb60b7b1cc12]
+2026-02-26T18:36:39.899-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (9:UUID) <- [fa0b1781-14ed-4f20-99a1-eddc24cba13d]
+2026-02-26T18:36:39.900-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    insert 
+    into
+        leads
+        (created_at, deleted_at, email, name, phone, status, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        leads
+        (created_at, deleted_at, email, name, phone, status, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-26T18:36:39.900-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.900969]
+2026-02-26T18:36:39.900-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:TIMESTAMP) <- [null]
+2026-02-26T18:36:39.900-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [c2_de5413d9-c822-4e69-9967-af901e894961@example.com]
+2026-02-26T18:36:39.900-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [Lead 2]
+2026-02-26T18:36:39.900-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:VARCHAR) <- [456]
+2026-02-26T18:36:39.900-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:VARCHAR) <- [CONTACTED]
+2026-02-26T18:36:39.900-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (7:TIMESTAMP) <- [2026-02-26T18:36:39.900969]
+2026-02-26T18:36:39.901-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (8:UUID) <- [abe37615-69cb-4212-81b6-fb60b7b1cc12]
+2026-02-26T18:36:39.901-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (9:UUID) <- [96f4ef10-b60e-4960-991d-5b8955b909dd]
+2026-02-26T18:36:39.902-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    insert 
+    into
+        leads
+        (created_at, deleted_at, email, name, phone, status, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        leads
+        (created_at, deleted_at, email, name, phone, status, updated_at, user_id, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-02-26T18:36:39.902-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:TIMESTAMP) <- [2026-02-26T18:36:39.902529]
+2026-02-26T18:36:39.902-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (2:TIMESTAMP) <- [null]
+2026-02-26T18:36:39.902-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (3:VARCHAR) <- [c3_b9a2d217-94e6-4553-8bf6-7b409659ac10@example.com]
+2026-02-26T18:36:39.902-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (4:VARCHAR) <- [Lead 3]
+2026-02-26T18:36:39.902-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (5:VARCHAR) <- [789]
+2026-02-26T18:36:39.902-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (6:VARCHAR) <- [CONTACTED]
+2026-02-26T18:36:39.902-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (7:TIMESTAMP) <- [2026-02-26T18:36:39.902529]
+2026-02-26T18:36:39.902-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (8:UUID) <- [abe37615-69cb-4212-81b6-fb60b7b1cc12]
+2026-02-26T18:36:39.902-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (9:UUID) <- [c3a4898b-f6e2-4625-a1ad-8a60da484943]
+2026-02-26T18:36:39.906-03:00 DEBUG 25584 --- [leadflow-backend] [           main] org.hibernate.SQL                        : 
+    select
+        count(l1_0.id) 
+    from
+        leads l1_0 
+    where
+        l1_0.status=? 
+        and l1_0.deleted_at is null
+Hibernate: 
+    select
+        count(l1_0.id) 
+    from
+        leads l1_0 
+    where
+        l1_0.status=? 
+        and l1_0.deleted_at is null
+2026-02-26T18:36:39.906-03:00 TRACE 25584 --- [leadflow-backend] [           main] org.hibernate.orm.jdbc.bind              : binding parameter (1:VARCHAR) <- [CONTACTED]
+]]></system-out>
+  </testcase>
+</testsuite>

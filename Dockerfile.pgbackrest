@@ -1,7 +1,9 @@
-FROM postgres:16-alpine
+FROM ubuntu:22.04
 
-RUN apk add --no-cache \
-    pgbackrest \
-    bash
+RUN apt-get update && \
+    apt-get install -y pgbackrest openssh-client
+
+RUN mkdir -p /var/lib/pgbackrest && \
+    mkdir -p /etc/pgbackrest
 
 CMD ["tail", "-f", "/dev/null"]
