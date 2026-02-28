@@ -27,11 +27,13 @@ public class RefreshTokenService {
     }
 
     /* ======================================================
-       GENERATE NEW REFRESH TOKEN
+       GENERATE NEW REFRESH TOKEN (WITH DEVICE BINDING)
        ====================================================== */
 
     @Transactional
-    public String generate(User user) {
+    public String generate(User user,
+                           String ipAddress,
+                           String userAgent) {
 
         if (user == null || user.getId() == null) {
             throw new IllegalArgumentException("Invalid user");
@@ -40,8 +42,11 @@ public class RefreshTokenService {
         String rawToken = generateSecureToken();
         String tokenHash = hash(rawToken);
 
+        String fingerprint = generateFingerprint(ipAddress, userAgent);
+
         RefreshToken entity = new RefreshToken(
                 tokenHash,
+                fingerprint,
                 user,
                 LocalDateTime.now().plusDays(REFRESH_DAYS)
         );
@@ -52,11 +57,13 @@ public class RefreshTokenService {
     }
 
     /* ======================================================
-       VALIDATE + ROTATE (SECURE ROTATION)
+       VALIDATE + ROTATE (SECURE ROTATION + DEVICE CHECK)
        ====================================================== */
 
     @Transactional
-    public RotationResult validateAndRotate(String rawToken) {
+    public RotationResult validateAndRotate(String rawToken,
+                                            String ipAddress,
+                                            String userAgent) {
 
         if (rawToken == null || rawToken.isBlank()) {
             throw new IllegalArgumentException("Invalid refresh token");
@@ -71,7 +78,6 @@ public class RefreshTokenService {
 
         // 🔒 REUSE DETECTION
         if (token.isRevoked()) {
-            // Se refresh já foi usado antes → ataque
             repository.deleteByUser_Id(token.getUser().getId());
             throw new IllegalStateException("Refresh token reuse detected");
         }
@@ -82,13 +88,22 @@ public class RefreshTokenService {
             throw new IllegalArgumentException("Refresh token expired");
         }
 
+        // 🔐 DEVICE BINDING VALIDATION
+        String currentFingerprint = generateFingerprint(ipAddress, userAgent);
+
+        if (!token.getDeviceFingerprint().equals(currentFingerprint)) {
+            repository.deleteByUser_Id(token.getUser().getId());
+            throw new IllegalStateException("Device mismatch detected");
+        }
+
         // 🔁 ROTATION
         token.revoke();
         repository.save(token);
 
         User user = token.getUser();
 
-        String newRefresh = generate(user);
+        String newRefresh =
+                generate(user, ipAddress, userAgent);
 
         return new RotationResult(user, newRefresh);
     }
@@ -127,9 +142,20 @@ public class RefreshTokenService {
         }
     }
 
+    private String generateFingerprint(String ipAddress,
+                                       String userAgent) {
+
+        String raw = (ipAddress == null ? "" : ipAddress) +
+                     "|" +
+                     (userAgent == null ? "" : userAgent);
+
+        return hash(raw);
+    }
+
     /* ======================================================
        RESULT WRAPPER
        ====================================================== */
 
-    public record RotationResult(User user, String newRefreshToken) {}
+    public record RotationResult(User user,
+                                 String newRefreshToken) {}
 }

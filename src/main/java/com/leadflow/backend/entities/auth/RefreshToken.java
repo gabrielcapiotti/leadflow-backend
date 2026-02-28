@@ -14,7 +14,8 @@ import java.util.UUID;
         name = "refresh_tokens",
         indexes = {
                 @Index(name = "idx_refresh_token_user", columnList = "user_id"),
-                @Index(name = "idx_refresh_token_hash", columnList = "token_hash")
+                @Index(name = "idx_refresh_token_hash", columnList = "token_hash"),
+                @Index(name = "idx_refresh_token_fingerprint", columnList = "device_fingerprint")
         },
         uniqueConstraints = {
                 @UniqueConstraint(name = "uq_refresh_token_hash", columnNames = "token_hash")
@@ -36,6 +37,9 @@ public class RefreshToken {
 
     @Column(name = "token_hash", nullable = false, length = 255)
     private String tokenHash;
+
+    @Column(name = "device_fingerprint", nullable = false, length = 255)
+    private String deviceFingerprint;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
@@ -68,22 +72,24 @@ public class RefreshToken {
     }
 
     public RefreshToken(String tokenHash,
+                        String deviceFingerprint,
                         User user,
                         LocalDateTime expiresAt) {
 
-        if (tokenHash == null || tokenHash.isBlank()) {
+        if (tokenHash == null || tokenHash.isBlank())
             throw new IllegalArgumentException("Token hash cannot be blank");
-        }
 
-        if (user == null) {
+        if (deviceFingerprint == null || deviceFingerprint.isBlank())
+            throw new IllegalArgumentException("Device fingerprint cannot be blank");
+
+        if (user == null)
             throw new IllegalArgumentException("User cannot be null");
-        }
 
-        if (expiresAt == null || expiresAt.isBefore(LocalDateTime.now())) {
+        if (expiresAt == null || expiresAt.isBefore(LocalDateTime.now()))
             throw new IllegalArgumentException("Expiration must be in the future");
-        }
 
         this.tokenHash = tokenHash;
+        this.deviceFingerprint = deviceFingerprint;
         this.user = user;
         this.expiresAt = expiresAt;
         this.revoked = false;
@@ -102,9 +108,7 @@ public class RefreshToken {
     }
 
     public void revoke() {
-        if (!this.revoked) {
-            this.revoked = true;
-        }
+        this.revoked = true;
     }
 
     /* ======================================================
@@ -117,6 +121,10 @@ public class RefreshToken {
 
     public String getTokenHash() {
         return tokenHash;
+    }
+
+    public String getDeviceFingerprint() {
+        return deviceFingerprint;
     }
 
     public User getUser() {
@@ -162,5 +170,9 @@ public class RefreshToken {
                 ", userId=" + (user != null ? user.getId() : null) +
                 ", revoked=" + revoked +
                 '}';
+    }
+
+    public void setDeviceFingerprint(String deviceFingerprint) {
+        this.deviceFingerprint = deviceFingerprint;
     }
 }

@@ -4,20 +4,33 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record AuthResponse(
 
-        @JsonProperty("token")
-        String token
+        @JsonProperty("accessToken")
+        String accessToken,
+
+        @JsonProperty("refreshToken")
+        String refreshToken
 
 ) {
 
     public AuthResponse {
-        if (token == null) {
-            throw new IllegalArgumentException("Token cannot be null");
+
+        if (accessToken == null) {
+            throw new IllegalArgumentException("Access token cannot be null");
         }
 
-        token = token.trim();
+        if (refreshToken == null) {
+            throw new IllegalArgumentException("Refresh token cannot be null");
+        }
 
-        if (token.isBlank()) {
-            throw new IllegalArgumentException("Token cannot be blank");
+        accessToken = accessToken.trim();
+        refreshToken = refreshToken.trim();
+
+        if (accessToken.isBlank()) {
+            throw new IllegalArgumentException("Access token cannot be blank");
+        }
+
+        if (refreshToken.isBlank()) {
+            throw new IllegalArgumentException("Refresh token cannot be blank");
         }
     }
 }

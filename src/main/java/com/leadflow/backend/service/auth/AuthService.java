@@ -7,11 +7,11 @@ import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
 import com.leadflow.backend.service.audit.SecurityAuditService;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +19,8 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import jakarta.servlet.http.HttpServletRequest;
+
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -30,17 +32,30 @@ public class AuthService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final SecurityAuditService auditService;
+    private final LoginAuditService loginAuditService;
+    private final BruteForceProtectionService bruteForceService;
+
+    private final int maxAttempts;
+    private final int windowMinutes;
 
     public AuthService(
             UserRepository userRepository,
             RoleRepository roleRepository,
             PasswordEncoder passwordEncoder,
-            SecurityAuditService auditService
+            SecurityAuditService auditService,
+            LoginAuditService loginAuditService,
+            BruteForceProtectionService bruteForceService,
+            @Value("${security.brute-force.max-attempts:5}") int maxAttempts,
+            @Value("${security.brute-force.window-minutes:5}") int windowMinutes
     ) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.auditService = auditService;
+        this.loginAuditService = loginAuditService;
+        this.bruteForceService = bruteForceService;
+        this.maxAttempts = Math.max(maxAttempts, 1);
+        this.windowMinutes = Math.max(windowMinutes, 1);
     }
 
     /* ======================================================
@@ -52,7 +67,6 @@ public class AuthService {
 
         validateInput(name, email, password);
 
-        String schema = resolveCurrentTenantSchema();
         String normalizedEmail = normalizeEmail(email);
 
         if (userRepository
@@ -79,44 +93,64 @@ public class AuthService {
 
         audit(SecurityAction.USER_REGISTERED, normalizedEmail, true);
 
-        logger.info("User registered in schema {} with email {}",
-                schema, normalizedEmail);
+        logger.info("User registered successfully: {}", normalizedEmail);
 
         return user;
     }
 
     /* ======================================================
-       LOGIN (COM BLOQUEIO + AUDITORIA)
+       LOGIN WITH REDIS BRUTE FORCE PROTECTION
        ====================================================== */
 
     @Transactional
     public User authenticateUser(String email, String password) {
 
+        HttpServletRequest request = currentRequest(); // ✅ CORREÇÃO
+
         if (email == null || email.isBlank() ||
             password == null || password.isBlank()) {
 
-            audit(SecurityAction.LOGIN_FAILED, email, false);
+            recordFailureAudit(email, "Invalid credentials");
             throw new IllegalArgumentException("Invalid credentials");
         }
 
-        String schema = resolveCurrentTenantSchema();
         String normalizedEmail = normalizeEmail(email);
+        UUID tenantId = resolveTenantId();
+
+        String ip = request != null ? request.getRemoteAddr() : "unknown";
+
+        String emailKey = "bf:email:" + tenantId + ":" + normalizedEmail;
+        String ipKey = "bf:ip:" + tenantId + ":" + ip;
+
+        // 🔴 Verificação de bloqueio
+        if (bruteForceService.isBlocked(emailKey, maxAttempts)
+                || bruteForceService.isBlocked(ipKey, maxAttempts)) {
+
+            recordFailureAudit(normalizedEmail, "Brute force detected");
+
+            logger.warn("Brute-force blocked for email {}", normalizedEmail);
+
+            throw new IllegalStateException(
+                    "Too many failed attempts. Try again later."
+            );
+        }
 
         User user = userRepository
                 .findByEmailIgnoreCaseAndDeletedAtIsNull(normalizedEmail)
                 .orElseThrow(() -> {
-                    audit(SecurityAction.LOGIN_FAILED, normalizedEmail, false);
+                    recordFailureAudit(normalizedEmail, "User not found");
                     return new IllegalArgumentException("Invalid credentials");
                 });
 
         if (user.isAccountLocked()) {
 
-            audit(SecurityAction.ACCOUNT_LOCKED, normalizedEmail, false);
+            recordFailureAudit(normalizedEmail, "Account locked");
 
-            logger.warn("Blocked login attempt for user {} in schema {}",
-                    normalizedEmail, schema);
+            logger.warn("Blocked login for locked account: {}", normalizedEmail);
 
-            throw new IllegalStateException("Account temporarily locked. Try again later.");
+            throw new IllegalStateException(
+                    "Account temporarily locked. Try again later."
+            );
         }
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
@@ -124,27 +158,36 @@ public class AuthService {
             user.registerFailedLogin();
             userRepository.save(user);
 
-            audit(SecurityAction.LOGIN_FAILED, normalizedEmail, false);
+            // 🔴 Incrementa Redis
+            bruteForceService.recordFailure(emailKey, windowMinutes);
+            bruteForceService.recordFailure(ipKey, windowMinutes);
 
-            logger.warn("Failed login attempt for user {} in schema {}",
-                    normalizedEmail, schema);
+            recordFailureAudit(normalizedEmail, "Wrong password");
+
+            logger.warn("Invalid password attempt for {}", normalizedEmail);
 
             throw new IllegalArgumentException("Invalid credentials");
         }
 
+        // ✅ Login bem-sucedido
         user.resetLoginAttempts();
         userRepository.save(user);
 
+        // 🔵 Reset Redis
+        bruteForceService.reset(emailKey);
+        bruteForceService.reset(ipKey);
+
+        recordSuccessAudit(user);
+
         audit(SecurityAction.LOGIN_SUCCESS, normalizedEmail, true);
 
-        logger.info("User authenticated in schema {}: {}",
-                schema, normalizedEmail);
+        logger.info("User authenticated successfully: {}", normalizedEmail);
 
         return user;
     }
 
     /* ======================================================
-       FIND BY EMAIL
+       FIND USER
        ====================================================== */
 
     @Transactional(readOnly = true)
@@ -154,36 +197,60 @@ public class AuthService {
             throw new IllegalArgumentException("Email cannot be blank");
         }
 
-        String normalizedEmail = normalizeEmail(email);
-
         return userRepository
-                .findByEmailIgnoreCaseAndDeletedAtIsNull(normalizedEmail)
+                .findByEmailIgnoreCaseAndDeletedAtIsNull(normalizeEmail(email))
                 .orElseThrow(() ->
                         new IllegalArgumentException("User not found")
                 );
     }
 
     /* ======================================================
-       AUDIT INTERNAL
+       LOGIN AUDIT HELPERS
+       ====================================================== */
+
+    private void recordSuccessAudit(User user) {
+
+        HttpServletRequest request = currentRequest();
+
+        loginAuditService.recordSuccess(
+                user.getId(),
+                resolveTenantId(),
+                user.getEmail(),
+                request != null ? request.getRemoteAddr() : null,
+                request != null ? request.getHeader("User-Agent") : null,
+                false
+        );
+    }
+
+    private void recordFailureAudit(String email, String reason) {
+
+        HttpServletRequest request = currentRequest();
+
+        loginAuditService.recordFailure(
+                resolveTenantId(),
+                email,
+                request != null ? request.getRemoteAddr() : null,
+                request != null ? request.getHeader("User-Agent") : null,
+                reason
+        );
+    }
+
+    /* ======================================================
+       SECURITY AUDIT
        ====================================================== */
 
     private void audit(SecurityAction action, String email, boolean success) {
 
-        String tenant = resolveCurrentTenantSchema();
         HttpServletRequest request = currentRequest();
-
-        String ip = request != null ? request.getRemoteAddr() : null;
-        String userAgent = request != null ? request.getHeader("User-Agent") : null;
-        String correlationId = MDC.get("correlationId");
 
         auditService.log(
                 action,
                 email,
-                tenant,
+                resolveCurrentTenantSchema(),
                 success,
-                ip,
-                userAgent,
-                correlationId
+                request != null ? request.getRemoteAddr() : null,
+                request != null ? request.getHeader("User-Agent") : null,
+                MDC.get("correlationId")
         );
     }
 
@@ -196,8 +263,19 @@ public class AuthService {
     }
 
     /* ======================================================
-       INTERNAL
+       INTERNAL HELPERS
        ====================================================== */
+
+    private UUID resolveTenantId() {
+
+        String tenant = TenantContext.getTenant();
+
+        if (tenant == null || tenant.isBlank()) {
+            throw new IllegalStateException("No tenant defined in TenantContext");
+        }
+
+        return UUID.fromString(tenant);
+    }
 
     private String resolveCurrentTenantSchema() {
 
@@ -223,6 +301,8 @@ public class AuthService {
             throw new IllegalArgumentException("Email cannot be blank");
 
         if (password == null || password.length() < 8)
-            throw new IllegalArgumentException("Password must contain at least 8 characters");
+            throw new IllegalArgumentException(
+                    "Password must contain at least 8 characters"
+            );
     }
 }

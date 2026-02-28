@@ -1,7 +1,6 @@
 package com.leadflow.backend.security.jwt;
 
 import com.leadflow.backend.entities.user.User;
-
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 
@@ -30,10 +29,6 @@ public class JwtService {
     private final String issuer;
     private final Clock clock;
 
-    /* ======================================================
-       CONSTRUCTOR (SPRING)
-       ====================================================== */
-
     public JwtService(
             @Value("${security.jwt.secret}") String secret,
             @Value("${security.jwt.expiration}") long expirationMillis,
@@ -42,7 +37,9 @@ public class JwtService {
     ) {
 
         if (secret == null || secret.length() < 32) {
-            throw new IllegalArgumentException("JWT secret must be at least 256 bits");
+            throw new IllegalArgumentException(
+                    "JWT secret must be at least 256 bits (32 characters)"
+            );
         }
 
         this.signingKey =
@@ -57,7 +54,7 @@ public class JwtService {
        TOKEN GENERATION
        ====================================================== */
 
-    public String generateToken(User user, String tenantSchema) {
+    public JwtToken generateToken(User user, String tenantSchema) {
 
         if (user == null ||
             user.getId() == null ||
@@ -75,18 +72,22 @@ public class JwtService {
         }
 
         Instant now = Instant.now(clock);
+        Instant expiresAt = now.plusMillis(expirationMillis);
+        String tokenId = UUID.randomUUID().toString();
 
-        return Jwts.builder()
-                .setId(UUID.randomUUID().toString())
+        String token = Jwts.builder()
+                .setId(tokenId)
                 .setSubject(user.getEmail())
                 .setIssuer(issuer)
                 .setIssuedAt(Date.from(now))
-                .setExpiration(Date.from(now.plusMillis(expirationMillis)))
+                .setExpiration(Date.from(expiresAt))
                 .claim("userId", user.getId().toString())
                 .claim("role", user.getRole().getName())
                 .claim("tenant", tenantSchema.trim().toLowerCase())
                 .signWith(signingKey, SignatureAlgorithm.HS256)
                 .compact();
+
+        return new JwtToken(token, tokenId, expiresAt);
     }
 
     /* ======================================================
@@ -175,12 +176,16 @@ public class JwtService {
                 claims -> claims.get("tenant", String.class));
     }
 
-    public Date extractIssuedAt(String token) {
-        return extractClaim(token, Claims::getIssuedAt);
+    public String extractTokenId(String token) {
+        return extractClaim(token, Claims::getId);
     }
 
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
+    }
+
+    public Date extractIssuedAt(String token) {
+        return extractClaim(token, Claims::getIssuedAt);
     }
 
     /* ======================================================

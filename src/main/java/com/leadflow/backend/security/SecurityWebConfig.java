@@ -2,6 +2,7 @@ package com.leadflow.backend.security;
 
 import com.leadflow.backend.security.jwt.JwtAuthenticationFilter;
 import com.leadflow.backend.security.jwt.JwtService;
+import com.leadflow.backend.service.auth.UserSessionService;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -10,7 +11,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.beans.factory.ObjectProvider;
-
 import org.springframework.core.annotation.Order;
 
 import org.springframework.security.authentication.AuthenticationManager;
@@ -56,9 +56,14 @@ public class SecurityWebConfig {
     )
     public JwtAuthenticationFilter jwtAuthenticationFilter(
             JwtService jwtService,
-            UserDetailsService userDetailsService
+            UserDetailsService userDetailsService,
+            UserSessionService userSessionService
     ) {
-        return new JwtAuthenticationFilter(jwtService, userDetailsService);
+        return new JwtAuthenticationFilter(
+                jwtService,
+                userDetailsService,
+                userSessionService
+        );
     }
 
     /* =====================================================
@@ -75,22 +80,17 @@ public class SecurityWebConfig {
         http
             .securityMatcher("/**")
 
-            // REST API → sem CSRF
             .csrf(csrf -> csrf.disable())
 
-            // Stateless (JWT)
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
 
-            // Desabilita autenticações padrão
             .httpBasic(httpBasic -> httpBasic.disable())
             .formLogin(form -> form.disable())
 
-            // CORS configurável externamente
             .cors(cors -> {})
 
-            // Tratamento explícito de erros
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((request, response, authException) ->
                         response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
@@ -100,14 +100,12 @@ public class SecurityWebConfig {
                 )
             )
 
-            // Autorização
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .anyRequest().authenticated()
             )
 
-            // Hardening de headers
             .headers(headers -> headers
                 .frameOptions(frame -> frame.sameOrigin())
                 .contentSecurityPolicy(csp ->
@@ -115,13 +113,15 @@ public class SecurityWebConfig {
                 )
                 .referrerPolicy(referrer ->
                     referrer.policy(
-                        org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER
+                        org.springframework.security.web.header.writers
+                                .ReferrerPolicyHeaderWriter
+                                .ReferrerPolicy.NO_REFERRER
                     )
                 )
             );
 
-        // Adiciona JWT apenas se existir
         JwtAuthenticationFilter jwtFilter = jwtFilterProvider.getIfAvailable();
+
         if (jwtFilter != null) {
             http.addFilterBefore(
                     jwtFilter,

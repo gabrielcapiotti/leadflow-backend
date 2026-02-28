@@ -2,11 +2,15 @@ package com.leadflow.backend.security.jwt;
 
 import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.security.CustomUserDetails;
+import com.leadflow.backend.service.auth.UserSessionService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,15 +27,21 @@ import java.util.UUID;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Logger logger =
+            LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final UserSessionService userSessionService;
 
     public JwtAuthenticationFilter(
             JwtService jwtService,
-            UserDetailsService userDetailsService
+            UserDetailsService userDetailsService,
+            UserSessionService userSessionService
     ) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
+        this.userSessionService = userSessionService;
     }
 
     @Override
@@ -43,62 +53,94 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = extractToken(request);
 
-        if (token != null &&
-                SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (token == null ||
+            SecurityContextHolder.getContext().getAuthentication() != null) {
 
-            try {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-                String email = jwtService.extractEmail(token);
+        try {
 
-                if (email != null) {
+            String email = jwtService.extractEmail(token);
 
-                    UserDetails userDetails =
-                            userDetailsService.loadUserByUsername(email);
+            if (email == null) {
+                filterChain.doFilter(request, response);
+                return;
+            }
 
-                    if (!(userDetails instanceof CustomUserDetails customUser)) {
-                        filterChain.doFilter(request, response);
-                        return;
-                    }
+            UserDetails userDetails =
+                    userDetailsService.loadUserByUsername(email);
 
-                    UUID expectedUserId = customUser.getId();
-                    String currentTenant = TenantContext.getTenant();
+            if (!(userDetails instanceof CustomUserDetails customUser)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
 
-                    boolean baseValid = jwtService.isTokenValid(
-                            token,
+            UUID userId = customUser.getId();
+            String tenant = TenantContext.getTenant();
+
+            if (tenant == null || tenant.isBlank()) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            boolean baseValid = jwtService.isTokenValid(
+                    token,
+                    userDetails,
+                    userId,
+                    tenant
+            );
+
+            if (!baseValid ||
+                !isTokenStillValidAfterPasswordChange(token, customUser)) {
+
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            String tokenId = jwtService.extractTokenId(token);
+            UUID tenantId = UUID.fromString(tenant);
+
+            /* ======================================================
+               SESSION SECURITY CORE
+               ====================================================== */
+
+            userSessionService.processSessionActivity(
+                    tokenId,
+                    tenantId,
+                    request.getRemoteAddr(),
+                    request.getHeader("User-Agent")
+            );
+
+            /* ======================================================
+               AUTHENTICATION CONTEXT
+               ====================================================== */
+
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(
                             userDetails,
-                            expectedUserId,
-                            currentTenant
+                            null,
+                            userDetails.getAuthorities()
                     );
 
-                    if (baseValid && isTokenStillValidAfterPasswordChange(token, customUser)) {
+            authToken.setDetails(
+                    new WebAuthenticationDetailsSource()
+                            .buildDetails(request)
+            );
 
-                        UsernamePasswordAuthenticationToken authToken =
-                                new UsernamePasswordAuthenticationToken(
-                                        userDetails,
-                                        null,
-                                        userDetails.getAuthorities()
-                                );
+            SecurityContextHolder.getContext()
+                    .setAuthentication(authToken);
 
-                        authToken.setDetails(
-                                new WebAuthenticationDetailsSource()
-                                        .buildDetails(request)
-                        );
-
-                        SecurityContextHolder.getContext()
-                                .setAuthentication(authToken);
-                    }
-                }
-
-            } catch (Exception ignored) {
-                // Token inválido ou manipulado → não autentica
-            }
+        } catch (Exception ex) {
+            logger.debug("JWT authentication failed: {}", ex.getMessage());
         }
 
         filterChain.doFilter(request, response);
     }
 
     /* ======================================================
-       JWT INVALIDATION LOGIC
+       PASSWORD INVALIDATION CHECK
        ====================================================== */
 
     private boolean isTokenStillValidAfterPasswordChange(

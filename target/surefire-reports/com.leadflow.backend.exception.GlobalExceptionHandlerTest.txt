@@ -1,4 +1,76 @@
 -------------------------------------------------------------------------------
 Test set: com.leadflow.backend.exception.GlobalExceptionHandlerTest
 -------------------------------------------------------------------------------
-Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.403 s -- in com.leadflow.backend.exception.GlobalExceptionHandlerTest
+Tests run: 6, Failures: 6, Errors: 0, Skipped: 0, Time elapsed: 0.391 s <<< FAILURE! -- in com.leadflow.backend.exception.GlobalExceptionHandlerTest
+com.leadflow.backend.exception.GlobalExceptionHandlerTest.shouldHandleIllegalStateException -- Time elapsed: 0.015 s <<< FAILURE!
+java.lang.AssertionError: JSON path "$.error" expected:<Invalid State> but was:<INVALID_STATE>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.util.JsonPathExpectationsHelper.assertValue(JsonPathExpectationsHelper.java:172)
+	at org.springframework.test.web.servlet.result.JsonPathResultMatchers.lambda$value$2(JsonPathResultMatchers.java:112)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.leadflow.backend.exception.GlobalExceptionHandlerTest.shouldHandleIllegalStateException(GlobalExceptionHandlerTest.java:134)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+com.leadflow.backend.exception.GlobalExceptionHandlerTest.shouldHandleIllegalArgumentException -- Time elapsed: 0.005 s <<< FAILURE!
+java.lang.AssertionError: JSON path "$.error" expected:<Business Error> but was:<BUSINESS_RULE_VIOLATION>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.util.JsonPathExpectationsHelper.assertValue(JsonPathExpectationsHelper.java:172)
+	at org.springframework.test.web.servlet.result.JsonPathResultMatchers.lambda$value$2(JsonPathResultMatchers.java:112)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.leadflow.backend.exception.GlobalExceptionHandlerTest.shouldHandleIllegalArgumentException(GlobalExceptionHandlerTest.java:122)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+com.leadflow.backend.exception.GlobalExceptionHandlerTest.shouldHandleBadCredentialsException -- Time elapsed: 0.005 s <<< FAILURE!
+java.lang.AssertionError: JSON path "$.error" expected:<Authentication Error> but was:<INVALID_CREDENTIALS>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.util.JsonPathExpectationsHelper.assertValue(JsonPathExpectationsHelper.java:172)
+	at org.springframework.test.web.servlet.result.JsonPathResultMatchers.lambda$value$2(JsonPathResultMatchers.java:112)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.leadflow.backend.exception.GlobalExceptionHandlerTest.shouldHandleBadCredentialsException(GlobalExceptionHandlerTest.java:146)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+com.leadflow.backend.exception.GlobalExceptionHandlerTest.shouldHandleValidationError -- Time elapsed: 0.016 s <<< FAILURE!
+java.lang.AssertionError: JSON path "$.error" expected:<Validation Error> but was:<VALIDATION_ERROR>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.util.JsonPathExpectationsHelper.assertValue(JsonPathExpectationsHelper.java:172)
+	at org.springframework.test.web.servlet.result.JsonPathResultMatchers.lambda$value$2(JsonPathResultMatchers.java:112)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.leadflow.backend.exception.GlobalExceptionHandlerTest.shouldHandleValidationError(GlobalExceptionHandlerTest.java:110)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+com.leadflow.backend.exception.GlobalExceptionHandlerTest.shouldHandleGenericException -- Time elapsed: 0.009 s <<< FAILURE!
+java.lang.AssertionError: JSON path "$.error" expected:<Internal Server Error> but was:<INTERNAL_SERVER_ERROR>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.util.JsonPathExpectationsHelper.assertValue(JsonPathExpectationsHelper.java:172)
+	at org.springframework.test.web.servlet.result.JsonPathResultMatchers.lambda$value$2(JsonPathResultMatchers.java:112)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.leadflow.backend.exception.GlobalExceptionHandlerTest.shouldHandleGenericException(GlobalExceptionHandlerTest.java:171)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+com.leadflow.backend.exception.GlobalExceptionHandlerTest.shouldHandleAccessDeniedException -- Time elapsed: 0.006 s <<< FAILURE!
+java.lang.AssertionError: JSON path "$.error" expected:<Access Denied> but was:<ACCESS_DENIED>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+	at org.springframework.test.util.JsonPathExpectationsHelper.assertValue(JsonPathExpectationsHelper.java:172)
+	at org.springframework.test.web.servlet.result.JsonPathResultMatchers.lambda$value$2(JsonPathResultMatchers.java:112)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.leadflow.backend.exception.GlobalExceptionHandlerTest.shouldHandleAccessDeniedException(GlobalExceptionHandlerTest.java:158)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+

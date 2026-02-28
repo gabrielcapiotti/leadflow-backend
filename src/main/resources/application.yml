@@ -47,6 +47,9 @@ security:
   jwt:
     secret: ${JWT_SECRET}                     # Chave secreta para assinatura do JWT (geralmente uma variável de ambiente)
     expiration: ${JWT_EXPIRATION:3600000}      # Tempo de expiração do token JWT (em milissegundos, 3600000 equivale a 1 hora)
-
-multitenancy:
-  enabled: true                               # Habilita o suporte para multitenancy (múltiplos tenants com diferentes esquemas)
+  session:
+    max-devices: 3                            # Número máximo de dispositivos por sessão
+    cleanup-days: 30                          # Número de dias para limpeza de sessões
+  brute-force:
+    max-attempts: 5
+    window-minutes: 5

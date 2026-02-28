@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.leadflow.backend.controller.lead.LeadControllerTest
 -------------------------------------------------------------------------------
-Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.709 s -- in com.leadflow.backend.controller.lead.LeadControllerTest
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.385 s -- in com.leadflow.backend.controller.lead.LeadControllerTest

@@ -8,6 +8,7 @@ import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.exception.GlobalExceptionHandler;
 import com.leadflow.backend.security.jwt.JwtService;
+import com.leadflow.backend.security.jwt.JwtToken;
 import com.leadflow.backend.service.auth.AuthService;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +27,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
+import java.time.Instant;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -78,7 +80,13 @@ class AuthControllerTest {
 
         // ✅ Agora o mock reflete o método correto
         when(jwtService.generateToken(any(User.class), anyString()))
-                .thenReturn("mocked-jwt-token");
+                .thenReturn(
+                        new JwtToken(
+                                "mocked-jwt-token",
+                                UUID.randomUUID().toString(),
+                                Instant.now().plusSeconds(3600)
+                        )
+                );
     }
 
     private RequestPostProcessor tenant() {

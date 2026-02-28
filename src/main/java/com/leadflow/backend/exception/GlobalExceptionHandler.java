@@ -1,6 +1,8 @@
 package com.leadflow.backend.exception;
 
 import com.leadflow.backend.dto.error.ApiErrorResponse;
+import com.leadflow.backend.security.exception.UnauthorizedException;
+
 import jakarta.validation.ConstraintViolationException;
 
 import org.slf4j.Logger;
@@ -44,7 +46,7 @@ public class GlobalExceptionHandler {
 
         return buildResponse(
                 HttpStatus.BAD_REQUEST,
-                "Validation Error",
+                "VALIDATION_ERROR",
                 message
         );
     }
@@ -65,7 +67,7 @@ public class GlobalExceptionHandler {
 
         return buildResponse(
                 HttpStatus.BAD_REQUEST,
-                "Validation Error",
+                "VALIDATION_ERROR",
                 message
         );
     }
@@ -81,7 +83,7 @@ public class GlobalExceptionHandler {
 
         return buildResponse(
                 HttpStatus.BAD_REQUEST,
-                "Business Error",
+                "BUSINESS_RULE_VIOLATION",
                 ex.getMessage()
         );
     }
@@ -91,19 +93,21 @@ public class GlobalExceptionHandler {
             IllegalStateException ex
     ) {
 
-        String message = ex.getMessage() != null ? ex.getMessage() : "Invalid state";
+        String message = ex.getMessage() != null
+                ? ex.getMessage()
+                : "Invalid state";
 
         if (message.toLowerCase().contains("locked")) {
             return buildResponse(
                     HttpStatus.LOCKED,
-                    "Account Locked",
+                    "ACCOUNT_LOCKED",
                     message
             );
         }
 
         return buildResponse(
                 HttpStatus.CONFLICT,
-                "Invalid State",
+                "INVALID_STATE",
                 message
         );
     }
@@ -117,11 +121,11 @@ public class GlobalExceptionHandler {
             DataIntegrityViolationException ex
     ) {
 
-        log.warn("Data integrity violation detected");
+        log.warn("Database constraint violation detected");
 
         return buildResponse(
                 HttpStatus.CONFLICT,
-                "Database Constraint Violation",
+                "DATABASE_CONSTRAINT_VIOLATION",
                 "Operation violates database constraints"
         );
     }
@@ -130,12 +134,24 @@ public class GlobalExceptionHandler {
        SECURITY
        ====================================================== */
 
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ApiErrorResponse> handleUnauthorized(
+            UnauthorizedException ex
+    ) {
+
+        return buildResponse(
+                HttpStatus.UNAUTHORIZED,
+                "UNAUTHORIZED",
+                ex.getMessage()
+        );
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiErrorResponse> handleBadCredentials() {
 
         return buildResponse(
                 HttpStatus.UNAUTHORIZED,
-                "Authentication Error",
+                "INVALID_CREDENTIALS",
                 "Invalid email or password"
         );
     }
@@ -145,7 +161,7 @@ public class GlobalExceptionHandler {
 
         return buildResponse(
                 HttpStatus.UNAUTHORIZED,
-                "Unauthorized",
+                "AUTHENTICATION_REQUIRED",
                 "Authentication is required to access this resource"
         );
     }
@@ -155,7 +171,7 @@ public class GlobalExceptionHandler {
 
         return buildResponse(
                 HttpStatus.FORBIDDEN,
-                "Access Denied",
+                "ACCESS_DENIED",
                 "You do not have permission to access this resource"
         );
     }
@@ -169,7 +185,7 @@ public class GlobalExceptionHandler {
 
         return buildResponse(
                 HttpStatus.BAD_REQUEST,
-                "Malformed JSON",
+                "MALFORMED_JSON",
                 "Request body is invalid or unreadable"
         );
     }
@@ -187,7 +203,7 @@ public class GlobalExceptionHandler {
 
         return buildResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "Internal Server Error",
+                "INTERNAL_SERVER_ERROR",
                 "An unexpected error occurred"
         );
     }
@@ -198,14 +214,14 @@ public class GlobalExceptionHandler {
 
     private ResponseEntity<ApiErrorResponse> buildResponse(
             HttpStatus status,
-            String error,
+            String errorCode,
             String message
     ) {
         return ResponseEntity
                 .status(status)
                 .body(new ApiErrorResponse(
                         status.value(),
-                        error,
+                        errorCode,
                         message
                 ));
     }
