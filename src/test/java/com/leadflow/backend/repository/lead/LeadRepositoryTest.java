@@ -47,7 +47,7 @@ class LeadRepositoryTest {
 
     @AfterEach
     void clearTenant() {
-        TenantContext.clear(); // ✅ Apenas limpar contexto
+        TenantContext.clear();
     }
 
     /* ======================================================
@@ -57,9 +57,7 @@ class LeadRepositoryTest {
     private User createUser() {
 
         Role role = roleRepository.findByNameIgnoreCase("ROLE_USER")
-                .orElseGet(() ->
-                        roleRepository.saveAndFlush(new Role("ROLE_USER"))
-                );
+                .orElseGet(() -> roleRepository.saveAndFlush(new Role("ROLE_USER")));
 
         String randomEmail =
                 "user_" + UUID.randomUUID() + "@example.com";

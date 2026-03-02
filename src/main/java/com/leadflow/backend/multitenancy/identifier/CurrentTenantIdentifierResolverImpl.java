@@ -34,11 +34,14 @@ public class CurrentTenantIdentifierResolverImpl
     @Override
     public String resolveCurrentTenantIdentifier() {
 
-        String tenant = TenantContext.getTenant();
+        // ✅ NÃO usar getTenant() aqui
+        String tenant = TenantContext.getIfPresent();
 
         if (tenant == null || tenant.isBlank()) {
+
             log.trace("No tenant found in context. Falling back to default schema: {}",
                     DEFAULT_TENANT);
+
             return DEFAULT_TENANT;
         }
 
@@ -47,7 +50,9 @@ public class CurrentTenantIdentifierResolverImpl
                 .toLowerCase(Locale.ROOT);
 
         if (!VALID_SCHEMA.matcher(normalized).matches()) {
+
             log.error("Invalid tenant identifier detected: {}", normalized);
+
             throw new IllegalArgumentException(
                     "Invalid tenant identifier: " + normalized
             );

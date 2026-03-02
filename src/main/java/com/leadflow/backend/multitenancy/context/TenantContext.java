@@ -8,61 +8,89 @@ import java.util.regex.Pattern;
 
 public final class TenantContext {
 
-    private static final Logger logger = LoggerFactory.getLogger(TenantContext.class);
+    private static final Logger logger =
+            LoggerFactory.getLogger(TenantContext.class);
 
-    private static final String DEFAULT_SCHEMA = "public";
+    /**
+     * Apenas lowercase, números e underscore.
+     * Validação mínima — regras mais rígidas devem ficar na camada de domínio.
+     */
+    private static final Pattern VALID_SCHEMA =
+            Pattern.compile("^[a-z0-9_]+$");
 
-    // Regex para garantir que o nome do tenant seja seguro
-    private static final Pattern VALID_SCHEMA = Pattern.compile("^[a-z0-9_]+$");
-
-    private static final ThreadLocal<String> CURRENT_TENANT = ThreadLocal.withInitial(() -> DEFAULT_SCHEMA);
+    // ❗ SEM valor inicial
+    private static final ThreadLocal<String> CURRENT_TENANT =
+            new ThreadLocal<>();
 
     private TenantContext() {
-        // Utility class
+        throw new UnsupportedOperationException("Utility class");
     }
 
     /* ======================================================
        SET
        ====================================================== */
 
-    /**
-     * Define o tenant no contexto atual da thread.
-     * Caso o tenant seja inválido ou em branco, o tenant padrão será utilizado.
-     * 
-     * @param tenant O identificador do tenant
-     */
     public static void setTenant(String tenant) {
 
-        // Verifica se o tenant é nulo ou em branco e define o valor default
         if (Objects.isNull(tenant) || tenant.isBlank()) {
-            logger.debug("Null/blank tenant received. Using default schema.");
-            CURRENT_TENANT.set(DEFAULT_SCHEMA);
-            return;
+            throw new IllegalArgumentException(
+                    "Tenant identifier cannot be null or blank"
+            );
         }
 
-        String normalized = tenant.trim().toLowerCase();  // Remove espaços em excesso e padroniza para minúsculas
+        String normalized = tenant
+                .trim()
+                .toLowerCase();
 
-        // Valida se o tenant é compatível com o padrão permitido
         if (!VALID_SCHEMA.matcher(normalized).matches()) {
-            logger.error("Invalid tenant identifier: {}", tenant);  // Log mais detalhado no caso de erro
-            throw new IllegalArgumentException("Invalid tenant identifier: " + tenant);
+            logger.error("Invalid tenant identifier: {}", tenant);
+            throw new IllegalArgumentException(
+                    "Invalid tenant identifier: " + tenant
+            );
         }
 
         CURRENT_TENANT.set(normalized);
-        logger.debug("Tenant set to: {}", normalized);  // Log para rastrear a alteração do tenant
+
+        logger.debug("Tenant set to: {}", normalized);
     }
 
     /* ======================================================
-       GET
+       GET STRICT (DOMAIN USE)
        ====================================================== */
 
     /**
-     * Obtém o tenant do contexto atual.
-     * 
-     * @return O identificador do tenant
+     * Usar apenas quando tenant é obrigatório.
      */
     public static String getTenant() {
+
+        String tenant = CURRENT_TENANT.get();
+
+        if (tenant == null) {
+            throw new IllegalStateException(
+                    "No tenant set in current thread"
+            );
+        }
+
+        return tenant;
+    }
+
+    /* ======================================================
+       GET OPTIONAL (INFRASTRUCTURE USE)
+       ====================================================== */
+
+    /**
+     * Usado pelo CurrentTenantIdentifierResolver.
+     */
+    public static String getIfPresent() {
         return CURRENT_TENANT.get();
+    }
+
+    /* ======================================================
+       STATE
+       ====================================================== */
+
+    public static boolean isSet() {
+        return CURRENT_TENANT.get() != null;
     }
 
     /* ======================================================
@@ -70,10 +98,10 @@ public final class TenantContext {
        ====================================================== */
 
     /**
-     * Limpa o tenant do contexto atual.
+     * Deve ser chamado no finally do filtro.
      */
     public static void clear() {
-        CURRENT_TENANT.remove();
+        CURRENT_TENANT.remove(); // correto
         logger.debug("Tenant context cleared.");
     }
 }

@@ -1,13 +1,12 @@
 package com.leadflow.backend.multitenancy;
 
 import java.util.Locale;
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 public final class TenantContext {
 
     /**
-     * Deve ser consistente com a validação da entidade Tenant.
+     * Deve ser consistente com a validação da entidade Tenant:
      * - Começa com letra
      * - 3 a 50 caracteres
      * - Apenas lowercase, números e underscore
@@ -34,8 +33,9 @@ public final class TenantContext {
             );
         }
 
-        String normalized =
-                tenant.trim().toLowerCase(Locale.ROOT);
+        String normalized = tenant
+                .trim()
+                .toLowerCase(Locale.ROOT);
 
         if (!VALID_TENANT.matcher(normalized).matches()) {
             throw new IllegalArgumentException(
@@ -52,7 +52,7 @@ public final class TenantContext {
 
     /**
      * Returns the current tenant.
-     * Fails fast if not set.
+     * Throws if not set.
      */
     public static String getTenant() {
 
@@ -67,17 +67,21 @@ public final class TenantContext {
         return tenant;
     }
 
+    /**
+     * Alias explícito para código de domínio.
+     */
     public static String requireTenant() {
         return getTenant();
     }
 
     /* ======================================================
-       OPTIONAL ACCESS
+       OPTIONAL ACCESS (INFRASTRUCTURE USE ONLY)
        ====================================================== */
 
     /**
      * Returns tenant or null if not present.
-     * Should only be used in infrastructure code.
+     * Must only be used in infrastructure layers
+     * (e.g. CurrentTenantIdentifierResolver).
      */
     public static String getIfPresent() {
         return CURRENT_TENANT.get();
@@ -88,7 +92,7 @@ public final class TenantContext {
        ====================================================== */
 
     public static boolean isSet() {
-        return Objects.nonNull(CURRENT_TENANT.get());
+        return CURRENT_TENANT.get() != null;
     }
 
     /* ======================================================
@@ -100,6 +104,6 @@ public final class TenantContext {
      * Prevents tenant leakage across threads.
      */
     public static void clear() {
-        CURRENT_TENANT.remove();
+        CURRENT_TENANT.remove(); // correto — nunca usar set(null)
     }
 }

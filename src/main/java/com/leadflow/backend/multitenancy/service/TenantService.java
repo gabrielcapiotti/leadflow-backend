@@ -1,5 +1,6 @@
 package com.leadflow.backend.multitenancy.service;
 
+import com.leadflow.backend.exception.TenantNotFoundException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -8,12 +9,13 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class TenantService {
 
     private static final String DEFAULT_SCHEMA = "public";
-
     private static final Pattern VALID_SCHEMA =
             Pattern.compile("^[a-z0-9_]{3,50}$");
 
@@ -32,6 +34,7 @@ public class TenantService {
             """;
 
     private final JdbcTemplate jdbcTemplate;
+    private static final Logger logger = LoggerFactory.getLogger(TenantService.class);
 
     public TenantService(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -54,7 +57,6 @@ public class TenantService {
         }
 
         try {
-
             String schema = jdbcTemplate.queryForObject(
                     RESOLVE_SCHEMA_SQL,
                     String.class,
@@ -64,6 +66,7 @@ public class TenantService {
             return Optional.ofNullable(schema).map(this::normalize);
 
         } catch (EmptyResultDataAccessException ex) {
+            logger.warn("Tenant not found for identifier: {}", identifier);
             return Optional.empty();
         }
     }
@@ -85,7 +88,6 @@ public class TenantService {
         }
 
         try {
-
             return jdbcTemplate.queryForObject(
                     RESOLVE_ID_SQL,
                     UUID.class,
@@ -93,7 +95,8 @@ public class TenantService {
             );
 
         } catch (EmptyResultDataAccessException ex) {
-            throw new IllegalArgumentException("Tenant not found for schema: " + schema);
+            logger.error("Tenant not found for schema: {}", schema);
+            throw new TenantNotFoundException("Tenant not found for schema: " + schema);
         }
     }
 

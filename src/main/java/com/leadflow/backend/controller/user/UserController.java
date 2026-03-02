@@ -3,7 +3,8 @@ package com.leadflow.backend.controller.user;
 import com.leadflow.backend.dto.user.UpdateUserRequest;
 import com.leadflow.backend.dto.user.UserResponse;
 import com.leadflow.backend.entities.user.User;
-import com.leadflow.backend.service.user.UserService; // Added import for UserService
+import com.leadflow.backend.exception.UserNotFoundException;  // Importando a exceção personalizada
+import com.leadflow.backend.service.user.UserService;
 import jakarta.validation.Valid;
 
 import org.springframework.data.domain.Page;
@@ -32,11 +33,9 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<Page<UserResponse>> list(Pageable pageable) {
-
         Page<UserResponse> response = userService
                 .listActiveUsers(pageable)
                 .map(this::toResponse);
-
         return ResponseEntity.ok(response);
     }
 
@@ -48,8 +47,10 @@ public class UserController {
     public ResponseEntity<UserResponse> getById(
             @PathVariable @NonNull UUID id
     ) {
-
         User user = userService.getById(id);
+        if (user == null) {
+            throw new UserNotFoundException("User not found with ID: " + id);  // Lançando exceção personalizada
+        }
         return ResponseEntity.ok(toResponse(user));
     }
 
@@ -62,13 +63,16 @@ public class UserController {
             @PathVariable @NonNull UUID id,
             @Valid @RequestBody UpdateUserRequest request
     ) {
-
         User user = userService.updateUser(
                 id,
                 request.getName(),
                 request.getEmail(),
                 request.getRoleId()
         );
+        
+        if (user == null) {
+            throw new UserNotFoundException("User not found with ID: " + id);  // Lançando exceção personalizada
+        }
 
         return ResponseEntity.ok(toResponse(user));
     }
@@ -81,8 +85,8 @@ public class UserController {
     public ResponseEntity<Void> delete(
             @PathVariable @NonNull UUID id
     ) {
+        userService.softDelete(id); // Call method directly without storing return value
 
-        userService.softDelete(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -91,7 +95,6 @@ public class UserController {
        ====================================================== */
 
     private UserResponse toResponse(User user) {
-
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null");
         }

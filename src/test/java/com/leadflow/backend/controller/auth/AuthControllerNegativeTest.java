@@ -1,14 +1,19 @@
 package com.leadflow.backend.controller.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.leadflow.backend.config.TestSecurityConfig;
 import com.leadflow.backend.dto.auth.LoginRequest;
 import com.leadflow.backend.dto.auth.RegisterRequest;
 import com.leadflow.backend.exception.GlobalExceptionHandler;
+import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.multitenancy.service.TenantService;
 import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.auth.AuthService;
+import com.leadflow.backend.service.auth.RefreshTokenService;
+import com.leadflow.backend.service.auth.UserSessionService;
+import com.leadflow.domain.auth.service.PasswordResetService;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,13 +26,15 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.UUID;
+
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AuthController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@Import({TestSecurityConfig.class, GlobalExceptionHandler.class})
+@Import(GlobalExceptionHandler.class)
 @ActiveProfiles("test")
 class AuthControllerNegativeTest {
 
@@ -45,6 +52,31 @@ class AuthControllerNegativeTest {
 
     @MockBean
     private TenantService tenantService;
+
+    @MockBean
+    private RefreshTokenService refreshTokenService;
+
+    @MockBean
+    private PasswordResetService passwordResetService;
+
+    @MockBean
+    private UserSessionService userSessionService;
+
+    /* =========================================================
+       SETUP TENANT CONTEXT
+       ========================================================= */
+
+    @BeforeEach
+    void setup() {
+        TenantContext.setTenant("tenant_id_123");
+        when(tenantService.getTenantIdBySchema("tenant_id_123"))
+                .thenReturn(UUID.randomUUID());
+    }
+
+    @AfterEach
+    void cleanup() {
+        TenantContext.clear();
+    }
 
     /* =========================================================
        REGISTER - VALIDATION
@@ -64,7 +96,7 @@ class AuthControllerNegativeTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Validation Error"));
+                .andExpect(jsonPath("$.error").value("Bad Request"));
     }
 
     @Test
@@ -81,7 +113,7 @@ class AuthControllerNegativeTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Validation Error"));
+                .andExpect(jsonPath("$.error").value("Bad Request"));
     }
 
     @Test
@@ -102,7 +134,7 @@ class AuthControllerNegativeTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Business Error"))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
                 .andExpect(jsonPath("$.message").value("Invalid data"));
     }
 
@@ -123,7 +155,7 @@ class AuthControllerNegativeTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Validation Error"));
+                .andExpect(jsonPath("$.error").value("Bad Request"));
     }
 
     @Test
@@ -143,7 +175,7 @@ class AuthControllerNegativeTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Authentication Error"))
+                .andExpect(jsonPath("$.error").value("Unauthorized"))
                 .andExpect(jsonPath("$.message")
                         .value("Invalid email or password"));
     }

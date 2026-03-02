@@ -30,7 +30,9 @@ public class GlobalExceptionHandler {
     private static final Logger log =
             LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    /* ================= VALIDATION ================= */
+    /* =========================================================
+       VALIDATION
+       ========================================================= */
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidation(
@@ -59,7 +61,17 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, message);
     }
 
-    /* ================= BUSINESS ================= */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidJson(
+            HttpMessageNotReadableException ex
+    ) {
+        return build(HttpStatus.BAD_REQUEST,
+                "Request body is invalid or unreadable");
+    }
+
+    /* =========================================================
+       BUSINESS
+       ========================================================= */
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiErrorResponse> handleIllegalArgument(
@@ -79,10 +91,13 @@ public class GlobalExceptionHandler {
             return build(HttpStatus.LOCKED, message);
         }
 
+        // Estado inválido de recurso existente
         return build(HttpStatus.CONFLICT, message);
     }
 
-    /* ================= SECURITY ================= */
+    /* =========================================================
+       SECURITY
+       ========================================================= */
 
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ApiErrorResponse> handleUnauthorized(
@@ -95,7 +110,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleBadCredentials(
             BadCredentialsException ex
     ) {
-        return build(HttpStatus.UNAUTHORIZED, "Invalid email or password");
+        log.warn("Invalid credentials attempt");
+        return build(HttpStatus.UNAUTHORIZED,
+                "Invalid email or password");
     }
 
     @ExceptionHandler(AuthenticationCredentialsNotFoundException.class)
@@ -114,28 +131,36 @@ public class GlobalExceptionHandler {
                 "You do not have permission to access this resource");
     }
 
-    /* ================= DATABASE ================= */
+    /* =========================================================
+       DATABASE
+       ========================================================= */
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleDataIntegrity(
             DataIntegrityViolationException ex
     ) {
-        log.warn("Database constraint violation", ex);
+
+        log.warn("Database constraint violation detected");
+
+        String rootMessage = ex.getMostSpecificCause() != null
+                ? ex.getMostSpecificCause().getMessage()
+                : "";
+
+        // Violação de unicidade (ex: email duplicado)
+        if (rootMessage != null &&
+                rootMessage.toLowerCase().contains("duplicate")) {
+
+            return build(HttpStatus.CONFLICT,
+                    "Resource already exists");
+        }
+
         return build(HttpStatus.CONFLICT,
                 "Operation violates database constraints");
     }
 
-    /* ================= MALFORMED JSON ================= */
-
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiErrorResponse> handleInvalidJson(
-            HttpMessageNotReadableException ex
-    ) {
-        return build(HttpStatus.BAD_REQUEST,
-                "Request body is invalid or unreadable");
-    }
-
-    /* ================= FALLBACK ================= */
+    /* =========================================================
+       FALLBACK
+       ========================================================= */
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleUnexpected(
@@ -146,7 +171,9 @@ public class GlobalExceptionHandler {
                 "An unexpected error occurred");
     }
 
-    /* ================= INTERNAL ================= */
+    /* =========================================================
+       INTERNAL UTIL
+       ========================================================= */
 
     private ResponseEntity<ApiErrorResponse> build(
             HttpStatus status,

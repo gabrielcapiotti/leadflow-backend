@@ -3,53 +3,53 @@ spring:
     name: leadflow-backend
 
   datasource:
-    url: jdbc:postgresql://localhost:2411/leadflow_test                          # URL do banco de dados (por exemplo: jdbc:postgresql://localhost:5432/leadflow)
-    username: postgres                     # Nome de usuário do banco de dados
-    password: venusia                     # Senha do banco de dados
-    driver-class-name: org.postgresql.Driver # Driver JDBC para PostgreSQL
+    url: jdbc:postgresql://localhost:2411/leadflow_test  # Verifique se a porta está correta
+    username: postgres
+    password: venusia
+    driver-class-name: org.postgresql.Driver
     hikari:
-      maximum-pool-size: 15                  # Número máximo de conexões no pool
-      minimum-idle: 5                        # Número mínimo de conexões inativas no pool
-      auto-commit: false                     # Desativa o auto-commit para transações explícitas
+      maximum-pool-size: 15
+      minimum-idle: 5
+      auto-commit: false
 
   jpa:
-    open-in-view: false                      # Desativa o Open Session in View para evitar conexões abertas durante o ciclo de vida da requisição
+    open-in-view: false
     hibernate:
-      ddl-auto: validate                     # O Hibernate validará a estrutura do banco de dados com as entidades
+      ddl-auto: validate  # Altere para 'update' se necessário em ambiente de desenvolvimento
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect # Dialeto do Hibernate para PostgreSQL
-        format_sql: false                     # Desativa a formatação do SQL gerado
-        multiTenancy: SCHEMA                  # Habilita a multitenancy com suporte a esquemas
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        multiTenancy: SCHEMA
         jdbc:
-          time_zone: UTC                     # Configuração do fuso horário do banco (UTC)
+          time_zone: UTC
 
   flyway:
-    enabled: true                             # Habilita a execução do Flyway para migrações de banco
-    baseline-on-migrate: true                  # Habilita o baseline quando houver uma migração no banco
-    validate-on-migrate: true                  # Valida as migrações antes de aplicá-las
+    enabled: true
+    baseline-on-migrate: true
+    validate-on-migrate: true
     locations:
-      - classpath:db/migration/global         # Caminho das migrações globais (para todas as instâncias)
-      - classpath:db/migration/tenants        # Caminho das migrações específicas para tenants (clientes)
+      - classpath:db/migration/global
+      - classpath:db/migration/tenants
 
 server:
-  port: ${SERVER_PORT:8081}                   # Porta do servidor, usa a variável de ambiente ou 8081 por padrão
+  port: ${SERVER_PORT:8081}
   servlet:
-    context-path: /api                        # Caminho base da API (por exemplo: http://localhost:8081/api)
+    context-path: /api
 
 logging:
   level:
-    root: INFO                                # Nível de log global
-    com.leadflow: INFO                         # Nível de log para a aplicação LeadFlow
-    org.hibernate.SQL: DEBUG                   # Nível de log para SQL gerado pelo Hibernate
+    root: INFO
+    com.leadflow: INFO
+    org.hibernate.SQL: DEBUG  # Mude para 'INFO' em produção
 
 security:
   jwt:
-    secret: ${JWT_SECRET:01234567890123456789012345678901}
+    secret: ${JWT_SECRET:01234567890123456789012345678901}  # Preferência por variável de ambiente
     expiration: ${JWT_EXPIRATION:3600000}
   session:
-    max-devices: 3                            # Número máximo de dispositivos por sessão
-    cleanup-days: 30                          # Número de dias para limpeza de sessões
+    max-devices: 3
+    cleanup-days: 30
   brute-force:
     max-attempts: 5
     window-minutes: 5

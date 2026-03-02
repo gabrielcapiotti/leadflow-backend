@@ -3,6 +3,7 @@ package com.leadflow.backend.multitenancy;
 import com.leadflow.backend.IntegrationTestBase;
 import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.util.TestTenantFactory;
+import static org.junit.jupiter.api.Assertions.assertFalse; 
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,13 +15,15 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureMockMvc
-@ActiveProfiles("test") // Use o profile 'test' para padronizar os testes
-@TestPropertySource(properties = "multitenancy.enabled=true")
+@ActiveProfiles("test")
+@TestPropertySource(properties = {
+        "multitenancy.enabled=true",
+        "jwt.secret=0123456789abcdef0123456789abcdef"
+})
 class TenantFilterIntegrationTest extends IntegrationTestBase {
 
     @Autowired
@@ -29,17 +32,11 @@ class TenantFilterIntegrationTest extends IntegrationTestBase {
     @Autowired
     private TestTenantFactory testTenantFactory;
 
-    // Removed @MockBean for TenantService
-
     private static final String TENANT_IDENTIFIER = "tenant_a";
-    private static final String SCHEMA = "tenant_a";
 
     @BeforeEach
     void setup() {
-
         testTenantFactory.createTenant("Tenant A");
-
-        // Removed stubbing for TenantService
     }
 
     @AfterEach
@@ -55,12 +52,8 @@ class TenantFilterIntegrationTest extends IntegrationTestBase {
                         .header("X-Tenant-ID", TENANT_IDENTIFIER)
         )
         .andExpect(status().is4xxClientError());
-        // O status não importa, apenas precisamos que o filtro execute
+        // O status não é relevante — apenas força execução do filtro
 
-        // Removed verification of TenantService resolveSchemaByTenantIdentifier
-
-        assertThat(TenantContext.getTenant())
-                .as("TenantContext deve ser limpo após o request")
-                .isNull(); // Adjusted to check for null instead of "public"
+        assertFalse(TenantContext.isSet()); // Verifica se o contexto foi limpo corretamente
     }
 }

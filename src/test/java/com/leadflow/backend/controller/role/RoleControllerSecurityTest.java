@@ -1,15 +1,22 @@
 package com.leadflow.backend.controller.role;
 
 import com.leadflow.backend.exception.GlobalExceptionHandler;
+import com.leadflow.backend.security.TestSecurityConfig;
 import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.RoleService;
+import com.leadflow.backend.multitenancy.filter.TenantFilter;
+import com.leadflow.backend.multitenancy.service.TenantService;
+
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
+
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -19,10 +26,15 @@ import static java.util.Collections.emptyList;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(RoleController.class)
-@AutoConfigureMockMvc(addFilters = false)
+@WebMvcTest(
+    controllers = RoleController.class,
+    excludeFilters = @ComponentScan.Filter(
+        type = FilterType.ASSIGNABLE_TYPE,
+        classes = TenantFilter.class
+    )
+)
 @ActiveProfiles("test")
-@Import(GlobalExceptionHandler.class)
+@Import({ GlobalExceptionHandler.class, TestSecurityConfig.class })
 class RoleControllerSecurityTest {
 
     @Autowired
@@ -34,13 +46,21 @@ class RoleControllerSecurityTest {
     @MockBean
     private JwtService jwtService;
 
+    @MockBean
+    private TenantService tenantService;
+
+    private static final String TENANT_HEADER = "X-Tenant-ID";
+    private static final String TENANT = "public";
+
     /* ==========================
        NOT AUTHENTICATED
        ========================== */
 
     @Test
     void shouldReturn401WhenNotAuthenticated() throws Exception {
-        mockMvc.perform(get("/api/roles"))
+
+        mockMvc.perform(get("/api/roles")
+                        .header(TENANT_HEADER, TENANT))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -51,7 +71,9 @@ class RoleControllerSecurityTest {
     @Test
     @WithMockUser(roles = "USER")
     void shouldReturn403ForUserRole() throws Exception {
-        mockMvc.perform(get("/api/roles"))
+
+        mockMvc.perform(get("/api/roles")
+                        .header(TENANT_HEADER, TENANT))
                 .andExpect(status().isForbidden());
     }
 
@@ -65,7 +87,8 @@ class RoleControllerSecurityTest {
 
         when(roleService.listAll()).thenReturn(emptyList());
 
-        mockMvc.perform(get("/api/roles"))
+        mockMvc.perform(get("/api/roles")
+                        .header(TENANT_HEADER, TENANT))
                 .andExpect(status().isOk());
     }
 }

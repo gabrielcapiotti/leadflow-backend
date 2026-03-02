@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,11 @@ import java.util.UUID;
 import java.util.function.Function;
 
 @Service
+@ConditionalOnProperty(
+        name = "security.jwt.enabled",
+        havingValue = "true",
+        matchIfMissing = true
+)
 public class JwtService implements InitializingBean {
 
     private static final Logger logger =
@@ -45,40 +51,41 @@ public class JwtService implements InitializingBean {
         this.clock = clock != null ? clock : Clock.systemUTC();
     }
 
-    /* ======================================================
-       INITIALIZATION VALIDATION (FAIL-FAST CONTROLLED)
-       ====================================================== */
-
     @Override
     public void afterPropertiesSet() {
-
         if (secret == null || secret.isBlank()) {
+            logger.error("JWT secret is null or blank");
             throw new IllegalStateException("JWT secret must not be null or blank");
         }
 
         if (secret.length() < 32) {
+            logger.error("JWT secret is too short: {} characters", secret.length());
             throw new IllegalStateException(
                     "JWT secret must be at least 256 bits (32 characters)"
             );
         }
 
         if (expirationMillis <= 0) {
+            logger.error("JWT expiration time is invalid: {}", expirationMillis);
             throw new IllegalStateException(
                     "JWT expiration must be a positive value"
             );
         }
 
         if (issuer == null || issuer.isBlank()) {
+            logger.error("JWT issuer is null or blank");
             throw new IllegalStateException("JWT issuer must not be blank");
         }
 
         this.signingKey =
                 Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+
+        logger.debug("JWT Secret successfully loaded: {}", secret);
+        logger.debug("JWT Expiration time: {} ms", expirationMillis);
+        logger.debug("JWT Issuer: {}", issuer);
     }
 
-    /* ======================================================
-       TOKEN GENERATION
-       ====================================================== */
+    /* ====================================================== */
 
     public JwtToken generateToken(User user, String tenantSchema) {
 
@@ -104,28 +111,24 @@ public class JwtService implements InitializingBean {
         return new JwtToken(token, tokenId, expiresAt);
     }
 
-    /* ======================================================
-       BASIC VALIDATION
-       ====================================================== */
+    /* ====================================================== */
 
     public boolean isValid(String token) {
 
         if (token == null || token.isBlank()) {
+            logger.warn("Token is null or blank");
             return false;
         }
 
         try {
             extractAllClaims(token);
+            logger.debug("Token is valid: {}", token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            logger.warn("Invalid JWT detected");
+            logger.warn("Invalid JWT detected: {}", e.getMessage());
             return false;
         }
     }
-
-    /* ======================================================
-       CONTEXT VALIDATION
-       ====================================================== */
 
     public boolean isTokenValid(
             String token,
@@ -154,9 +157,7 @@ public class JwtService implements InitializingBean {
         }
     }
 
-    /* ======================================================
-       CLAIM EXTRACTION
-       ====================================================== */
+    /* ====================================================== */
 
     public <T> T extractClaim(
             String token,
@@ -202,9 +203,7 @@ public class JwtService implements InitializingBean {
         return extractClaim(token, Claims::getIssuedAt);
     }
 
-    /* ======================================================
-       INTERNAL PARSE
-       ====================================================== */
+    /* ====================================================== */
 
     private Claims extractAllClaims(String token) {
 
@@ -212,38 +211,28 @@ public class JwtService implements InitializingBean {
                 .setSigningKey(signingKey)
                 .requireIssuer(issuer)
                 .setAllowedClockSkewSeconds(30)
-                .setClock(() ->
-                        Date.from(Instant.now(clock)))
+                .setClock(() -> Date.from(Instant.now(clock)))
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
     }
 
-    /* ======================================================
-       VALIDATION HELPERS
-       ====================================================== */
-
     private void validateUser(User user) {
-
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null");
         }
-
         if (user.getId() == null) {
             throw new IllegalStateException("User ID cannot be null");
         }
-
         if (user.getEmail() == null || user.getEmail().isBlank()) {
             throw new IllegalStateException("User email cannot be blank");
         }
-
         if (user.getRole() == null) {
             throw new IllegalStateException("User role cannot be null");
         }
     }
 
     private void validateTenant(String tenantSchema) {
-
         if (tenantSchema == null || tenantSchema.isBlank()) {
             throw new IllegalArgumentException(
                     "Tenant schema cannot be blank"

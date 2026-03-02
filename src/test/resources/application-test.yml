@@ -42,7 +42,7 @@ logging:
 
 security:
   jwt:
-    secret: integration-secret-key
+    secret: 0123456789abcdef0123456789abcdef0123456789abcdef
     expiration: 3600000
 
 multitenancy:

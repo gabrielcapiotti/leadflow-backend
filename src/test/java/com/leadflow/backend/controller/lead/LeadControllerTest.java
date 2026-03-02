@@ -10,6 +10,7 @@ import com.leadflow.backend.exception.GlobalExceptionHandler;
 import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.lead.LeadService;
 import com.leadflow.backend.service.user.UserService;
+import com.leadflow.backend.multitenancy.service.TenantService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,6 +54,9 @@ class LeadControllerTest {
 
     @MockBean
     private JwtService jwtService;
+
+    @MockBean
+    private TenantService tenantService;
 
     private Lead lead;
     private User user;

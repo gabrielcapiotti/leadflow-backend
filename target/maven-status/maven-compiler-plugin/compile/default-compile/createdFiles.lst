@@ -7,6 +7,7 @@ com\leadflow\backend\security\SecurityWebConfig.class
 com\leadflow\backend\controller\settings\SettingController.class
 com\leadflow\backend\service\auth\BruteForceProtectionService.class
 com\leadflow\backend\security\UserDetailsServiceImpl.class
+com\leadflow\backend\exception\TenantNotFoundException.class
 com\leadflow\backend\repository\lead\LeadRepository.class
 com\leadflow\backend\security\SecurityCoreConfig.class
 com\leadflow\backend\service\user\UserService.class
@@ -51,6 +52,7 @@ com\leadflow\backend\security\CustomUserDetails.class
 com\leadflow\backend\multitenancy\provider\MultiTenantConnectionProviderImpl.class
 com\leadflow\backend\repository\auth\LoginAuditRepository.class
 com\leadflow\backend\service\auth\RefreshTokenService$RotationResult.class
+com\leadflow\backend\exception\UserNotFoundException.class
 com\leadflow\backend\dto\user\UpdateUserRequest.class
 com\leadflow\backend\dto\audit\SecurityAuditResponse.class
 com\leadflow\backend\exception\GlobalExceptionHandler.class

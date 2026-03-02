@@ -41,7 +41,7 @@ public class TenantFilter extends OncePerRequestFilter {
     }
 
     /* ======================================================
-       SKIP PATHS & DISPATCH TYPES
+       SKIP FILTERING FOR TECHNICAL ENDPOINTS
        ====================================================== */
 
     @Override
@@ -59,7 +59,6 @@ public class TenantFilter extends OncePerRequestFilter {
             return true;
         }
 
-        // Apenas endpoints técnicos devem ser ignorados
         return path.startsWith("/actuator")
                 || path.startsWith("/swagger")
                 || path.startsWith("/v3/api-docs");
@@ -76,6 +75,35 @@ public class TenantFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
+        try {
+
+            String tenantIdentifier = extractTenantHeader(request);
+
+            String schemaName = resolveTenantSchema(tenantIdentifier, response);
+
+            if (schemaName == null) {
+                return; // erro já enviado na response
+            }
+
+            TenantContext.setTenant(schemaName);
+
+            logger.debug("Tenant resolved to schema: {}", schemaName);
+
+            filterChain.doFilter(request, response);
+
+        } finally {
+            // Garantia absoluta de limpeza do ThreadLocal
+            TenantContext.clear();
+        }
+    }
+
+    /* ======================================================
+       INTERNAL HELPERS
+       ====================================================== */
+
+    private String extractTenantHeader(HttpServletRequest request)
+            throws IOException {
+
         String tenantIdentifier = request.getHeader(TENANT_HEADER);
 
         if (tenantIdentifier == null || tenantIdentifier.isBlank()) {
@@ -86,63 +114,62 @@ public class TenantFilter extends OncePerRequestFilter {
                     request.getRequestURI()
             );
 
-            response.sendError(
-                    HttpServletResponse.SC_BAD_REQUEST,
-                    "Missing " + TENANT_HEADER + " header"
-            );
-            return;
+            throw new IllegalArgumentException("Missing tenant header");
         }
 
-        String normalizedTenant = tenantIdentifier.trim();
+        return tenantIdentifier.trim();
+    }
+
+    private String resolveTenantSchema(
+            String tenantIdentifier,
+            HttpServletResponse response
+    ) throws IOException {
 
         try {
 
             Optional<String> schemaOptional =
-                    tenantService.resolveSchemaByTenantIdentifier(normalizedTenant);
+                    tenantService.resolveSchemaByTenantIdentifier(tenantIdentifier);
 
             if (schemaOptional.isEmpty()) {
 
-                logger.warn("Tenant not found: {}", normalizedTenant);
+                logger.warn("Tenant not found: {}", tenantIdentifier);
 
                 response.sendError(
                         HttpServletResponse.SC_NOT_FOUND,
                         "Tenant not found"
                 );
-                return;
+
+                return null;
             }
 
             String schemaName = schemaOptional.get();
 
-            // Defesa contra schema injection
+            // Proteção contra schema injection
             tenantService.validateSchemaName(schemaName);
 
-            TenantContext.setTenant(schemaName);
-
-            logger.debug("Tenant resolved to schema: {}", schemaName);
-
-            filterChain.doFilter(request, response);
+            return schemaName;
 
         } catch (IllegalArgumentException ex) {
 
-            logger.warn("Invalid tenant format: {}", normalizedTenant);
+            logger.warn("Invalid tenant identifier: {}", tenantIdentifier);
 
             response.sendError(
                     HttpServletResponse.SC_BAD_REQUEST,
                     "Invalid tenant identifier"
             );
 
+            return null;
+
         } catch (Exception ex) {
 
-            logger.error("Tenant resolution failure: {}", normalizedTenant, ex);
+            logger.error("Tenant resolution failure: {}", tenantIdentifier, ex);
 
             response.sendError(
                     HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                     "Tenant resolution error"
             );
 
-        } finally {
-            // Garantia absoluta de limpeza
-            TenantContext.clear();
+            return null;
         }
     }
 }

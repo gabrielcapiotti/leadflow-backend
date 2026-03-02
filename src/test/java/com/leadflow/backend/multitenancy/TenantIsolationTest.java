@@ -13,7 +13,6 @@ import com.leadflow.backend.util.TestTenantFactory;
 
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -21,9 +20,8 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ActiveProfiles("test") // Use o profile 'test' para padronizar os testes
+@ActiveProfiles("test")
 @Tag("integration")
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class TenantIsolationTest extends IntegrationTestBase {
 
     @Autowired
@@ -52,18 +50,15 @@ class TenantIsolationTest extends IntegrationTestBase {
         tenantA = testTenantFactory.createTenant("Tenant A");
         tenantB = testTenantFactory.createTenant("Tenant B");
 
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS " + tenantA.getSchemaName());
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS " + tenantB.getSchemaName());
+        createSchemaIfNotExists(tenantA.getSchemaName());
+        createSchemaIfNotExists(tenantB.getSchemaName());
 
-        // Initialize tables and ROLE_USER in Tenant A
-        TenantContext.setTenant(tenantA.getSchemaName());
-        roleRepository.saveAndFlush(new Role("ROLE_USER"));
-        leadRepository.count();
+        // Garante que ROLE_USER exista apenas uma vez (global)
+        ensureRoleExists("ROLE_USER");
 
-        // Initialize tables and ROLE_USER in Tenant B
-        TenantContext.setTenant(tenantB.getSchemaName());
-        roleRepository.saveAndFlush(new Role("ROLE_USER"));
-        leadRepository.count();
+        // Força criação das tabelas tenant
+        initializeTenant(tenantA.getSchemaName());
+        initializeTenant(tenantB.getSchemaName());
 
         TenantContext.clear();
     }
@@ -73,6 +68,32 @@ class TenantIsolationTest extends IntegrationTestBase {
         TenantContext.clear();
     }
 
+    private void createSchemaIfNotExists(String schema) {
+        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS " + schema);
+    }
+
+    /**
+     * Roles são globais (public schema).
+     * Portanto devem ser criadas apenas uma vez.
+     */
+    private Role ensureRoleExists(String roleName) {
+        return roleRepository.findByNameIgnoreCase(roleName)
+                .orElseGet(() ->
+                        roleRepository.saveAndFlush(new Role(roleName))
+                );
+    }
+
+    /**
+     * Apenas força criação das tabelas do schema tenant.
+     * NÃO cria role aqui.
+     */
+    private void initializeTenant(String schema) {
+        TenantContext.setTenant(schema);
+
+        // força criação das tabelas se ainda não existirem
+        leadRepository.count();
+    }
+
     /* ======================================================
        TEST 1 — Count Isolation
        ====================================================== */
@@ -80,7 +101,6 @@ class TenantIsolationTest extends IntegrationTestBase {
     @Test
     void shouldIsolateDataBetweenSchemas() {
 
-        // ---------- TENANT A ----------
         TenantContext.setTenant(tenantA.getSchemaName());
 
         Role role = roleRepository.findByNameIgnoreCase("ROLE_USER")
@@ -104,21 +124,12 @@ class TenantIsolationTest extends IntegrationTestBase {
 
         leadRepository.saveAndFlush(leadA);
 
-        long countTenantA = leadRepository.count();
+        assertThat(leadRepository.count()).isEqualTo(1);
 
-        assertThat(countTenantA)
-                .as("Tenant A must contain exactly 1 lead")
-                .isEqualTo(1);
-
-        // ---------- TENANT B ----------
         TenantContext.clear();
         TenantContext.setTenant(tenantB.getSchemaName());
 
-        long countTenantB = leadRepository.count();
-
-        assertThat(countTenantB)
-                .as("Tenant B must not see Tenant A data")
-                .isZero();
+        assertThat(leadRepository.count()).isZero();
     }
 
     /* ======================================================
@@ -128,7 +139,6 @@ class TenantIsolationTest extends IntegrationTestBase {
     @Test
     void shouldNotAccessOtherTenantData() {
 
-        // ---------- TENANT A ----------
         TenantContext.setTenant(tenantA.getSchemaName());
 
         Role role = roleRepository.findByNameIgnoreCase("ROLE_USER")
@@ -154,14 +164,9 @@ class TenantIsolationTest extends IntegrationTestBase {
 
         UUID leadId = leadA.getId();
 
-        // ---------- TENANT B ----------
         TenantContext.clear();
         TenantContext.setTenant(tenantB.getSchemaName());
 
-        boolean existsInTenantB = leadRepository.findById(leadId).isPresent();
-
-        assertThat(existsInTenantB)
-                .as("Tenant B must not access Tenant A data")
-                .isFalse();
+        assertThat(leadRepository.findById(leadId)).isEmpty();
     }
 }

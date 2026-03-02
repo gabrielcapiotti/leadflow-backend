@@ -27,8 +27,7 @@ import java.util.UUID;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private static final Logger logger =
-            LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
@@ -53,15 +52,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = extractToken(request);
 
-        if (token == null ||
-            SecurityContextHolder.getContext().getAuthentication() != null) {
-
+        if (token == null || SecurityContextHolder.getContext().getAuthentication() != null) {
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
-
             String email = jwtService.extractEmail(token);
 
             if (email == null) {
@@ -69,8 +65,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            UserDetails userDetails =
-                    userDetailsService.loadUserByUsername(email);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
             if (!(userDetails instanceof CustomUserDetails customUser)) {
                 filterChain.doFilter(request, response);
@@ -92,9 +87,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     tenant
             );
 
-            if (!baseValid ||
-                !isTokenStillValidAfterPasswordChange(token, customUser)) {
-
+            if (!baseValid || !isTokenStillValidAfterPasswordChange(token, customUser)) {
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -102,10 +95,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String tokenId = jwtService.extractTokenId(token);
             UUID tenantId = UUID.fromString(tenant);
 
-            /* ======================================================
-               SESSION SECURITY CORE
-               ====================================================== */
-
+            // Manage session activity and log it
             userSessionService.processSessionActivity(
                     tokenId,
                     tenantId,
@@ -113,74 +103,59 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     request.getHeader("User-Agent")
             );
 
-            /* ======================================================
-               AUTHENTICATION CONTEXT
-               ====================================================== */
-
-            UsernamePasswordAuthenticationToken authToken =
+            // Authenticate user and set the security context
+            UsernamePasswordAuthenticationToken authToken = 
                     new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
                             userDetails.getAuthorities()
                     );
 
-            authToken.setDetails(
-                    new WebAuthenticationDetailsSource()
-                            .buildDetails(request)
-            );
-
-            SecurityContextHolder.getContext()
-                    .setAuthentication(authToken);
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authToken);
 
         } catch (Exception ex) {
+            // Log detailed information about authentication failures
             logger.debug("JWT authentication failed: {}", ex.getMessage());
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // Set HTTP status 401 on failure
         }
 
         filterChain.doFilter(request, response);
     }
 
-    /* ======================================================
-       PASSWORD INVALIDATION CHECK
-       ====================================================== */
-
+    // Check if the token is still valid after password change
     private boolean isTokenStillValidAfterPasswordChange(
             String token,
             CustomUserDetails userDetails
     ) {
-
         Date issuedAt = jwtService.extractIssuedAt(token);
 
         if (issuedAt == null) {
             return false;
         }
 
-        LocalDateTime tokenIssuedAt =
-                issuedAt.toInstant()
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDateTime();
+        LocalDateTime tokenIssuedAt = issuedAt.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
 
-        LocalDateTime credentialsUpdatedAt =
-                userDetails.getCredentialsUpdatedAt();
+        LocalDateTime credentialsUpdatedAt = userDetails.getCredentialsUpdatedAt();
 
         if (credentialsUpdatedAt == null) {
             return true;
         }
 
+        // Ensure the token was issued before the password was changed
         return !tokenIssuedAt.isBefore(credentialsUpdatedAt);
     }
 
-    /* ======================================================
-       TOKEN EXTRACTION
-       ====================================================== */
-
+    // Extract JWT token from the request header
     private String extractToken(HttpServletRequest request) {
-
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return null;
         }
 
-        return authHeader.substring(7);
+        return authHeader.substring(7); // Extract the token part from the header
     }
 }

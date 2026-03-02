@@ -37,7 +37,8 @@ public class UserService {
             throw new IllegalArgumentException("Pageable cannot be null");
         }
 
-        return userRepository.findByDeletedAtIsNull(pageable);
+        // Não é necessário chamar orElse() pois o método findAll já retorna um Page<User>
+        return userRepository.findAll(pageable);
     }
 
     @Transactional(readOnly = true)
