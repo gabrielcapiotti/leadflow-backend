@@ -9,6 +9,7 @@ C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\lead
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\entities\user\Role.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\repository\auth\RefreshTokenRepository.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\multitenancy\identifier\CurrentTenantIdentifierResolverImpl.java
+C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\dto\auth\SessionResponse.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\entities\log\Log.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\entities\auth\RefreshToken.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\entities\auth\UserSession.java
@@ -17,9 +18,12 @@ C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\lead
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\multitenancy\context\TenantContext.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\repository\log\LogRepository.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\security\exception\UnauthorizedException.java
+C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\config\RedisConfig.java
+C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\repository\auth\LoginAuditRepository.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\controller\auth\AuthController.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\dto\audit\SecurityAuditResponse.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\multitenancy\filter\TenantFilter.java
+C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\service\auth\BruteForceProtectionService.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\controller\lead\LeadStatusHistoryController.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\service\RoleService.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\multitenancy\service\TenantProvisioningService.java
@@ -33,6 +37,7 @@ C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\lead
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\service\settings\SettingMapper.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\repository\user\UserRepository.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\controller\user\UserController.java
+C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\entities\auth\LoginAudit.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\exception\GlobalExceptionHandler.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\service\lead\LeadService.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\service\user\UserService.java
@@ -50,7 +55,6 @@ C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\lead
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\repository\tenant\TenantRepository.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\dto\settings\SettingResponse.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\multitenancy\TenantContext.java
-C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\BackendApplication.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\domain\auth\service\PasswordResetService.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\domain\auth\dto\ForgotPasswordRequest.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\dto\settings\UpdateSettingRequest.java
@@ -72,12 +76,14 @@ C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\lead
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\controller\settings\SettingController.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\dto\auth\AuthResponse.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\entities\enums\LeadStatus.java
+C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\BackendApplication.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\repository\auth\UserSessionRepository.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\service\LogService.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\domain\auth\repository\PasswordResetTokenRepository.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\entities\audit\SecurityAuditLog.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\controller\admin\AdminAuditController.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\service\auth\RefreshTokenService.java
+C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\service\auth\LoginAuditService.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\dto\user\UpdateUserRequest.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\dto\lead\LeadResponse.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\dto\auth\RegisterRequest.java

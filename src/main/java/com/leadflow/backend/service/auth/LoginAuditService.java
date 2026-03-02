@@ -1,7 +1,9 @@
 package com.leadflow.backend.service.auth;
 
+import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.auth.LoginAudit;
 import com.leadflow.backend.repository.auth.LoginAuditRepository;
+import com.leadflow.backend.repository.tenant.TenantRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,11 +17,14 @@ import java.util.UUID;
 public class LoginAuditService {
 
     private final LoginAuditRepository repository;
+    private final TenantRepository tenantRepository;
     private final Clock clock;
 
     public LoginAuditService(LoginAuditRepository repository,
+                             TenantRepository tenantRepository,
                              Clock clock) {
         this.repository = repository;
+        this.tenantRepository = tenantRepository;
         this.clock = clock;
     }
 
@@ -29,13 +34,15 @@ public class LoginAuditService {
 
     @Transactional
     public void recordSuccess(UUID userId,
-                              UUID tenantId,
+                              String tenantSchema,
                               String email,
                               String ip,
                               String userAgent,
                               boolean suspicious) {
 
-        Objects.requireNonNull(tenantId, "tenantId cannot be null");
+        UUID tenantId = resolveTenantId(tenantSchema);
+
+        Objects.requireNonNull(userId, "userId cannot be null");
         Objects.requireNonNull(email, "email cannot be null");
 
         LoginAudit audit = new LoginAudit();
@@ -56,13 +63,14 @@ public class LoginAuditService {
        ====================================================== */
 
     @Transactional
-    public void recordFailure(UUID tenantId,
+    public void recordFailure(String tenantSchema,
                               String email,
                               String ip,
                               String userAgent,
                               String reason) {
 
-        Objects.requireNonNull(tenantId, "tenantId cannot be null");
+        UUID tenantId = resolveTenantId(tenantSchema);
+
         Objects.requireNonNull(email, "email cannot be null");
 
         LoginAudit audit = new LoginAudit();
@@ -84,17 +92,17 @@ public class LoginAuditService {
 
     @Transactional(readOnly = true)
     public boolean isBruteForceDetected(String email,
-                                        UUID tenantId,
+                                        String tenantSchema,
                                         int maxAttempts,
                                         int windowMinutes) {
 
-        if (email == null || email.isBlank()) {
+        if (email == null || email.isBlank())
             return false;
-        }
 
-        if (maxAttempts <= 0 || windowMinutes <= 0) {
+        if (maxAttempts <= 0 || windowMinutes <= 0)
             return false;
-        }
+
+        UUID tenantId = resolveTenantId(tenantSchema);
 
         Instant threshold = Instant.now(clock)
                 .minusSeconds(windowMinutes * 60L);
@@ -112,6 +120,22 @@ public class LoginAuditService {
     /* ======================================================
        INTERNAL
        ====================================================== */
+
+    private UUID resolveTenantId(String tenantSchema) {
+
+        if (tenantSchema == null || tenantSchema.isBlank()) {
+            throw new IllegalStateException("Tenant schema cannot be null or blank");
+        }
+
+        return tenantRepository
+                .findBySchemaNameIgnoreCaseAndDeletedAtIsNull(tenantSchema.trim())
+                .map(Tenant::getId)
+                .orElseThrow(() ->
+                        new IllegalStateException(
+                                "Tenant not found: " + tenantSchema
+                        )
+                );
+    }
 
     private String normalizeEmail(String email) {
         return email.trim().toLowerCase();

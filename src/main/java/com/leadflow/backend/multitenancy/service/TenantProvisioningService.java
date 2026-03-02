@@ -2,14 +2,17 @@ package com.leadflow.backend.multitenancy.service;
 
 import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.repository.tenant.TenantRepository;
+
 import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 @Service
@@ -18,6 +21,10 @@ public class TenantProvisioningService {
     private static final Logger logger =
             LoggerFactory.getLogger(TenantProvisioningService.class);
 
+    /**
+     * Apenas letras minúsculas, números e underscore.
+     * Entre 3 e 50 caracteres.
+     */
     private static final Pattern VALID_SCHEMA =
             Pattern.compile("^[a-z0-9_]{3,50}$");
 
@@ -35,65 +42,83 @@ public class TenantProvisioningService {
         this.tenantRepository = tenantRepository;
     }
 
+    /* ======================================================
+       PUBLIC API
+       ====================================================== */
+
+    /**
+     * Provisiona um novo tenant baseado em SCHEMA.
+     * Processo:
+     * 1. Normaliza e valida schema
+     * 2. Cria schema
+     * 3. Executa migrations Flyway
+     * 4. Registra tenant no schema público
+     */
     public synchronized void provisionTenant(String tenantName) {
 
         validateTenantName(tenantName);
 
         String schemaName = normalizeSchema(tenantName);
 
-        if (!VALID_SCHEMA.matcher(schemaName).matches()) {
-            throw new IllegalArgumentException("Invalid schema name format");
-        }
+        validateSchemaFormat(schemaName);
 
-        if (tenantRepository.existsBySchemaNameIgnoreCase(schemaName)) {
+        if (tenantRepository
+                .existsBySchemaNameIgnoreCaseAndDeletedAtIsNull(schemaName)) {
+
             logger.info("Tenant already provisioned: {}", schemaName);
             return;
         }
 
         try {
-
-            // 🔥 1 - Criar schema (sem transação Spring)
             createSchema(schemaName);
-
-            // 🔥 2 - Rodar Flyway no schema do tenant
             runTenantMigrations(schemaName);
-
-            // 🔥 3 - Registrar tenant (transação isolada)
             registerTenantTransactional(tenantName, schemaName);
 
             logger.info("Tenant successfully provisioned: {}", schemaName);
 
-        } catch (Exception e) {
+        } catch (Exception ex) {
 
             logger.error("Tenant provisioning failed for schema {}",
-                    schemaName, e);
+                    schemaName, ex);
 
             cleanupSchema(schemaName);
 
             throw new IllegalStateException(
-                    "Tenant provisioning failed", e
+                    "Tenant provisioning failed for schema: " + schemaName,
+                    ex
             );
         }
     }
 
-    /* ================= SCHEMA ================= */
+    /* ======================================================
+       SCHEMA MANAGEMENT
+       ====================================================== */
 
     private void createSchema(String schemaName) {
+
+        // Seguro porque schema já foi validado por regex restritiva
         jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS " + schemaName);
+
+        logger.debug("Schema created: {}", schemaName);
     }
 
     private void cleanupSchema(String schemaName) {
+
         try {
             jdbcTemplate.execute(
                     "DROP SCHEMA IF EXISTS " + schemaName + " CASCADE"
             );
-            logger.warn("Rolled back schema {}", schemaName);
+
+            logger.warn("Schema rolled back: {}", schemaName);
+
         } catch (Exception ex) {
             logger.error("Failed to cleanup schema {}", schemaName, ex);
         }
     }
 
-    /* ================= FLYWAY ================= */
+    /* ======================================================
+       FLYWAY
+       ====================================================== */
 
     private void runTenantMigrations(String schemaName) {
 
@@ -103,14 +128,19 @@ public class TenantProvisioningService {
                 .defaultSchema(schemaName)
                 .locations("classpath:db/migration/tenant")
                 .baselineOnMigrate(true)
+                .validateOnMigrate(true)
                 .load();
 
         flyway.migrate();
+
+        logger.debug("Migrations executed for schema: {}", schemaName);
     }
 
-    /* ================= REGISTER ================= */
+    /* ======================================================
+       TENANT REGISTRATION (PUBLIC SCHEMA)
+       ====================================================== */
 
-    @Transactional(transactionManager = "publicTransactionManager")
+    @Transactional("publicTransactionManager")
     protected void registerTenantTransactional(
             String tenantName,
             String schemaName
@@ -122,26 +152,42 @@ public class TenantProvisioningService {
         );
 
         tenantRepository.save(tenant);
+
+        logger.debug("Tenant registered in public schema: {}", schemaName);
     }
 
-    /* ================= VALIDATION ================= */
+    /* ======================================================
+       VALIDATION
+       ====================================================== */
 
     private void validateTenantName(String tenantName) {
 
         if (tenantName == null || tenantName.isBlank()) {
-            throw new IllegalArgumentException("Tenant name cannot be blank");
+            throw new IllegalArgumentException(
+                    "Tenant name cannot be null or blank"
+            );
         }
 
         if (tenantName.length() > 100) {
-            throw new IllegalArgumentException("Tenant name too long");
+            throw new IllegalArgumentException(
+                    "Tenant name exceeds maximum length (100)"
+            );
+        }
+    }
+
+    private void validateSchemaFormat(String schemaName) {
+
+        if (!VALID_SCHEMA.matcher(schemaName).matches()) {
+            throw new IllegalArgumentException(
+                    "Invalid schema format. Allowed: lowercase letters, numbers and underscore (3–50 chars)"
+            );
         }
     }
 
     private String normalizeSchema(String name) {
 
-        return name
-                .trim()
-                .toLowerCase()
+        return name.trim()
+                .toLowerCase(Locale.ROOT)
                 .replaceAll("[^a-z0-9 ]", "")
                 .replace(" ", "_");
     }

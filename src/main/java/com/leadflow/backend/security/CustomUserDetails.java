@@ -14,6 +14,8 @@ import java.util.UUID;
 
 public final class CustomUserDetails implements UserDetails {
 
+    private final User user;
+
     private final UUID id;
     private final String email;
     private final String password;
@@ -37,6 +39,8 @@ public final class CustomUserDetails implements UserDetails {
         if (user.getRole() == null) {
             throw new IllegalStateException("User role cannot be null");
         }
+
+        this.user = user;
 
         this.id = user.getId();
         this.email = user.getEmail();
@@ -79,6 +83,10 @@ public final class CustomUserDetails implements UserDetails {
         return credentialsUpdatedAt;
     }
 
+    public User getUser() {
+        return user;
+    }
+
     /* ======================================================
        USERDETAILS IMPLEMENTATION
        ====================================================== */
@@ -100,7 +108,7 @@ public final class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return true; // Não usamos expiração por tempo
+        return true;
     }
 
     @Override
@@ -110,7 +118,7 @@ public final class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true; // Controlado via JWT iat
+        return true;
     }
 
     @Override

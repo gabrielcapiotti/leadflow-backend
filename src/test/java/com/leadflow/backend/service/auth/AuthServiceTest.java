@@ -1,11 +1,13 @@
 package com.leadflow.backend.service.auth;
 
+import com.leadflow.backend.entities.audit.SecurityAction;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
-import com.leadflow.backend.multitenancy.context.TenantContext;
+import com.leadflow.backend.multitenancy.TenantContext;
 import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
 import com.leadflow.backend.service.audit.SecurityAuditService;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,31 +27,23 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private RoleRepository roleRepository;
-
-    @Mock
-    private SecurityAuditService auditService;
-
-    @Mock
-    private LoginAuditService loginAuditService;
-
-    @Mock
-    private BruteForceProtectionService bruteForceService; // ✅ NOVO MOCK
+    @Mock private UserRepository userRepository;
+    @Mock private RoleRepository roleRepository;
+    @Mock private SecurityAuditService auditService;
+    @Mock private LoginAuditService loginAuditService;
+    @Mock private BruteForceProtectionService bruteForceService;
 
     private PasswordEncoder passwordEncoder;
     private AuthService authService;
 
     private Role userRole;
 
-    private static final String SCHEMA =
-            "00000000-0000-0000-0000-000000000001";
+    private static final String TENANT = "tenant_test";
 
     @BeforeEach
     void setUp() {
+
+        TenantContext.setTenant(TENANT);
 
         passwordEncoder = new BCryptPasswordEncoder();
 
@@ -59,14 +53,12 @@ class AuthServiceTest {
                 passwordEncoder,
                 auditService,
                 loginAuditService,
-                bruteForceService,  // ✅ INJETADO
+                bruteForceService,
                 5,
                 5
         );
 
         userRole = new Role("ROLE_USER");
-
-        TenantContext.setTenant(SCHEMA);
     }
 
     @AfterEach
@@ -74,9 +66,9 @@ class AuthServiceTest {
         TenantContext.clear();
     }
 
-    /* ======================================================
-       REGISTER
-       ====================================================== */
+    /* ====================================================== */
+    /* REGISTER                                               */
+    /* ====================================================== */
 
     @Test
     void shouldRegisterUserSuccessfully() {
@@ -97,18 +89,25 @@ class AuthServiceTest {
                 "password123"
         );
 
-        assertThat(result.getEmail()).isEqualTo("test@example.com");
+        assertThat(result).isNotNull();
         assertThat(passwordEncoder.matches("password123",
                 result.getPassword())).isTrue();
 
         verify(userRepository).save(any(User.class));
+
         verify(auditService)
-                .log(any(), any(), any(), anyBoolean(), any(), any(), any());
+                .log(any(SecurityAction.class),
+                        eq("test@example.com"),
+                        eq(TENANT),
+                        eq(true),
+                        any(),
+                        any(),
+                        any());
     }
 
-    /* ======================================================
-       AUTHENTICATE SUCCESS
-       ====================================================== */
+    /* ====================================================== */
+    /* AUTHENTICATE SUCCESS                                   */
+    /* ====================================================== */
 
     @Test
     void shouldAuthenticateSuccessfully() {
@@ -137,14 +136,31 @@ class AuthServiceTest {
 
         assertThat(result).isEqualTo(user);
 
-        verify(bruteForceService).reset(anyString());
+        verify(bruteForceService, atLeastOnce())
+                .reset(anyString());
+
+        verify(loginAuditService).recordSuccess(
+                any(),
+                eq(TENANT),
+                eq("test@example.com"),
+                any(),
+                any(),
+                eq(false)
+        );
+
         verify(auditService)
-                .log(any(), any(), any(), eq(true), any(), any(), any());
+                .log(any(SecurityAction.class),
+                        eq("test@example.com"),
+                        eq(TENANT),
+                        eq(true),
+                        any(),
+                        any(),
+                        any());
     }
 
-    /* ======================================================
-       AUTHENTICATE WRONG PASSWORD
-       ====================================================== */
+    /* ====================================================== */
+    /* AUTHENTICATE WRONG PASSWORD                            */
+    /* ====================================================== */
 
     @Test
     void shouldThrowWhenPasswordIsInvalid() {
@@ -171,19 +187,31 @@ class AuthServiceTest {
                         "test@example.com",
                         "wrong-password"
                 )
-        )
-        .isInstanceOf(IllegalArgumentException.class);
+        ).isInstanceOf(IllegalArgumentException.class);
 
         verify(bruteForceService, atLeastOnce())
                 .recordFailure(anyString(), anyInt());
 
+        verify(loginAuditService)
+                .recordFailure(eq(TENANT),
+                        eq("test@example.com"),
+                        any(),
+                        any(),
+                        eq("Wrong password"));
+
         verify(auditService)
-                .log(any(), any(), any(), eq(false), any(), any(), any());
+                .log(any(SecurityAction.class),
+                        eq("test@example.com"),
+                        eq(TENANT),
+                        eq(false),
+                        any(),
+                        any(),
+                        any());
     }
 
-    /* ======================================================
-       BRUTE FORCE BLOCK
-       ====================================================== */
+    /* ====================================================== */
+    /* BRUTE FORCE BLOCK                                      */
+    /* ====================================================== */
 
     @Test
     void shouldBlockWhenBruteForceDetected() {
@@ -196,9 +224,24 @@ class AuthServiceTest {
                         "test@example.com",
                         "password"
                 )
-        )
-        .isInstanceOf(IllegalStateException.class);
+        ).isInstanceOf(IllegalStateException.class);
 
         verifyNoInteractions(userRepository);
+
+        verify(loginAuditService)
+                .recordFailure(eq(TENANT),
+                        eq("test@example.com"),
+                        any(),
+                        any(),
+                        eq("Brute force detected"));
+
+        verify(auditService)
+                .log(any(SecurityAction.class),
+                        eq("test@example.com"),
+                        eq(TENANT),
+                        eq(false),
+                        any(),
+                        any(),
+                        any());
     }
 }

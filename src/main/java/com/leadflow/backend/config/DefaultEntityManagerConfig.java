@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.context.annotation.Primary;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -16,12 +16,9 @@ import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;
 
+import java.time.Clock;
+
 @Configuration
-@EnableJpaRepositories(
-        basePackages = "com.leadflow.backend.repository",
-        entityManagerFactoryRef = "tenantEntityManagerFactory",
-        transactionManagerRef = "tenantTransactionManager"
-)
 public class DefaultEntityManagerConfig {
 
     private final DataSource dataSource;
@@ -42,7 +39,6 @@ public class DefaultEntityManagerConfig {
     public LocalContainerEntityManagerFactoryBean tenantEntityManagerFactory(
             EntityManagerFactoryBuilder builder
     ) {
-
         Map<String, Object> properties = new HashMap<>();
 
         // Hibernate 6 configuration
@@ -52,7 +48,7 @@ public class DefaultEntityManagerConfig {
 
         return builder
                 .dataSource(dataSource)
-                .packages("com.leadflow.backend.entities")
+                .packages("com.leadflow.backend.entities", "com.leadflow.domain.auth") // Include additional package
                 .persistenceUnit("tenant")
                 .properties(properties)
                 .build();
@@ -64,5 +60,27 @@ public class DefaultEntityManagerConfig {
             EntityManagerFactory tenantEntityManagerFactory
     ) {
         return new JpaTransactionManager(tenantEntityManagerFactory);
+    }
+
+    @Bean(name = "transactionManager")
+    @Primary
+    public PlatformTransactionManager transactionManager(
+            @Qualifier("tenantEntityManagerFactory")
+            EntityManagerFactory emf
+    ) {
+        return new JpaTransactionManager(emf);
+    }
+
+    @Bean
+    public Clock clock() {
+        return Clock.systemDefaultZone();
+    }
+
+    @Bean(name = "entityManagerFactory")
+    @Primary
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory(
+            EntityManagerFactoryBuilder builder
+    ) {
+        return tenantEntityManagerFactory(builder);
     }
 }

@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 @Component
@@ -15,64 +16,59 @@ public class CurrentTenantIdentifierResolverImpl
     private static final Logger log =
             LoggerFactory.getLogger(CurrentTenantIdentifierResolverImpl.class);
 
-    /**
-     * Schema base obrigatório.
-     * Deve existir fisicamente no banco.
-     */
     private static final String DEFAULT_TENANT = "public";
 
     /**
-     * Regex estrita para evitar SQL injection via schema name.
+     * PostgreSQL identifier limit = 63 characters.
+     * Only lowercase letters, numbers and underscore allowed.
      */
+    private static final int MAX_IDENTIFIER_LENGTH = 63;
+
     private static final Pattern VALID_SCHEMA =
-            Pattern.compile("^[a-z0-9_]+$");
+            Pattern.compile("^[a-z0-9_]{1," + MAX_IDENTIFIER_LENGTH + "}$");
+
+    /* ======================================================
+       RESOLVE CURRENT TENANT
+       ====================================================== */
 
     @Override
     public String resolveCurrentTenantIdentifier() {
 
         String tenant = TenantContext.getTenant();
 
-        // 🔹 Fallback obrigatório (evita falha no bootstrap do Hibernate)
         if (tenant == null || tenant.isBlank()) {
-
-            log.trace("No tenant found in context. Falling back to default schema: {}", DEFAULT_TENANT);
-
+            log.trace("No tenant found in context. Falling back to default schema: {}",
+                    DEFAULT_TENANT);
             return DEFAULT_TENANT;
         }
 
-        String normalizedTenant = tenant.trim().toLowerCase();
+        String normalized = tenant
+                .trim()
+                .toLowerCase(Locale.ROOT);
 
-        // 🔒 Defesa contra schema injection
-        if (!VALID_SCHEMA.matcher(normalizedTenant).matches()) {
-
-            log.error("Invalid tenant identifier detected: {}", normalizedTenant);
-
+        if (!VALID_SCHEMA.matcher(normalized).matches()) {
+            log.error("Invalid tenant identifier detected: {}", normalized);
             throw new IllegalArgumentException(
-                    "Invalid tenant identifier: " + normalizedTenant
+                    "Invalid tenant identifier: " + normalized
             );
         }
 
-        log.trace("Resolved tenant identifier: {}", normalizedTenant);
+        log.trace("Resolved tenant identifier: {}", normalized);
 
-        return normalizedTenant;
+        return normalized;
     }
 
+    /* ======================================================
+       HIBERNATE CONTRACT
+       ====================================================== */
+
     /**
-     * true = Hibernate valida o tenant ao reutilizar sessão.
-     *
-     * ESSENCIAL em ambiente web multi-tenant:
-     * evita vazamento de schema entre requisições.
+     * Must return true in web multi-tenant environments.
+     * Ensures Hibernate validates tenant changes
+     * when reusing sessions.
      */
     @Override
     public boolean validateExistingCurrentSessions() {
         return true;
-    }
-
-    /**
-     * Hibernate 6 pode chamar este método durante bootstrap.
-     * Mantemos consistente com DEFAULT_TENANT.
-     */
-    public String resolveTenantIdentifier(Object entity) {
-        return resolveCurrentTenantIdentifier();
     }
 }

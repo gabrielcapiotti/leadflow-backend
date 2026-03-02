@@ -1,16 +1,21 @@
 package com.leadflow.backend.integration;
 
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-
+import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
-@Testcontainers
-@SpringBootTest
-@ActiveProfiles("integration-flyway")
+import com.leadflow.backend.exception.GlobalExceptionHandler;
+
+@WebMvcTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test") // Use o profile 'test' para padronizar os testes
+@Import(GlobalExceptionHandler.class)
 public abstract class FlywayTestBase {
 
     private static final String IMAGE = "postgres:16-alpine";
@@ -52,4 +57,7 @@ public abstract class FlywayTestBase {
         registry.add("spring.test.database.replace", () -> "none");
         registry.add("multitenancy.enabled", () -> "true");
     }
+
+    @Autowired
+    private MockMvc mockMvc;
 }

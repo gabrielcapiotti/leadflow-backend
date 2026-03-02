@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class LeadService {
 
     private final LeadRepository leadRepository;
@@ -31,9 +32,9 @@ public class LeadService {
         this.userRepository = userRepository;
     }
 
-    /* ======================================================
-       RESOLVE USER
-       ====================================================== */
+    /* ====================================================== */
+    /* RESOLVE USER                                           */
+    /* ====================================================== */
 
     @Transactional(readOnly = true)
     public User resolveUser(String email) {
@@ -43,17 +44,16 @@ public class LeadService {
         }
 
         return userRepository
-                .findByEmailIgnoreCaseAndDeletedAtIsNull(email)
+                .findByEmailIgnoreCaseAndDeletedAtIsNull(email.trim())
                 .orElseThrow(() ->
                         new IllegalArgumentException("User not found")
                 );
     }
 
-    /* ======================================================
-       CREATE
-       ====================================================== */
+    /* ====================================================== */
+    /* CREATE                                                 */
+    /* ====================================================== */
 
-    @Transactional
     public Lead createLead(
             String name,
             String email,
@@ -61,18 +61,15 @@ public class LeadService {
             User createdBy
     ) {
 
-        if (createdBy == null) {
-            throw new IllegalArgumentException("User cannot be null");
-        }
+        requireUser(createdBy);
+        requireEmail(email);
 
-        if (email == null || email.isBlank()) {
-            throw new IllegalArgumentException("Email cannot be null or blank");
-        }
+        String normalizedEmail = email.trim().toLowerCase();
 
         boolean exists = leadRepository
                 .existsByUserIdAndEmailIgnoreCaseAndDeletedAtIsNull(
                         createdBy.getId(),
-                        email.trim().toLowerCase()
+                        normalizedEmail
                 );
 
         if (exists) {
@@ -82,7 +79,7 @@ public class LeadService {
         Lead lead = new Lead(
                 createdBy.getId(),
                 name,
-                email,
+                normalizedEmail,
                 phone
         );
 
@@ -95,34 +92,33 @@ public class LeadService {
         return lead;
     }
 
-    /* ======================================================
-       LIST
-       ====================================================== */
+    /* ====================================================== */
+    /* LIST                                                   */
+    /* ====================================================== */
 
     @Transactional(readOnly = true)
     public List<Lead> listActiveLeads(User user) {
 
-        if (user == null) {
-            throw new IllegalArgumentException("User cannot be null");
-        }
+        requireUser(user);
 
         return leadRepository
                 .findByUserIdAndDeletedAtIsNull(user.getId());
     }
 
-    /* ======================================================
-       UPDATE STATUS
-       ====================================================== */
+    /* ====================================================== */
+    /* UPDATE STATUS                                          */
+    /* ====================================================== */
 
-    @Transactional
     public Lead updateStatus(
             UUID leadId,
             LeadStatus newStatus,
             User user
     ) {
 
-        if (user == null) {
-            throw new IllegalArgumentException("User cannot be null");
+        requireUser(user);
+
+        if (leadId == null) {
+            throw new IllegalArgumentException("LeadId cannot be null");
         }
 
         if (newStatus == null) {
@@ -130,7 +126,10 @@ public class LeadService {
         }
 
         Lead lead = leadRepository
-                .findByIdAndUserIdAndDeletedAtIsNull(leadId, user.getId())
+                .findByIdAndUserIdAndDeletedAtIsNull(
+                        leadId,
+                        user.getId()
+                )
                 .orElseThrow(() ->
                         new IllegalArgumentException("Lead not found or already deleted")
                 );
@@ -148,19 +147,23 @@ public class LeadService {
         return lead;
     }
 
-    /* ======================================================
-       SOFT DELETE
-       ====================================================== */
+    /* ====================================================== */
+    /* SOFT DELETE                                            */
+    /* ====================================================== */
 
-    @Transactional
     public void softDelete(UUID leadId, User user) {
 
-        if (user == null) {
-            throw new IllegalArgumentException("User cannot be null");
+        requireUser(user);
+
+        if (leadId == null) {
+            throw new IllegalArgumentException("LeadId cannot be null");
         }
 
         Lead lead = leadRepository
-                .findByIdAndUserIdAndDeletedAtIsNull(leadId, user.getId())
+                .findByIdAndUserIdAndDeletedAtIsNull(
+                        leadId,
+                        user.getId()
+                )
                 .orElseThrow(() ->
                         new IllegalArgumentException("Lead not found or already deleted")
                 );
@@ -168,21 +171,44 @@ public class LeadService {
         lead.softDelete();
     }
 
-    /* ======================================================
-       GET BY ID (ISOLATED)
-       ====================================================== */
+    /* ====================================================== */
+    /* GET BY ID                                              */
+    /* ====================================================== */
 
     @Transactional(readOnly = true)
     public Lead getByIdForUser(UUID leadId, UUID userId) {
+
+        if (leadId == null) {
+            throw new IllegalArgumentException("LeadId cannot be null");
+        }
 
         if (userId == null) {
             throw new IllegalArgumentException("UserId cannot be null");
         }
 
         return leadRepository
-                .findByIdAndUserIdAndDeletedAtIsNull(leadId, userId)
+                .findByIdAndUserIdAndDeletedAtIsNull(
+                        leadId,
+                        userId
+                )
                 .orElseThrow(() ->
                         new IllegalArgumentException("Lead not found or already deleted")
                 );
+    }
+
+    /* ====================================================== */
+    /* PRIVATE GUARDS                                         */
+    /* ====================================================== */
+
+    private void requireUser(User user) {
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+    }
+
+    private void requireEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email cannot be null or blank");
+        }
     }
 }

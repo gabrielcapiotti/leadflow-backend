@@ -21,7 +21,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ActiveProfiles("integration")
+@ActiveProfiles("test") // Use o profile 'test' para padronizar os testes
 @Tag("integration")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class TenantIsolationTest extends IntegrationTestBase {
@@ -52,14 +52,20 @@ class TenantIsolationTest extends IntegrationTestBase {
         tenantA = testTenantFactory.createTenant("Tenant A");
         tenantB = testTenantFactory.createTenant("Tenant B");
 
-        // Garante criação física dos schemas (essencial em H2)
         jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS " + tenantA.getSchemaName());
         jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS " + tenantB.getSchemaName());
 
-        // ROLE_USER deve existir no schema global (public)
+        // Initialize tables and ROLE_USER in Tenant A
+        TenantContext.setTenant(tenantA.getSchemaName());
+        roleRepository.saveAndFlush(new Role("ROLE_USER"));
+        leadRepository.count();
+
+        // Initialize tables and ROLE_USER in Tenant B
+        TenantContext.setTenant(tenantB.getSchemaName());
+        roleRepository.saveAndFlush(new Role("ROLE_USER"));
+        leadRepository.count();
+
         TenantContext.clear();
-        roleRepository.findByNameIgnoreCase("ROLE_USER")
-                .orElseGet(() -> roleRepository.saveAndFlush(new Role("ROLE_USER")));
     }
 
     @AfterEach

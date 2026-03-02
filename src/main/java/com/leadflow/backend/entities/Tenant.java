@@ -7,6 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Entity
 @Table(
@@ -27,20 +28,17 @@ import java.util.UUID;
 )
 public class Tenant {
 
+    private static final Pattern VALID_SCHEMA =
+            Pattern.compile("^[a-z][a-z0-9_]{2,49}$");
+
     /* ======================================================
        ID
        ====================================================== */
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(nullable = false, updatable = false)
     private UUID id;
-
-    @PrePersist
-    public void prePersist() {
-        if (id == null) {
-            id = UUID.randomUUID();
-        }
-    }
 
     /* ======================================================
        FIELDS
@@ -49,10 +47,12 @@ public class Tenant {
     @Column(nullable = false, length = 100)
     private String name;
 
-    /**
-     * Schema é imutável após criação.
-     */
-    @Column(name = "schema_name", nullable = false, length = 100, updatable = false)
+    @Column(
+            name = "schema_name",
+            nullable = false,
+            length = 50,
+            updatable = false
+    )
     private String schemaName;
 
     @CreationTimestamp
@@ -71,7 +71,6 @@ public class Tenant {
        ====================================================== */
 
     protected Tenant() {
-        // Required by JPA
     }
 
     public Tenant(String name, String schemaName) {
@@ -117,52 +116,44 @@ public class Tenant {
        VALIDATION
        ====================================================== */
 
-    private void validateName(String name) {
+    private void setName(String name) {
+
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Tenant name cannot be blank");
         }
+
+        if (name.length() > 100) {
+            throw new IllegalArgumentException("Tenant name too long");
+        }
+
+        this.name = name.trim();
     }
 
-    private void validateSchema(String schema) {
+    private void setSchemaName(String schema) {
 
         if (schema == null || schema.isBlank()) {
             throw new IllegalArgumentException("Schema name cannot be blank");
         }
 
-        if (!schema.matches("^[a-z0-9_]+$")) {
+        String normalized = schema.trim().toLowerCase();
+
+        if (!VALID_SCHEMA.matcher(normalized).matches()) {
             throw new IllegalArgumentException(
-                    "Schema name must contain only lowercase letters, numbers and underscore"
+                    "Invalid schema format"
             );
         }
 
-        if ("public".equals(schema)) {
+        if ("public".equals(normalized)) {
             throw new IllegalArgumentException(
-                    "Schema 'public' is reserved and cannot be registered as a tenant"
+                    "Schema 'public' is reserved"
             );
         }
-    }
 
-    private String normalizeSchema(String schema) {
-        return schema.trim().toLowerCase();
-    }
-
-    /* ======================================================
-       CONTROLLED SETTERS
-       ====================================================== */
-
-    private void setName(String name) {
-        validateName(name);
-        this.name = name.trim();
-    }
-
-    private void setSchemaName(String schema) {
-        String normalized = normalizeSchema(schema);
-        validateSchema(normalized);
         this.schemaName = normalized;
     }
 
     /* ======================================================
-       EQUALS & HASHCODE (Hibernate-safe)
+       EQUALS & HASHCODE
        ====================================================== */
 
     @Override

@@ -1,8 +1,10 @@
 package com.leadflow.backend.controller.auth;
 
 import com.leadflow.backend.dto.auth.*;
+import com.leadflow.backend.dto.user.UserResponse;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.multitenancy.context.TenantContext;
+import com.leadflow.backend.multitenancy.service.TenantService;
 import com.leadflow.backend.security.CustomUserDetails;
 import com.leadflow.backend.security.exception.UnauthorizedException;
 import com.leadflow.backend.security.jwt.JwtService;
@@ -15,7 +17,9 @@ import com.leadflow.domain.auth.service.PasswordResetService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -32,19 +36,22 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
     private final PasswordResetService passwordResetService;
     private final UserSessionService userSessionService;
+    private final TenantService tenantService; // ✅ ADICIONADO
 
     public AuthController(
             AuthService authService,
             JwtService jwtService,
             RefreshTokenService refreshTokenService,
             PasswordResetService passwordResetService,
-            UserSessionService userSessionService
+            UserSessionService userSessionService,
+            TenantService tenantService // ✅ ADICIONADO
     ) {
         this.authService = authService;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
         this.passwordResetService = passwordResetService;
         this.userSessionService = userSessionService;
+        this.tenantService = tenantService; // ✅ ADICIONADO
     }
 
     /* ======================================================
@@ -58,7 +65,7 @@ public class AuthController {
     ) {
 
         String tenant = requireTenant();
-        UUID tenantId = resolveTenantId(tenant);
+        UUID tenantId = tenantService.getTenantIdBySchema(tenant);
 
         User user = authService.registerUser(
                 request.name(),
@@ -76,11 +83,12 @@ public class AuthController {
                 httpRequest.getHeader("User-Agent")
         );
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new AuthResponse(
-                        accessToken.getToken(),
-                        refreshToken
-                ));
+        AuthResponse response = new AuthResponse(
+                accessToken.getToken(),
+                refreshToken
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /* ======================================================
@@ -94,7 +102,7 @@ public class AuthController {
     ) {
 
         String tenant = requireTenant();
-        UUID tenantId = resolveTenantId(tenant);
+        UUID tenantId = tenantService.getTenantIdBySchema(tenant);
 
         User user = authService.authenticateUser(
                 request.email(),
@@ -111,16 +119,36 @@ public class AuthController {
                 httpRequest.getHeader("User-Agent")
         );
 
-        return ResponseEntity.ok(
-                new AuthResponse(
-                        accessToken.getToken(),
-                        refreshToken
-                )
+        AuthResponse response = new AuthResponse(
+                accessToken.getToken(),
+                refreshToken
         );
+
+        return ResponseEntity.ok(response);
     }
 
     /* ======================================================
-       LIST ACTIVE SESSIONS
+       CURRENT USER
+       ====================================================== */
+
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> me(Authentication authentication) {
+
+        CustomUserDetails userDetails = requireAuthenticatedUser(authentication);
+        User user = userDetails.getUser();
+
+        UserResponse response = new UserResponse(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getRole().getName()
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    /* ======================================================
+       SESSIONS
        ====================================================== */
 
     @GetMapping("/sessions")
@@ -132,23 +160,20 @@ public class AuthController {
         CustomUserDetails user = requireAuthenticatedUser(authentication);
 
         String tenant = requireTenant();
-        UUID tenantId = resolveTenantId(tenant);
+        UUID tenantId = tenantService.getTenantIdBySchema(tenant);
 
         String token = extractToken(request);
         String tokenId = jwtService.extractTokenId(token);
 
-        return ResponseEntity.ok(
+        List<SessionResponse> sessions =
                 userSessionService.listActiveSessions(
                         user.getId(),
                         tenantId,
                         tokenId
-                )
-        );
-    }
+                );
 
-    /* ======================================================
-       REVOKE SPECIFIC SESSION
-       ====================================================== */
+        return ResponseEntity.ok(sessions);
+    }
 
     @DeleteMapping("/sessions/{sessionId}")
     public ResponseEntity<Void> revokeSession(
@@ -160,28 +185,10 @@ public class AuthController {
         CustomUserDetails user = requireAuthenticatedUser(authentication);
 
         String tenant = requireTenant();
-        UUID tenantId = resolveTenantId(tenant);
+        UUID tenantId = tenantService.getTenantIdBySchema(tenant);
 
-        // Impede revogação da própria sessão atual
         String token = extractToken(request);
         String currentTokenId = jwtService.extractTokenId(token);
-
-        List<SessionResponse> sessions =
-                userSessionService.listActiveSessions(
-                        user.getId(),
-                        tenantId,
-                        currentTokenId
-                );
-
-        sessions.stream()
-                .filter(SessionResponse::current)
-                .filter(s -> s.sessionId().equals(sessionId))
-                .findAny()
-                .ifPresent(s -> {
-                    throw new IllegalArgumentException(
-                            "Cannot revoke current active session"
-                    );
-                });
 
         userSessionService.revokeSpecificSession(
                 sessionId,
@@ -193,14 +200,13 @@ public class AuthController {
     }
 
     /* ======================================================
-       INTERNAL HELPERS
+       HELPERS
        ====================================================== */
 
     private CustomUserDetails requireAuthenticatedUser(Authentication authentication) {
 
         if (authentication == null ||
                 !(authentication.getPrincipal() instanceof CustomUserDetails user)) {
-
             throw new UnauthorizedException("Authentication required");
         }
 
@@ -213,34 +219,28 @@ public class AuthController {
             JwtToken accessToken,
             HttpServletRequest request
     ) {
+        String ipAddress = request.getRemoteAddr();
+        String userAgent = request.getHeader("User-Agent");
+
+        if (ipAddress == null || ipAddress.isBlank()) {
+            throw new IllegalArgumentException("IP address cannot be null or blank");
+        }
+
+        if (userAgent == null || userAgent.isBlank()) {
+            throw new IllegalArgumentException("User-Agent cannot be null or blank");
+        }
 
         userSessionService.createSession(
                 userId,
                 tenantId,
                 accessToken.getTokenId(),
-                request.getRemoteAddr(),
-                request.getHeader("User-Agent")
+                ipAddress,
+                userAgent
         );
     }
 
     private String requireTenant() {
-
-        String schema = TenantContext.getTenant();
-
-        if (schema == null || schema.isBlank()) {
-            throw new UnauthorizedException("Tenant not resolved");
-        }
-
-        return schema;
-    }
-
-    private UUID resolveTenantId(String tenant) {
-
-        try {
-            return UUID.fromString(tenant);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid tenant identifier");
-        }
+        return TenantContext.getTenant();
     }
 
     private String extractToken(HttpServletRequest request) {

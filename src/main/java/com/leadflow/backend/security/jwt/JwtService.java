@@ -6,6 +6,7 @@ import io.jsonwebtoken.security.Keys;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -15,19 +16,22 @@ import java.security.Key;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 
 @Service
-public class JwtService {
+public class JwtService implements InitializingBean {
 
     private static final Logger logger =
             LoggerFactory.getLogger(JwtService.class);
 
-    private final Key signingKey;
+    private final String secret;
     private final long expirationMillis;
     private final String issuer;
     private final Clock clock;
+
+    private Key signingKey;
 
     public JwtService(
             @Value("${security.jwt.secret}") String secret,
@@ -35,19 +39,41 @@ public class JwtService {
             @Value("${security.jwt.issuer:leadflow}") String issuer,
             Clock clock
     ) {
+        this.secret = secret;
+        this.expirationMillis = expirationMillis;
+        this.issuer = issuer;
+        this.clock = clock != null ? clock : Clock.systemUTC();
+    }
 
-        if (secret == null || secret.length() < 32) {
-            throw new IllegalArgumentException(
+    /* ======================================================
+       INITIALIZATION VALIDATION (FAIL-FAST CONTROLLED)
+       ====================================================== */
+
+    @Override
+    public void afterPropertiesSet() {
+
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException("JWT secret must not be null or blank");
+        }
+
+        if (secret.length() < 32) {
+            throw new IllegalStateException(
                     "JWT secret must be at least 256 bits (32 characters)"
             );
         }
 
+        if (expirationMillis <= 0) {
+            throw new IllegalStateException(
+                    "JWT expiration must be a positive value"
+            );
+        }
+
+        if (issuer == null || issuer.isBlank()) {
+            throw new IllegalStateException("JWT issuer must not be blank");
+        }
+
         this.signingKey =
                 Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-
-        this.expirationMillis = expirationMillis;
-        this.issuer = issuer;
-        this.clock = clock != null ? clock : Clock.systemUTC();
     }
 
     /* ======================================================
@@ -56,20 +82,8 @@ public class JwtService {
 
     public JwtToken generateToken(User user, String tenantSchema) {
 
-        if (user == null ||
-            user.getId() == null ||
-            user.getRole() == null) {
-
-            throw new IllegalStateException(
-                    "Invalid user for token generation"
-            );
-        }
-
-        if (tenantSchema == null || tenantSchema.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Tenant schema cannot be blank"
-            );
-        }
+        validateUser(user);
+        validateTenant(tenantSchema);
 
         Instant now = Instant.now(clock);
         Instant expiresAt = now.plusMillis(expirationMillis);
@@ -104,7 +118,7 @@ public class JwtService {
             extractAllClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            logger.warn("Invalid JWT: {}", e.getMessage());
+            logger.warn("Invalid JWT detected");
             return false;
         }
     }
@@ -130,8 +144,8 @@ public class JwtService {
             UUID tokenUserId = extractUserId(token);
             String tokenTenant = extractTenant(token);
 
-            return email.equals(userDetails.getUsername())
-                    && tokenUserId.equals(expectedUserId)
+            return Objects.equals(email, userDetails.getUsername())
+                    && Objects.equals(tokenUserId, expectedUserId)
                     && tokenTenant.equalsIgnoreCase(expectedTenant);
 
         } catch (Exception e) {
@@ -160,7 +174,7 @@ public class JwtService {
                 claims -> claims.get("userId", String.class));
 
         if (value == null) {
-            throw new IllegalArgumentException("userId claim missing");
+            throw new IllegalStateException("userId claim missing");
         }
 
         return UUID.fromString(value);
@@ -203,5 +217,37 @@ public class JwtService {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    /* ======================================================
+       VALIDATION HELPERS
+       ====================================================== */
+
+    private void validateUser(User user) {
+
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+
+        if (user.getId() == null) {
+            throw new IllegalStateException("User ID cannot be null");
+        }
+
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            throw new IllegalStateException("User email cannot be blank");
+        }
+
+        if (user.getRole() == null) {
+            throw new IllegalStateException("User role cannot be null");
+        }
+    }
+
+    private void validateTenant(String tenantSchema) {
+
+        if (tenantSchema == null || tenantSchema.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Tenant schema cannot be blank"
+            );
+        }
     }
 }

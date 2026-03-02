@@ -35,9 +35,9 @@ public class LeadController {
         this.userService = userService;
     }
 
-    /* ======================================================
-       CREATE
-       ====================================================== */
+    /* ====================================================== */
+    /* CREATE                                                 */
+    /* ====================================================== */
 
     @PostMapping
     public ResponseEntity<LeadResponse> createLead(
@@ -59,9 +59,9 @@ public class LeadController {
                 .body(new LeadResponse(lead));
     }
 
-    /* ======================================================
-       LIST
-       ====================================================== */
+    /* ====================================================== */
+    /* LIST                                                   */
+    /* ====================================================== */
 
     @GetMapping
     public ResponseEntity<List<LeadResponse>> listLeads(
@@ -79,9 +79,9 @@ public class LeadController {
         return ResponseEntity.ok(response);
     }
 
-    /* ======================================================
-       UPDATE STATUS
-       ====================================================== */
+    /* ====================================================== */
+    /* UPDATE STATUS                                          */
+    /* ====================================================== */
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<LeadResponse> updateLeadStatus(
@@ -97,12 +97,13 @@ public class LeadController {
         return ResponseEntity.ok(new LeadResponse(lead));
     }
 
-    /* ======================================================
-       DELETE (Soft Delete)
-       ====================================================== */
+    /* ====================================================== */
+    /* DELETE (SOFT DELETE)                                   */
+    /* ====================================================== */
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteLead(
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteLead(
             @AuthenticationPrincipal UserDetails principal,
             @PathVariable UUID id
     ) {
@@ -110,14 +111,16 @@ public class LeadController {
         User user = resolveAuthenticatedUser(principal);
 
         leadService.softDelete(id, user);
-
-        return ResponseEntity.noContent().build();
     }
 
-    /* ======================================================
-       INTERNAL
-       ====================================================== */
+    /* ====================================================== */
+    /* INTERNAL                                               */
+    /* ====================================================== */
 
+    /**
+     * Resolve authenticated domain User from Spring Security principal.
+     * Throws AccessDeniedException if authentication is invalid.
+     */
     private User resolveAuthenticatedUser(UserDetails principal) {
 
         if (principal == null) {

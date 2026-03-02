@@ -25,7 +25,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-        multiTenancy: NONE     # importante para evitar conflito no contexto de teste
+        multiTenancy: SCHEMA   # ativa suporte a multi-tenancy nos testes
         jdbc:
           lob:
             non_contextual_creation: true
@@ -46,4 +46,4 @@ security:
     expiration: 3600000
 
 multitenancy:
-  enabled: false              # desabilita filtro e resolver de tenant nos testes
+  enabled: true              # habilita filtro e resolver de tenant nos testes

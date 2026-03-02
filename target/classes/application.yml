@@ -3,9 +3,9 @@ spring:
     name: leadflow-backend
 
   datasource:
-    url: ${DB_URL}                          # URL do banco de dados (por exemplo: jdbc:postgresql://localhost:5432/leadflow)
-    username: ${DB_USER}                     # Nome de usuário do banco de dados
-    password: ${DB_PASSWORD}                 # Senha do banco de dados
+    url: jdbc:postgresql://localhost:2411/leadflow_test                          # URL do banco de dados (por exemplo: jdbc:postgresql://localhost:5432/leadflow)
+    username: postgres                     # Nome de usuário do banco de dados
+    password: venusia                     # Senha do banco de dados
     driver-class-name: org.postgresql.Driver # Driver JDBC para PostgreSQL
     hikari:
       maximum-pool-size: 15                  # Número máximo de conexões no pool
@@ -45,8 +45,8 @@ logging:
 
 security:
   jwt:
-    secret: ${JWT_SECRET}                     # Chave secreta para assinatura do JWT (geralmente uma variável de ambiente)
-    expiration: ${JWT_EXPIRATION:3600000}      # Tempo de expiração do token JWT (em milissegundos, 3600000 equivale a 1 hora)
+    secret: ${JWT_SECRET:01234567890123456789012345678901}
+    expiration: ${JWT_EXPIRATION:3600000}
   session:
     max-devices: 3                            # Número máximo de dispositivos por sessão
     cleanup-days: 30                          # Número de dias para limpeza de sessões

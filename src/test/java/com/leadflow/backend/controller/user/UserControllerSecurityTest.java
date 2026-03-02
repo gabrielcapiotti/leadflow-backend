@@ -2,14 +2,14 @@ package com.leadflow.backend.controller.user;
 
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.exception.GlobalExceptionHandler;
-import com.leadflow.backend.security.TestSecurityConfig;
+import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.user.UserService;
 
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 
@@ -30,9 +30,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UserController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
-@AutoConfigureMockMvc
-@Import({ TestSecurityConfig.class, GlobalExceptionHandler.class })
+@Import(GlobalExceptionHandler.class)
 class UserControllerSecurityTest {
 
     @Autowired
@@ -40,6 +40,9 @@ class UserControllerSecurityTest {
 
     @MockBean
     private UserService userService;
+
+    @MockBean
+    private JwtService jwtService;
 
     /* ==========================
        USER ROLE → 403

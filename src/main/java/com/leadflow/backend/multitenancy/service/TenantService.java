@@ -4,7 +4,9 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Locale;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
@@ -18,7 +20,14 @@ public class TenantService {
     private static final String RESOLVE_SCHEMA_SQL = """
             SELECT schema_name
             FROM public.tenants
-            WHERE LOWER(schema_name) = LOWER(?)
+            WHERE schema_name = ?
+              AND deleted_at IS NULL
+            """;
+
+    private static final String RESOLVE_ID_SQL = """
+            SELECT id
+            FROM public.tenants
+            WHERE schema_name = ?
               AND deleted_at IS NULL
             """;
 
@@ -38,7 +47,11 @@ public class TenantService {
             return Optional.empty();
         }
 
-        String normalized = identifier.trim().toLowerCase();
+        String normalized = normalize(identifier);
+
+        if (!VALID_SCHEMA.matcher(normalized).matches()) {
+            return Optional.empty();
+        }
 
         try {
 
@@ -48,10 +61,39 @@ public class TenantService {
                     normalized
             );
 
-            return Optional.ofNullable(schema);
+            return Optional.ofNullable(schema).map(this::normalize);
 
         } catch (EmptyResultDataAccessException ex) {
             return Optional.empty();
+        }
+    }
+
+    /* ======================================================
+       RESOLVE TENANT → ID (CRÍTICO)
+       ====================================================== */
+
+    public UUID getTenantIdBySchema(String schema) {
+
+        if (schema == null || schema.isBlank()) {
+            throw new IllegalArgumentException("Schema cannot be blank");
+        }
+
+        String normalized = normalize(schema);
+
+        if (!VALID_SCHEMA.matcher(normalized).matches()) {
+            throw new IllegalArgumentException("Invalid schema format");
+        }
+
+        try {
+
+            return jdbcTemplate.queryForObject(
+                    RESOLVE_ID_SQL,
+                    UUID.class,
+                    normalized
+            );
+
+        } catch (EmptyResultDataAccessException ex) {
+            throw new IllegalArgumentException("Tenant not found for schema: " + schema);
         }
     }
 
@@ -65,7 +107,7 @@ public class TenantService {
             throw new IllegalArgumentException("Schema cannot be blank");
         }
 
-        String normalized = schema.trim().toLowerCase();
+        String normalized = normalize(schema);
 
         if (!VALID_SCHEMA.matcher(normalized).matches()) {
             throw new IllegalArgumentException("Invalid schema format");
@@ -78,5 +120,13 @@ public class TenantService {
 
     public String getDefaultSchema() {
         return DEFAULT_SCHEMA;
+    }
+
+    /* ======================================================
+       INTERNAL UTIL
+       ====================================================== */
+
+    private String normalize(String value) {
+        return value.trim().toLowerCase(Locale.ROOT);
     }
 }

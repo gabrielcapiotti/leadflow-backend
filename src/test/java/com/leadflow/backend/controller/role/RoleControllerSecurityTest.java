@@ -1,13 +1,13 @@
 package com.leadflow.backend.controller.role;
 
-import com.leadflow.backend.security.TestSecurityConfig;
+import com.leadflow.backend.exception.GlobalExceptionHandler;
+import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.RoleService;
-
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -20,9 +20,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(RoleController.class)
-@Import(TestSecurityConfig.class)
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
-@AutoConfigureMockMvc
+@Import(GlobalExceptionHandler.class)
 class RoleControllerSecurityTest {
 
     @Autowired
@@ -30,6 +30,9 @@ class RoleControllerSecurityTest {
 
     @MockBean
     private RoleService roleService;
+
+    @MockBean
+    private JwtService jwtService;
 
     /* ==========================
        NOT AUTHENTICATED

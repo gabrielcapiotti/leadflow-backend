@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leadflow.backend.config.TestSecurityConfig;
 import com.leadflow.backend.dto.auth.LoginRequest;
 import com.leadflow.backend.dto.auth.RegisterRequest;
+import com.leadflow.backend.exception.GlobalExceptionHandler;
 import com.leadflow.backend.multitenancy.service.TenantService;
 import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.auth.AuthService;
@@ -11,6 +12,7 @@ import com.leadflow.backend.service.auth.AuthService;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -24,7 +26,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AuthController.class)
-@Import(TestSecurityConfig.class)
+@AutoConfigureMockMvc(addFilters = false)
+@Import({TestSecurityConfig.class, GlobalExceptionHandler.class})
 @ActiveProfiles("test")
 class AuthControllerNegativeTest {
 

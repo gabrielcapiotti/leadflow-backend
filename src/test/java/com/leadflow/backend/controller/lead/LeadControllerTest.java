@@ -7,9 +7,10 @@ import com.leadflow.backend.entities.lead.Lead;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.exception.GlobalExceptionHandler;
+import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.lead.LeadService;
 import com.leadflow.backend.service.user.UserService;
-
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -28,13 +29,13 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = LeadController.class)
-@ActiveProfiles("test")
 @AutoConfigureMockMvc(addFilters = false)
+@ActiveProfiles("test") // Use o profile 'test' para padronizar os testes
 @Import(GlobalExceptionHandler.class)
 class LeadControllerTest {
 
@@ -50,9 +51,18 @@ class LeadControllerTest {
     @MockBean
     private UserService userService;
 
+    @MockBean
+    private JwtService jwtService;
+
     private Lead lead;
     private User user;
     private UUID leadId;
+
+    private static final String TENANT = "tenant_test";
+
+    /* ====================================================== */
+    /* SETUP / TEARDOWN                                       */
+    /* ====================================================== */
 
     @BeforeEach
     void setUp() {
@@ -82,19 +92,23 @@ class LeadControllerTest {
         ReflectionTestUtils.setField(lead, "createdAt", LocalDateTime.now());
         ReflectionTestUtils.setField(lead, "updatedAt", LocalDateTime.now());
 
-        // 🔥 Importante: controller resolveUser usa email do principal
         when(userService.getActiveByEmail("test@example.com"))
                 .thenReturn(user);
     }
 
-    /* ======================================================
-       CREATE
-       ====================================================== */
+    @AfterEach
+    void tearDown() {
+    }
+
+    /* ====================================================== */
+    /* CREATE                                                 */
+    /* ====================================================== */
 
     @Test
     @WithMockUser(username = "test@example.com")
     void createLead_ShouldReturnCreatedLead() throws Exception {
 
+        // Arrange
         when(leadService.createLead(
                 anyString(),
                 anyString(),
@@ -108,6 +122,7 @@ class LeadControllerTest {
                 "123456789"
         );
 
+        // Act & Assert
         mockMvc.perform(post("/api/leads")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -115,16 +130,24 @@ class LeadControllerTest {
                 .andExpect(jsonPath("$.id").value(leadId.toString()))
                 .andExpect(jsonPath("$.name").value("Test Lead"))
                 .andExpect(jsonPath("$.status").value("NEW"));
+
+        verify(leadService).createLead(
+                eq("Test Lead"),
+                eq("lead@example.com"),
+                eq("123456789"),
+                eq(user)
+        );
     }
 
-    /* ======================================================
-       UPDATE STATUS
-       ====================================================== */
+    /* ====================================================== */
+    /* UPDATE STATUS                                          */
+    /* ====================================================== */
 
     @Test
     @WithMockUser(username = "test@example.com")
     void updateLeadStatus_ShouldReturnUpdatedLead() throws Exception {
 
+        // Arrange
         lead.changeStatus(LeadStatus.CONTACTED);
 
         when(leadService.updateStatus(
@@ -133,21 +156,28 @@ class LeadControllerTest {
                 eq(user)
         )).thenReturn(lead);
 
+        // Act & Assert
         mockMvc.perform(patch("/api/leads/{id}/status", leadId)
                         .param("status", "CONTACTED"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CONTACTED"));
+
+        verify(leadService)
+                .updateStatus(leadId, LeadStatus.CONTACTED, user);
     }
 
-    /* ======================================================
-       DELETE
-       ====================================================== */
+    /* ====================================================== */
+    /* DELETE                                                 */
+    /* ====================================================== */
 
     @Test
     @WithMockUser(username = "test@example.com")
     void deleteLead_ShouldReturnNoContent() throws Exception {
 
+        // Act & Assert
         mockMvc.perform(delete("/api/leads/{id}", leadId))
                 .andExpect(status().isNoContent());
+
+        verify(leadService).softDelete(leadId, user);
     }
 }

@@ -59,8 +59,8 @@ public class TenantFilter extends OncePerRequestFilter {
             return true;
         }
 
-        return path.startsWith("/auth")
-                || path.startsWith("/actuator")
+        // Apenas endpoints técnicos devem ser ignorados
+        return path.startsWith("/actuator")
                 || path.startsWith("/swagger")
                 || path.startsWith("/v3/api-docs");
     }
@@ -86,12 +86,10 @@ public class TenantFilter extends OncePerRequestFilter {
                     request.getRequestURI()
             );
 
-            if (!response.isCommitted()) {
-                response.sendError(
-                        HttpServletResponse.SC_BAD_REQUEST,
-                        "Missing " + TENANT_HEADER + " header"
-                );
-            }
+            response.sendError(
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    "Missing " + TENANT_HEADER + " header"
+            );
             return;
         }
 
@@ -104,20 +102,18 @@ public class TenantFilter extends OncePerRequestFilter {
 
             if (schemaOptional.isEmpty()) {
 
-                logger.warn("Invalid tenant identifier: {}", normalizedTenant);
+                logger.warn("Tenant not found: {}", normalizedTenant);
 
-                if (!response.isCommitted()) {
-                    response.sendError(
-                            HttpServletResponse.SC_NOT_FOUND,
-                            "Tenant not found"
-                    );
-                }
+                response.sendError(
+                        HttpServletResponse.SC_NOT_FOUND,
+                        "Tenant not found"
+                );
                 return;
             }
 
             String schemaName = schemaOptional.get();
 
-            // Segurança contra schema injection
+            // Defesa contra schema injection
             tenantService.validateSchemaName(schemaName);
 
             TenantContext.setTenant(schemaName);
@@ -126,20 +122,26 @@ public class TenantFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
 
+        } catch (IllegalArgumentException ex) {
+
+            logger.warn("Invalid tenant format: {}", normalizedTenant);
+
+            response.sendError(
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    "Invalid tenant identifier"
+            );
+
         } catch (Exception ex) {
 
-            logger.error("Tenant resolution failed for identifier {}",
-                    normalizedTenant, ex);
+            logger.error("Tenant resolution failure: {}", normalizedTenant, ex);
 
-            if (!response.isCommitted()) {
-                response.sendError(
-                        HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                        "Tenant resolution error"
-                );
-            }
+            response.sendError(
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Tenant resolution error"
+            );
 
         } finally {
-            // Garantia absoluta de limpeza do ThreadLocal
+            // Garantia absoluta de limpeza
             TenantContext.clear();
         }
     }

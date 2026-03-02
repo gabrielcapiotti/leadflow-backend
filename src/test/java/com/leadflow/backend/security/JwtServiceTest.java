@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class JwtServiceTest {
 
@@ -27,7 +28,7 @@ class JwtServiceTest {
     private static final String TENANT = "test_schema";
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
 
         jwtService = new JwtService(
                 SECRET,
@@ -35,6 +36,9 @@ class JwtServiceTest {
                 "leadflow",
                 Clock.systemUTC()
         );
+
+        // 🔥 Importante para versão enterprise
+        jwtService.afterPropertiesSet();
 
         userId = UUID.randomUUID();
 
@@ -61,10 +65,7 @@ class JwtServiceTest {
 
         assertThat(jwtToken).isNotNull();
         assertThat(jwtToken.getToken()).isNotBlank();
-
-        assertThat(jwtToken.getToken().split("\\."))
-                .hasSize(3);
-
+        assertThat(jwtToken.getToken().split("\\.")).hasSize(3);
         assertThat(jwtToken.getTokenId()).isNotBlank();
         assertThat(jwtToken.getExpiresAt()).isAfter(Instant.now());
     }
@@ -78,17 +79,15 @@ class JwtServiceTest {
 
         JwtToken jwtToken = jwtService.generateToken(user, TENANT);
 
-        boolean isValid = jwtService.isValid(jwtToken.getToken());
-
-        assertThat(isValid).isTrue();
+        assertThat(jwtService.isValid(jwtToken.getToken()))
+                .isTrue();
     }
 
     @Test
     void isValid_ShouldReturnFalse_ForInvalidToken() {
 
-        boolean isValid = jwtService.isValid("invalid.jwt.token");
-
-        assertThat(isValid).isFalse();
+        assertThat(jwtService.isValid("invalid.jwt.token"))
+                .isFalse();
     }
 
     /* ==========================
@@ -100,9 +99,8 @@ class JwtServiceTest {
 
         JwtToken jwtToken = jwtService.generateToken(user, TENANT);
 
-        String email = jwtService.extractEmail(jwtToken.getToken());
-
-        assertThat(email).isEqualTo("test@example.com");
+        assertThat(jwtService.extractEmail(jwtToken.getToken()))
+                .isEqualTo("test@example.com");
     }
 
     @Test
@@ -110,10 +108,8 @@ class JwtServiceTest {
 
         JwtToken jwtToken = jwtService.generateToken(user, TENANT);
 
-        UUID extractedUserId =
-                jwtService.extractUserId(jwtToken.getToken());
-
-        assertThat(extractedUserId).isEqualTo(userId);
+        assertThat(jwtService.extractUserId(jwtToken.getToken()))
+                .isEqualTo(userId);
     }
 
     @Test
@@ -121,10 +117,8 @@ class JwtServiceTest {
 
         JwtToken jwtToken = jwtService.generateToken(user, TENANT);
 
-        String role =
-                jwtService.extractRole(jwtToken.getToken());
-
-        assertThat(role).isEqualTo("ROLE_USER");
+        assertThat(jwtService.extractRole(jwtToken.getToken()))
+                .isEqualTo("ROLE_USER");
     }
 
     @Test
@@ -133,9 +127,27 @@ class JwtServiceTest {
         JwtToken jwtToken =
                 jwtService.generateToken(user, "tenant_x");
 
-        String tenant =
-                jwtService.extractTenant(jwtToken.getToken());
+        assertThat(jwtService.extractTenant(jwtToken.getToken()))
+                .isEqualTo("tenant_x");
+    }
 
-        assertThat(tenant).isEqualTo("tenant_x");
+    /* ==========================
+       NEGATIVE CASES
+       ========================== */
+
+    @Test
+    void generateToken_ShouldThrow_WhenTenantBlank() {
+
+        assertThatThrownBy(() ->
+                jwtService.generateToken(user, ""))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void generateToken_ShouldThrow_WhenUserNull() {
+
+        assertThatThrownBy(() ->
+                jwtService.generateToken(null, TENANT))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

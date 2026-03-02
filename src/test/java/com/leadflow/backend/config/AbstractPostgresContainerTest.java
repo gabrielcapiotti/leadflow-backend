@@ -18,7 +18,7 @@ import org.testcontainers.utility.DockerImageName;
  * ✔ Compatível com Flyway
  */
 @Testcontainers
-@ActiveProfiles("integration")
+@ActiveProfiles("test") // Use o profile 'test' para padronizar os testes
 public abstract class AbstractPostgresContainerTest {
 
     private static final DockerImageName POSTGRES_IMAGE =

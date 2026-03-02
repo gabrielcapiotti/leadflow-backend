@@ -3,6 +3,7 @@ package com.leadflow.backend.entities.auth;
 import jakarta.persistence.*;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 @Entity
@@ -72,7 +73,39 @@ public class UserSession {
     private Instant revokedAt;
 
     /* ======================================================
-       LIFECYCLE HOOK
+       CONSTRUCTOR (DOMAIN ENTRY POINT)
+       ====================================================== */
+
+    public UserSession(UUID userId,
+                       UUID tenantId,
+                       String tokenId,
+                       String ipAddress,
+                       String userAgent,
+                       Instant now) {
+
+        this.userId = Objects.requireNonNull(userId);
+        this.tenantId = Objects.requireNonNull(tenantId);
+        this.tokenId = Objects.requireNonNull(tokenId);
+
+        this.initialIpAddress = ipAddress;
+        this.initialUserAgent = userAgent;
+
+        this.ipAddress = ipAddress;
+        this.userAgent = userAgent;
+
+        this.active = true;
+        this.suspicious = false;
+
+        this.createdAt = now;
+        this.lastAccessAt = now;
+    }
+
+    protected UserSession() {
+        // JPA
+    }
+
+    /* ======================================================
+       LIFECYCLE
        ====================================================== */
 
     @PrePersist
@@ -89,64 +122,27 @@ public class UserSession {
        GETTERS
        ====================================================== */
 
-    public UUID getId() {
-        return id;
-    }
-
-    public UUID getUserId() {
-        return userId;
-    }
-
-    public UUID getTenantId() {
-        return tenantId;
-    }
-
-    public String getTokenId() {
-        return tokenId;
-    }
-
-    public String getIpAddress() {
-        return ipAddress;
-    }
-
-    public String getUserAgent() {
-        return userAgent;
-    }
-
-    public String getInitialIpAddress() {
-        return initialIpAddress;
-    }
-
-    public String getInitialUserAgent() {
-        return initialUserAgent;
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public boolean isSuspicious() {
-        return suspicious;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public Instant getLastAccessAt() {
-        return lastAccessAt;
-    }
-
-    public Instant getRevokedAt() {
-        return revokedAt;
-    }
+    public UUID getId() { return id; }
+    public UUID getUserId() { return userId; }
+    public UUID getTenantId() { return tenantId; }
+    public String getTokenId() { return tokenId; }
+    public String getIpAddress() { return ipAddress; }
+    public String getUserAgent() { return userAgent; }
+    public String getInitialIpAddress() { return initialIpAddress; }
+    public String getInitialUserAgent() { return initialUserAgent; }
+    public boolean isActive() { return active; }
+    public boolean isSuspicious() { return suspicious; }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getLastAccessAt() { return lastAccessAt; }
+    public Instant getRevokedAt() { return revokedAt; }
 
     /* ======================================================
-       MUTATORS CONTROLADOS
+       DOMAIN BEHAVIOR
        ====================================================== */
 
     public void activate() {
         this.active = true;
+        this.revokedAt = null;
     }
 
     public void revoke(Instant timestamp) {
@@ -166,35 +162,4 @@ public class UserSession {
         this.ipAddress = ip;
         this.userAgent = agent;
     }
-
-    public void setInitialDeviceInfo(String ip, String agent) {
-        this.initialIpAddress = ip;
-        this.initialUserAgent = agent;
-    }
-
-    public UserSession(UUID userId,
-                   UUID tenantId,
-                   String tokenId,
-                   String ipAddress,
-                   String userAgent,
-                   Instant now) {
-
-    this.userId = userId;
-    this.tenantId = tenantId;
-    this.tokenId = tokenId;
-
-    this.initialIpAddress = ipAddress;
-    this.initialUserAgent = userAgent;
-
-    this.ipAddress = ipAddress;
-    this.userAgent = userAgent;
-
-    this.active = true;
-    this.suspicious = false;
-
-    this.createdAt = now;
-    this.lastAccessAt = now;
-}
-
-protected UserSession() {}
 }
