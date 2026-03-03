@@ -47,3 +47,7 @@ security:
 
 multitenancy:
   enabled: true              # habilita filtro e resolver de tenant nos testes
+
+openai:
+  api:
+    key: test-key

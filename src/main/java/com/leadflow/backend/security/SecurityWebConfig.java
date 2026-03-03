@@ -74,7 +74,8 @@ public class SecurityWebConfig {
     @Order(2)
     public SecurityFilterChain filterChain(
             HttpSecurity http,
-            ObjectProvider<JwtAuthenticationFilter> jwtFilterProvider
+            ObjectProvider<JwtAuthenticationFilter> jwtFilterProvider,
+            RateLimitFilter rateLimitFilter
     ) throws Exception {
 
         http
@@ -128,6 +129,11 @@ public class SecurityWebConfig {
                     UsernamePasswordAuthenticationFilter.class
             );
         }
+
+        http.addFilterAfter(
+            rateLimitFilter,
+            UsernamePasswordAuthenticationFilter.class
+        );
 
         return http.build();
     }

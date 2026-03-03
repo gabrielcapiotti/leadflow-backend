@@ -1,0 +1,2 @@
+ALTER TABLE vendor_leads
+ADD COLUMN stage VARCHAR(100) NOT NULL DEFAULT 'novo';

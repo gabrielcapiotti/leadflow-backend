@@ -1,0 +1,1 @@
+UPDATE vendor_leads SET stage = UPPER(stage);

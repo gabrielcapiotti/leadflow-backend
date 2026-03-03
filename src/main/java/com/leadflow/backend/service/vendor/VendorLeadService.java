@@ -1,0 +1,321 @@
+package com.leadflow.backend.service.vendor;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.leadflow.backend.dto.vendor.StageConversionResponse;
+import com.leadflow.backend.dto.vendor.StageTimeMetricsResponse;
+import com.leadflow.backend.dto.vendor.VendorLeadMetricsResponse;
+import com.leadflow.backend.entities.vendor.LeadStage;
+import com.leadflow.backend.entities.vendor.VendorLead;
+import com.leadflow.backend.entities.vendor.VendorLeadConversation;
+import com.leadflow.backend.entities.vendor.VendorLeadStageHistory;
+import com.leadflow.backend.repository.VendorLeadConversationRepository;
+import com.leadflow.backend.repository.VendorLeadRepository;
+import com.leadflow.backend.repository.VendorLeadStageHistoryRepository;
+import com.leadflow.backend.security.VendorContext;
+import com.leadflow.backend.service.monitoring.MetricsService;
+
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+@Service
+public class VendorLeadService {
+
+    private final VendorLeadRepository repository;
+    private final VendorLeadConversationRepository conversationRepository;
+    private final VendorLeadStageHistoryRepository historyRepository;
+    private final VendorContext vendorContext;
+    private final AuditService auditService;
+    private final MetricsService metricsService;
+    private final ObjectMapper objectMapper;
+
+    public VendorLeadService(VendorLeadRepository repository,
+                             VendorLeadConversationRepository conversationRepository,
+                             VendorLeadStageHistoryRepository historyRepository,
+                             VendorContext vendorContext,
+                             AuditService auditService,
+                             MetricsService metricsService,
+                             ObjectMapper objectMapper) {
+        this.repository = repository;
+        this.conversationRepository = conversationRepository;
+        this.historyRepository = historyRepository;
+        this.vendorContext = vendorContext;
+        this.auditService = auditService;
+        this.metricsService = metricsService;
+        this.objectMapper = objectMapper;
+    }
+
+    public VendorLead createFromAi(UUID vendorId, String json) {
+
+        try {
+            JsonNode node = objectMapper.readTree(json);
+
+            if (node.hasNonNull("nomeCompleto") &&
+                node.hasNonNull("whatsapp")) {
+
+                String whatsapp = node.get("whatsapp").asText();
+
+                var existingLead = repository
+                    .findFirstByVendorIdAndWhatsappOrderByCreatedDateDesc(vendorId, whatsapp);
+
+                boolean isNewLead = existingLead.isEmpty();
+
+                VendorLead lead = existingLead.orElseGet(VendorLead::new);
+
+                if (lead.getVendorId() == null) {
+                    lead.setVendorId(vendorId);
+                }
+
+                lead.setNomeCompleto(node.get("nomeCompleto").asText());
+                lead.setWhatsapp(whatsapp);
+                lead.setTipoConsorcio(node.path("tipoConsorcio").asText(null));
+                lead.setValorCredito(node.path("valorCredito").asText(null));
+                lead.setUrgencia(node.path("urgencia").asText(null));
+
+                lead.setScore(calculateScore(lead));
+                VendorLead savedLead = repository.save(lead);
+
+                if (isNewLead) {
+                    metricsService.incrementLeadCreated();
+                }
+
+                return savedLead;
+            }
+
+        } catch (Exception e) {
+            // futuramente log estruturado
+        }
+
+        return null;
+    }
+
+    public void saveConversation(UUID leadId, String userMessage, String aiMessage) {
+        if (leadId == null || userMessage == null || aiMessage == null) {
+            return;
+        }
+
+        if (userMessage.isBlank() || aiMessage.isBlank()) {
+            return;
+        }
+
+        saveConversationMessage(leadId, "USER", userMessage);
+        saveConversationMessage(leadId, "AI", aiMessage);
+    }
+
+    public List<VendorLeadConversation> getConversation(UUID leadId) {
+        return conversationRepository.findByVendorLeadIdOrderByCreatedAtAsc(leadId);
+    }
+
+    public VendorLead updateStage(UUID leadId, LeadStage newStage) {
+
+        UUID vendorId = vendorContext.getCurrentVendor().getId();
+
+        VendorLead lead = repository.findByIdAndVendorId(leadId, vendorId)
+            .orElseThrow(() -> new RuntimeException("Lead não encontrado ou acesso negado"));
+
+        LeadStage currentStage = lead.getStage();
+
+        if (currentStage == newStage) {
+            return lead;
+        }
+
+        if (!currentStage.canTransitionTo(newStage)) {
+            throw new IllegalStateException(
+                    "Transição inválida: " + currentStage + " → " + newStage
+            );
+        }
+
+        lead.setStage(newStage);
+        lead.setScore(calculateScore(lead));
+
+        repository.save(lead);
+
+        VendorLeadStageHistory history = new VendorLeadStageHistory();
+        history.setVendorLeadId(leadId);
+        history.setPreviousStage(currentStage.name());
+        history.setNewStage(newStage.name());
+
+        historyRepository.save(history);
+
+        auditService.log(
+            "STAGE_CHANGE",
+            leadId,
+            currentStage + " → " + newStage
+        );
+
+        return lead;
+    }
+
+    public VendorLead assignOwner(UUID leadId) {
+
+        var vendor = vendorContext.getCurrentVendor();
+
+        VendorLead lead = repository.findByIdAndVendorId(leadId, vendor.getId())
+            .orElseThrow(() -> new RuntimeException("Lead não encontrado ou acesso negado"));
+
+        lead.setOwnerEmail(vendor.getUserEmail());
+
+        VendorLead savedLead = repository.save(lead); // nunca null
+
+        auditService.log(
+                "OWNER_ASSIGN",
+                leadId,
+                "Owner atribuído: " + vendor.getUserEmail()
+        );
+
+        return savedLead;
+    }
+
+    public List<VendorLead> getRankingByOwner(String ownerEmail) {
+        return repository.findByOwnerEmailOrderByScoreDesc(ownerEmail);
+    }
+
+    public VendorLeadMetricsResponse getMetricsForCurrentVendor() {
+
+        UUID vendorId = vendorContext.getCurrentVendor().getId();
+
+        var results = repository.countByStage(vendorId);
+
+        java.util.Map<String, Long> map = new java.util.HashMap<>();
+
+        for (Object[] row : results) {
+            String stage = (String) row[0];
+            Long count = (Long) row[1];
+            map.put(stage, count);
+        }
+
+        return new VendorLeadMetricsResponse(map);
+    }
+
+    public List<VendorLead> getRankingForCurrentVendor() {
+        UUID vendorId = vendorContext.getCurrentVendor().getId();
+        return repository.findByVendorIdOrderByScoreDesc(vendorId);
+    }
+
+    public VendorLead getLeadForCurrentVendor(UUID leadId) {
+        UUID vendorId = vendorContext.getCurrentVendor().getId();
+
+        return repository.findByIdAndVendorId(leadId, vendorId)
+                .orElseThrow(() -> new RuntimeException("Lead não encontrado ou acesso negado"));
+    }
+
+    private int calculateScore(VendorLead lead) {
+
+        int base = switch (lead.getUrgencia() == null ? "" : lead.getUrgencia()) {
+            case "quero_fechar" -> 100;
+            case "analisando" -> 60;
+            case "pesquisando" -> 30;
+            default -> 10;
+        };
+
+        int bonus = 0;
+
+        if (lead.getStage() != null) {
+            bonus = switch (lead.getStage()) {
+                case PROPOSTA -> 20;
+                case CONTATO -> 10;
+                default -> 0;
+            };
+        }
+
+        return base + bonus;
+    }
+
+    public StageTimeMetricsResponse calculateAverageStageTimeForCurrentVendor() {
+
+        UUID vendorId = vendorContext.getCurrentVendor().getId();
+
+        var leads = repository.findByVendorId(vendorId);
+
+        Map<String, List<Long>> stageDurations = new HashMap<>();
+
+        for (var lead : leads) {
+
+            var history = historyRepository
+                    .findByVendorLeadIdOrderByChangedAtDesc(lead.getId());
+
+            Instant previous = lead.getCreatedDate();
+
+            for (int i = history.size() - 1; i >= 0; i--) {
+
+                var record = history.get(i);
+
+                long duration =
+                        java.time.Duration
+                                .between(previous, record.getChangedAt())
+                                .toHours();
+
+                stageDurations
+                        .computeIfAbsent(record.getPreviousStage(),
+                                k -> new java.util.ArrayList<>())
+                        .add(duration);
+
+                previous = record.getChangedAt();
+            }
+        }
+
+        Map<String, Double> averages = new HashMap<>();
+
+        for (var entry : stageDurations.entrySet()) {
+
+            double avg = entry.getValue()
+                    .stream()
+                    .mapToLong(Long::longValue)
+                    .average()
+                    .orElse(0);
+
+            averages.put(entry.getKey(), avg);
+        }
+
+        return new StageTimeMetricsResponse(averages);
+    }
+
+    public StageConversionResponse calculateConversionRatesForCurrentVendor() {
+
+        UUID vendorId = vendorContext.getCurrentVendor().getId();
+
+        var results = historyRepository.countTransitionsByVendor(vendorId);
+
+        Map<String, Long> stageTotals = new HashMap<>();
+        Map<String, Long> transitions = new HashMap<>();
+
+        for (Object[] row : results) {
+
+            String from = (String) row[0];
+            String to = (String) row[1];
+            Long count = (Long) row[2];
+
+            stageTotals.put(from,
+                    stageTotals.getOrDefault(from, 0L) + count);
+
+            transitions.put(from + "→" + to, count);
+        }
+
+        Map<String, Double> conversion = new HashMap<>();
+
+        for (var entry : transitions.entrySet()) {
+
+            String from = entry.getKey().split("→")[0];
+            long totalFrom = stageTotals.getOrDefault(from, 1L);
+
+            double rate = (double) entry.getValue() / totalFrom * 100.0;
+
+            conversion.put(entry.getKey(), rate);
+        }
+
+        return new StageConversionResponse(conversion);
+    }
+
+    private void saveConversationMessage(UUID leadId, String role, String content) {
+        VendorLeadConversation conversation = new VendorLeadConversation();
+        conversation.setVendorLeadId(leadId);
+        conversation.setRole(role);
+        conversation.setContent(content.trim());
+        conversationRepository.save(conversation);
+    }
+}
