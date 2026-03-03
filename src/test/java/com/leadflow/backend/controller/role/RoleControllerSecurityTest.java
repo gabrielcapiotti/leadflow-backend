@@ -1,6 +1,7 @@
 package com.leadflow.backend.controller.role;
 
 import com.leadflow.backend.exception.GlobalExceptionHandler;
+import com.leadflow.backend.security.RateLimitService;
 import com.leadflow.backend.security.TestSecurityConfig;
 import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.RoleService;
@@ -48,6 +49,9 @@ class RoleControllerSecurityTest {
 
     @MockBean
     private TenantService tenantService;
+
+    @MockBean
+    private RateLimitService rateLimitService;
 
     private static final String TENANT_HEADER = "X-Tenant-ID";
     private static final String TENANT = "public";

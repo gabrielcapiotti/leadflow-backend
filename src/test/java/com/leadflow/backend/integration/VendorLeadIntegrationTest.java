@@ -4,9 +4,13 @@ import com.leadflow.backend.entities.vendor.*;
 import com.leadflow.backend.repository.*;
 import com.leadflow.backend.service.vendor.VendorLeadService;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +32,18 @@ class VendorLeadIntegrationTest {
 
     @Autowired
     private VendorLeadService service;
+
+    @BeforeEach
+    void setAuthentication() {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("vendor@test.com", "N/A")
+        );
+    }
+
+    @AfterEach
+    void clearAuthentication() {
+        SecurityContextHolder.clearContext();
+    }
 
     @Test
     void shouldPersistLeadAndStageHistory() {

@@ -4,6 +4,8 @@ import com.leadflow.backend.controller.DashboardController;
 import com.leadflow.backend.dto.vendor.DashboardResponse;
 import com.leadflow.backend.entities.vendor.LeadStage;
 import com.leadflow.backend.entities.vendor.VendorLead;
+import com.leadflow.backend.multitenancy.service.TenantService;
+import com.leadflow.backend.security.RateLimitService;
 import com.leadflow.backend.service.vendor.DashboardService;
 import org.junit.jupiter.api.Test;
 
@@ -35,6 +37,12 @@ class DashboardControllerTest {
     @MockBean
     private DashboardService dashboardService;
 
+    @MockBean
+    private TenantService tenantService;
+
+    @MockBean
+    private RateLimitService rateLimitService;
+
     @Test
     void getDashboard_ShouldReturnDashboardResponse() throws Exception {
 
@@ -60,7 +68,7 @@ class DashboardControllerTest {
 
         when(dashboardService.getDashboardForCurrentVendor()).thenReturn(response);
 
-        mockMvc.perform(get("/api/dashboard"))
+        mockMvc.perform(get("/dashboard"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.rankingTop5[0].id").value(leadId.toString()))
                 .andExpect(jsonPath("$.rankingTop5[0].nomeCompleto").value("Lead Top"))

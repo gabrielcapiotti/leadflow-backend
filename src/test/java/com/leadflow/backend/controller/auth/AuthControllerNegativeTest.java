@@ -6,6 +6,7 @@ import com.leadflow.backend.dto.auth.RegisterRequest;
 import com.leadflow.backend.exception.GlobalExceptionHandler;
 import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.multitenancy.service.TenantService;
+import com.leadflow.backend.security.RateLimitService;
 import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.auth.AuthService;
 import com.leadflow.backend.service.auth.RefreshTokenService;
@@ -61,6 +62,9 @@ class AuthControllerNegativeTest {
 
     @MockBean
     private UserSessionService userSessionService;
+
+        @MockBean
+        private RateLimitService rateLimitService;
 
     /* =========================================================
        SETUP TENANT CONTEXT

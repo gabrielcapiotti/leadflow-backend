@@ -7,6 +7,7 @@ import com.leadflow.backend.entities.lead.Lead;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.exception.GlobalExceptionHandler;
+import com.leadflow.backend.security.RateLimitService;
 import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.lead.LeadService;
 import com.leadflow.backend.service.user.UserService;
@@ -57,6 +58,9 @@ class LeadControllerTest {
 
     @MockBean
     private TenantService tenantService;
+
+        @MockBean
+        private RateLimitService rateLimitService;
 
     private Lead lead;
     private User user;

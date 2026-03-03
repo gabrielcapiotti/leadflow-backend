@@ -3,6 +3,7 @@ package com.leadflow.backend.integration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -11,12 +12,16 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 import com.leadflow.backend.exception.GlobalExceptionHandler;
+import com.leadflow.backend.security.RateLimitService;
 
 @WebMvcTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test") // Use o profile 'test' para padronizar os testes
 @Import(GlobalExceptionHandler.class)
 public abstract class FlywayTestBase {
+
+    @MockBean
+    private RateLimitService rateLimitService;
 
     private static final String IMAGE = "postgres:16-alpine";
 
