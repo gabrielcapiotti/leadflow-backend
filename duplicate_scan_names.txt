@@ -1,0 +1,25 @@
+# Arquivos com mesmo nome
+
+## NAME: AuditService.java | count=2
+- C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\service\system\AuditService.java
+- C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\service\vendor\AuditService.java
+
+## NAME: application-integration.yml | count=2
+- C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\resources\application-integration.yml
+- C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\resources\application-integration.yml
+
+## NAME: application-test.yml | count=2
+- C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\resources\application-test.yml
+- C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\test\resources\application-test.yml
+
+## NAME: CreateLeadRequest.java | count=2
+- C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\dto\lead\CreateLeadRequest.java
+- C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\dto\vendor\CreateLeadRequest.java
+
+## NAME: RefreshTokenService.java | count=2
+- C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\service\audit\RefreshTokenService.java
+- C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\service\auth\RefreshTokenService.java
+
+## NAME: ConversationService.java | count=2
+- C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\service\conversation\ConversationService.java
+- C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\service\vendor\ConversationService.java

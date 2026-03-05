@@ -22,6 +22,7 @@ public class AuditService {
     }
 
     public void log(String acao,
+                    String entityType,
                     UUID entidadeId,
                     String detalhes) {
 
@@ -31,9 +32,16 @@ public class AuditService {
         log.setVendorId(vendor.getId());
         log.setUserEmail(vendor.getUserEmail());
         log.setAcao(acao);
+        log.setEntityType(entityType);
         log.setEntidadeId(entidadeId);
         log.setDetalhes(detalhes);
 
         repository.save(log);
+    }
+
+    public void log(String acao,
+                    UUID entidadeId,
+                    String detalhes) {
+        log(acao, "UNKNOWN", entidadeId, detalhes);
     }
 }

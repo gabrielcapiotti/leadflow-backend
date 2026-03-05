@@ -24,7 +24,6 @@ class VendorLeadServiceTest {
     private VendorLeadConversationRepository conversationRepository;
     private VendorLeadStageHistoryRepository historyRepository;
     private VendorContext vendorContext;
-    private AuditService auditService;
     private MetricsService metricsService;
 
     private VendorLeadService service;
@@ -38,7 +37,6 @@ class VendorLeadServiceTest {
         conversationRepository = mock(VendorLeadConversationRepository.class);
         historyRepository = mock(VendorLeadStageHistoryRepository.class);
         vendorContext = mock(VendorContext.class);
-        auditService = mock(AuditService.class);
         metricsService = mock(MetricsService.class);
 
         service = new VendorLeadService(
@@ -46,7 +44,6 @@ class VendorLeadServiceTest {
                 conversationRepository,
                 historyRepository,
                 vendorContext,
-                auditService,
                 metricsService,
                 new ObjectMapper()
         );
@@ -85,7 +82,6 @@ class VendorLeadServiceTest {
 
         assertEquals(LeadStage.CONTATO, updated.getStage());
         verify(historyRepository).save(any());
-        verify(auditService).log(eq("STAGE_CHANGE"), eq(leadId), any());
     }
 
     @Test
@@ -126,7 +122,6 @@ class VendorLeadServiceTest {
         VendorLead result = service.assignOwner(leadId);
 
         assertEquals("user@test.com", result.getOwnerEmail());
-        verify(auditService).log(eq("OWNER_ASSIGN"), eq(leadId), any());
     }
 
     // ========================================

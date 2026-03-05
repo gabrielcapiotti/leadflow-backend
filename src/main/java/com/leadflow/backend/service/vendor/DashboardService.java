@@ -4,7 +4,6 @@ import com.leadflow.backend.dto.vendor.DashboardResponse;
 import com.leadflow.backend.dto.vendor.StageConversionResponse;
 import com.leadflow.backend.dto.vendor.StageTimeMetricsResponse;
 import com.leadflow.backend.entities.vendor.VendorLead;
-import com.leadflow.backend.repository.VendorLeadAlertRepository;
 import com.leadflow.backend.repository.VendorLeadRepository;
 import com.leadflow.backend.security.VendorContext;
 
@@ -20,16 +19,13 @@ public class DashboardService {
 
     private final VendorLeadRepository leadRepository;
     private final VendorLeadService leadService;
-    private final VendorLeadAlertRepository alertRepository;
         private final VendorContext vendorContext;
 
     public DashboardService(VendorLeadRepository leadRepository,
                             VendorLeadService leadService,
-                                                        VendorLeadAlertRepository alertRepository,
                                                         VendorContext vendorContext) {
         this.leadRepository = leadRepository;
         this.leadService = leadService;
-        this.alertRepository = alertRepository;
                 this.vendorContext = vendorContext;
     }
 

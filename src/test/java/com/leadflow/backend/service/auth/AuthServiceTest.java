@@ -3,7 +3,7 @@ package com.leadflow.backend.service.auth;
 import com.leadflow.backend.entities.audit.SecurityAction;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
-import com.leadflow.backend.multitenancy.TenantContext;
+import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
 import com.leadflow.backend.service.audit.SecurityAuditService;

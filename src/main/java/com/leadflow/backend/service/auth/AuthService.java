@@ -3,7 +3,7 @@ package com.leadflow.backend.service.auth;
 import com.leadflow.backend.entities.audit.SecurityAction;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
-import com.leadflow.backend.multitenancy.TenantContext;
+import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
 import com.leadflow.backend.service.audit.SecurityAuditService;
@@ -114,7 +114,7 @@ public class AuthService {
         }
 
         String normalizedEmail = normalizeEmail(email);
-        String tenantSchema = TenantContext.requireTenant();
+        String tenantSchema = TenantContext.getTenant();
         String ip = request != null ? request.getRemoteAddr() : "unknown";
 
         String emailKey = "bf:email:" + tenantSchema + ":" + normalizedEmail;
@@ -188,7 +188,7 @@ public class AuthService {
 
         loginAuditService.recordSuccess(
                 user.getId(),
-                TenantContext.requireTenant(),
+                TenantContext.getTenant(),
                 user.getEmail(),
                 request != null ? request.getRemoteAddr() : null,
                 request != null ? request.getHeader("User-Agent") : null,
@@ -203,7 +203,7 @@ public class AuthService {
         HttpServletRequest request = currentRequest();
 
         loginAuditService.recordFailure(
-                TenantContext.requireTenant(),
+                TenantContext.getTenant(),
                 email,
                 request != null ? request.getRemoteAddr() : null,
                 request != null ? request.getHeader("User-Agent") : null,
@@ -220,7 +220,7 @@ public class AuthService {
         auditService.log(
                 action,
                 email,
-                TenantContext.requireTenant(),
+                TenantContext.getTenant(),
                 success,
                 request != null ? request.getRemoteAddr() : null,
                 request != null ? request.getHeader("User-Agent") : null,

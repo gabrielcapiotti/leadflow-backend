@@ -29,7 +29,7 @@ public class UserSessionService {
     public UserSessionService(
             UserSessionRepository repository,
             Clock clock,
-            @Value("${security.session.max-devices:3}") int maxDevices,
+            @Value("${security.session.max-devices:10}") int maxDevices,
             @Value("${security.session.idle-timeout-minutes:30}") int idleTimeoutMinutes
     ) {
         this.repository = repository;

@@ -15,6 +15,8 @@ public interface SecurityAuditLogRepository
         extends JpaRepository<SecurityAuditLog, UUID>,
                 JpaSpecificationExecutor<SecurityAuditLog> {
 
+        long deleteByCreatedAtBefore(LocalDateTime threshold);
+
     Page<SecurityAuditLog> findByEmailContainingIgnoreCase(
             String email,
             Pageable pageable

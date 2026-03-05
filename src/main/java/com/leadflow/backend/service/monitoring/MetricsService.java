@@ -7,19 +7,41 @@ import org.springframework.stereotype.Service;
 @Service
 public class MetricsService {
 
+    private final MeterRegistry registry;
     private final Counter leadsCreated;
     private final Counter hotLeads;
     private final Counter aiCalls;
 
     public MetricsService(MeterRegistry registry) {
+        this.registry = registry;
 
-        this.leadsCreated = registry.counter("lead.created");
-        this.hotLeads = registry.counter("lead.hot");
-        this.aiCalls = registry.counter("ai.calls");
+        this.leadsCreated = Counter.builder("lead.created")
+                .description("Total leads created")
+                .register(registry);
+
+        this.hotLeads = Counter.builder("lead.hot")
+                .description("Total hot leads")
+                .register(registry);
+
+        this.aiCalls = Counter.builder("ai.executions")
+                .description("Total AI executions")
+                .register(registry);
     }
 
     public void incrementLeadCreated() {
         leadsCreated.increment();
+    }
+
+    public void leadCreated() {
+        incrementLeadCreated();
+    }
+
+    public void leadCreated(String vendorId) {
+        Counter.builder("lead.created")
+                .description("Total leads created")
+                .tag("vendor", vendorId)
+                .register(registry)
+                .increment();
     }
 
     public void incrementHotLead() {
@@ -28,5 +50,9 @@ public class MetricsService {
 
     public void incrementAiCalls() {
         aiCalls.increment();
+    }
+
+    public void aiExecution() {
+        incrementAiCalls();
     }
 }

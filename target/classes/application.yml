@@ -19,18 +19,43 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: false
+        "[format_sql]": false
         multiTenancy: SCHEMA
         jdbc:
-          time_zone: UTC
-
+          "[time_zone]": UTC
+          
   flyway:
     enabled: true
     baseline-on-migrate: true
     validate-on-migrate: true
     locations:
       - classpath:db/migration/global
-      - classpath:db/migration/tenants
+      - classpath:db/migration/tenant
+
+  task:
+    scheduling:
+      pool:
+        size: 5
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+sendgrid:
+  api-key: ${SENDGRID_API_KEY}
+  from-email: no-reply@seudominio.com
+  webhook:
+    verify-signature: ${SENDGRID_WEBHOOK_VERIFY_SIGNATURE:true}
+    public-key: ${SENDGRID_WEBHOOK_PUBLIC_KEY}
+  retry:
+    max-attempts: 3
+    initial-backoff-ms: 300
+    multiplier: 2.0
+    worker:
+      max-attempts: 8
+      delay-seconds: 60
+      fixed-delay-ms: 60000
 
 server:
   port: ${SERVER_PORT:8081}
@@ -40,16 +65,82 @@ server:
 logging:
   level:
     root: INFO
-    com.leadflow: INFO
-    org.hibernate.SQL: DEBUG  # Mude para 'INFO' em produção
+    "[com.leadflow]": DEBUG
+    "[org.hibernate.SQL]": DEBUG  # Mude para 'INFO' em produção
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: leadflow-backend
+
+system:
+  admin:
+    email: ${SYSTEM_ADMIN_EMAIL:}
 
 security:
   jwt:
     secret: ${JWT_SECRET:01234567890123456789012345678901}  # Preferência por variável de ambiente
     expiration: ${JWT_EXPIRATION:3600000}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:https://seusite.com}
+  rate-limit:
+    global:
+      per-minute: 100
+    ai:
+      per-minute: 30
+    auth:
+      per-minute: 20
+    admin:
+      per-minute: 60
+    webhook:
+      per-minute: 120
   session:
-    max-devices: 3
+    max-devices: 10
     cleanup-days: 30
   brute-force:
     max-attempts: 5
     window-minutes: 5
+
+openai:
+  api:
+    key: ${OPENAI_API_KEY}
+  retry:
+    max-attempts: 3
+    initial-backoff-ms: 1500
+    multiplier: 2.0
+
+cakto:
+  webhook:
+    secret: ${CAKTO_WEBHOOK_SECRET:}
+
+billing:
+  checkout:
+    base-url: ${BILLING_CHECKOUT_BASE_URL:https://seusite.com/checkout}
+
+subscription:
+  trial-days: 7
+  limits:
+    active-leads: 500
+    ai-executions: 1000
+
+audit:
+  cleanup:
+    retention-days: 90
+
+stripe:
+  secret:
+    key: sk_test_xxxxx
+
+app:
+  frontend:
+    success-url: http://localhost:3000/payment-success
+    cancel-url: http://localhost:3000/payment-cancel

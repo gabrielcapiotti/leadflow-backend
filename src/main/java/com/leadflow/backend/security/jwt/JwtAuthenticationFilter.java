@@ -1,6 +1,7 @@
 package com.leadflow.backend.security.jwt;
 
 import com.leadflow.backend.multitenancy.context.TenantContext;
+import com.leadflow.backend.multitenancy.service.TenantService;
 import com.leadflow.backend.security.CustomUserDetails;
 import com.leadflow.backend.service.auth.UserSessionService;
 
@@ -22,6 +23,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.UUID;
 
@@ -32,15 +34,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
     private final UserSessionService userSessionService;
+    private final TenantService tenantService;
 
     public JwtAuthenticationFilter(
             JwtService jwtService,
             UserDetailsService userDetailsService,
-            UserSessionService userSessionService
+            UserSessionService userSessionService,
+            TenantService tenantService
     ) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
         this.userSessionService = userSessionService;
+        this.tenantService = tenantService;
     }
 
     @Override
@@ -93,7 +98,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             String tokenId = jwtService.extractTokenId(token);
-            UUID tenantId = UUID.fromString(tenant);
+            UUID tenantId = tenantService.getTenantIdBySchema(tenant);
 
             // Manage session activity and log it
             userSessionService.processSessionActivity(
@@ -144,8 +149,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return true;
         }
 
+        LocalDateTime normalizedCredentialsUpdatedAt =
+                credentialsUpdatedAt.truncatedTo(ChronoUnit.SECONDS);
+
         // Ensure the token was issued before the password was changed
-        return !tokenIssuedAt.isBefore(credentialsUpdatedAt);
+        return !tokenIssuedAt.isBefore(normalizedCredentialsUpdatedAt);
     }
 
     // Extract JWT token from the request header

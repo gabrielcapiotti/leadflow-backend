@@ -17,7 +17,7 @@ import org.testcontainers.utility.DockerImageName;
  * ✔ Compatível com Spring Boot
  * ✔ Compatível com Flyway
  */
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @ActiveProfiles("test") // Use o profile 'test' para padronizar os testes
 public abstract class AbstractPostgresContainerTest {
 

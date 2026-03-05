@@ -9,10 +9,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
-@Testcontainers
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -20,13 +17,16 @@ public abstract class IntegrationTestBase {
 
     private static final String IMAGE = "postgres:16-alpine";
 
-    @Container
+    @SuppressWarnings("resource")
     static final PostgreSQLContainer<?> postgres =
             new PostgreSQLContainer<>(IMAGE)
                     .withDatabaseName("leadflow_test")
                     .withUsername("postgres")
-                    .withPassword("postgres")
-                    .withReuse(true);
+                    .withPassword("postgres");
+
+        static {
+                postgres.start();
+        }
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {

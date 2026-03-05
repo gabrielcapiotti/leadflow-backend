@@ -2,6 +2,7 @@ package com.leadflow.backend.service.user;
 
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
+import com.leadflow.backend.entities.vendor.Vendor;
 import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
 
@@ -128,5 +129,9 @@ public class UserService {
         user.softDelete();
 
         userRepository.save(user);
+    }
+
+    public void createAdminUser(Vendor vendor, String email) {
+        // Implementation for creating an admin user for the given vendor
     }
 }

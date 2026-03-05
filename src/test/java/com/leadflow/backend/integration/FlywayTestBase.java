@@ -1,15 +1,18 @@
 package com.leadflow.backend.integration;
 
+import org.junit.jupiter.api.AfterAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.leadflow.backend.exception.GlobalExceptionHandler;
 import com.leadflow.backend.security.RateLimitService;
@@ -18,22 +21,21 @@ import com.leadflow.backend.security.RateLimitService;
 @AutoConfigureMockMvc
 @ActiveProfiles("test") // Use o profile 'test' para padronizar os testes
 @Import(GlobalExceptionHandler.class)
+@Testcontainers(disabledWithoutDocker = true)
 public abstract class FlywayTestBase {
 
-    @MockBean
+    @MockitoBean
     private RateLimitService rateLimitService;
 
     private static final String IMAGE = "postgres:16-alpine";
 
+    @Container
+        @SuppressWarnings("resource")
     static final PostgreSQLContainer<?> postgres =
             new PostgreSQLContainer<>(IMAGE)
                     .withDatabaseName("leadflow_test")
                     .withUsername("postgres")
                     .withPassword("postgres");
-
-    static {
-        postgres.start();
-    }
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
@@ -63,6 +65,11 @@ public abstract class FlywayTestBase {
         registry.add("multitenancy.enabled", () -> "true");
     }
 
+    @AfterAll
+    static void stopPostgres() {
+        postgres.stop();
+    }
+
     @Autowired
-    private MockMvc mockMvc;
+    protected MockMvc mockMvc;
 }

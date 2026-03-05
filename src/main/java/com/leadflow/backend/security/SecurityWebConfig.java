@@ -2,6 +2,7 @@ package com.leadflow.backend.security;
 
 import com.leadflow.backend.security.jwt.JwtAuthenticationFilter;
 import com.leadflow.backend.security.jwt.JwtService;
+import com.leadflow.backend.multitenancy.service.TenantService;
 import com.leadflow.backend.service.auth.UserSessionService;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,6 +23,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
 
 @Configuration
 @EnableMethodSecurity
@@ -57,12 +59,14 @@ public class SecurityWebConfig {
     public JwtAuthenticationFilter jwtAuthenticationFilter(
             JwtService jwtService,
             UserDetailsService userDetailsService,
-            UserSessionService userSessionService
+            UserSessionService userSessionService,
+            TenantService tenantService
     ) {
         return new JwtAuthenticationFilter(
                 jwtService,
                 userDetailsService,
-                userSessionService
+            userSessionService,
+            tenantService
         );
     }
 
@@ -102,16 +106,22 @@ public class SecurityWebConfig {
             )
 
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/auth/**").permitAll()
+                .requestMatchers("/billing/checkout").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
+                .requestMatchers("/actuator/prometheus").permitAll()
+                .requestMatchers("/webhooks/**").permitAll()
                 .anyRequest().authenticated()
             )
 
             .headers(headers -> headers
-                .frameOptions(frame -> frame.sameOrigin())
+                .frameOptions(frame -> frame.deny())
                 .contentSecurityPolicy(csp ->
                     csp.policyDirectives("default-src 'self'")
                 )
+                .contentTypeOptions(contentType -> {})
+                .addHeaderWriter(new StaticHeadersWriter("X-XSS-Protection", "1; mode=block"))
                 .referrerPolicy(referrer ->
                     referrer.policy(
                         org.springframework.security.web.header.writers

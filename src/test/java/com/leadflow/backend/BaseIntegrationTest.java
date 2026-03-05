@@ -22,7 +22,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * ✔ Sem start manual
  * ✔ Compatível com CI
  */
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test") // Use o profile 'test' para padronizar os testes
@@ -75,5 +75,5 @@ public abstract class BaseIntegrationTest {
     }
 
     @Autowired
-    private MockMvc mockMvc;
+        protected MockMvc mockMvc;
 }

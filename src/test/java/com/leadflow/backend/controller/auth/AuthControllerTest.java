@@ -5,8 +5,11 @@ import com.leadflow.backend.dto.auth.LoginRequest;
 import com.leadflow.backend.dto.auth.RegisterRequest;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
+import com.leadflow.backend.exception.GlobalExceptionHandler;
+import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.multitenancy.service.TenantService;
 import com.leadflow.backend.security.CustomUserDetails;
+import com.leadflow.backend.security.RateLimitService;
 import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.security.jwt.JwtToken;
 import com.leadflow.backend.service.auth.AuthService;
@@ -14,16 +17,23 @@ import com.leadflow.backend.service.auth.RefreshTokenService;
 import com.leadflow.backend.service.auth.UserSessionService;
 import com.leadflow.domain.auth.service.PasswordResetService;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Bean;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
@@ -34,12 +44,13 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
+@WebMvcTest(AuthController.class)
 @AutoConfigureMockMvc
+@Import({GlobalExceptionHandler.class, AuthControllerTest.AuthTestSecurityConfig.class})
 @ActiveProfiles("test")
 class AuthControllerTest {
 
@@ -49,18 +60,20 @@ class AuthControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean private AuthService authService;
-    @MockBean private JwtService jwtService;
-    @MockBean private RefreshTokenService refreshTokenService;
-    @MockBean private PasswordResetService passwordResetService;
-    @MockBean private UserSessionService userSessionService;
-    @MockBean private TenantService tenantService;
+        @MockitoBean private AuthService authService;
+        @MockitoBean private JwtService jwtService;
+        @MockitoBean private RefreshTokenService refreshTokenService;
+        @MockitoBean private PasswordResetService passwordResetService;
+        @MockitoBean private UserSessionService userSessionService;
+        @MockitoBean private TenantService tenantService;
+        @MockitoBean private RateLimitService rateLimitService;
 
     private User mockUser;
     private static final String TENANT = "tenant_test";
 
     @BeforeEach
     void setup() {
+                TenantContext.setTenant(TENANT);
 
         Role role = new Role("ROLE_USER");
 
@@ -98,6 +111,11 @@ class AuthControllerTest {
         when(tenantService.getTenantIdBySchema(anyString()))
                 .thenReturn(UUID.randomUUID());
     }
+
+        @AfterEach
+        void cleanup() {
+                TenantContext.clear();
+        }
 
     @Test
     @DisplayName("Should register user and return JWT token")
@@ -157,17 +175,10 @@ class AuthControllerTest {
         CustomUserDetails customUser =
                 new CustomUserDetails(mockUser);
 
-        UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(
-                        customUser,
-                        null,
-                        customUser.getAuthorities()
-                );
-
         mockMvc.perform(
                 get("/auth/me")
                         .header("X-Tenant-ID", TENANT)
-                        .with(authentication(auth))
+                        .with(user(customUser))
         )
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.email").value(mockUser.getEmail()));
@@ -183,4 +194,30 @@ class AuthControllerTest {
         )
         .andExpect(status().isUnauthorized());
     }
+
+        @TestConfiguration
+        static class AuthTestSecurityConfig {
+
+                @Bean
+                SecurityFilterChain authTestFilterChain(HttpSecurity http) throws Exception {
+                        return http
+                                        .csrf(csrf -> csrf.disable())
+                                        .sessionManagement(session ->
+                                                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                                        )
+                                        .authorizeHttpRequests(auth -> auth
+                                                        .requestMatchers("/auth/register", "/auth/login").permitAll()
+                                                        .anyRequest().authenticated()
+                                        )
+                                            .exceptionHandling(ex -> ex
+                                                    .authenticationEntryPoint((request, response, authException) ->
+                                                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
+                                                    )
+                                                    .accessDeniedHandler((request, response, accessDeniedException) ->
+                                                            response.sendError(HttpServletResponse.SC_FORBIDDEN)
+                                                    )
+                                            )
+                                        .build();
+                }
+        }
 }

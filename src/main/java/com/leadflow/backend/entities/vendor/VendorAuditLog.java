@@ -23,6 +23,9 @@ public class VendorAuditLog {
     private String acao;
 
     @Column(nullable = false)
+    private String entityType;
+
+    @Column(nullable = false)
     private UUID entidadeId;
 
     @Column(columnDefinition = "TEXT")
@@ -42,6 +45,7 @@ public class VendorAuditLog {
     public UUID getVendorId() { return vendorId; }
     public String getUserEmail() { return userEmail; }
     public String getAcao() { return acao; }
+    public String getEntityType() { return entityType; }
     public UUID getEntidadeId() { return entidadeId; }
     public String getDetalhes() { return detalhes; }
     public Instant getCreatedAt() { return createdAt; }
@@ -49,6 +53,7 @@ public class VendorAuditLog {
     public void setVendorId(UUID vendorId) { this.vendorId = vendorId; }
     public void setUserEmail(String userEmail) { this.userEmail = userEmail; }
     public void setAcao(String acao) { this.acao = acao; }
+    public void setEntityType(String entityType) { this.entityType = entityType; }
     public void setEntidadeId(UUID entidadeId) { this.entidadeId = entidadeId; }
     public void setDetalhes(String detalhes) { this.detalhes = detalhes; }
 }

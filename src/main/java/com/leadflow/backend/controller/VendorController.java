@@ -2,6 +2,7 @@ package com.leadflow.backend.controller;
 
 import com.leadflow.backend.entities.vendor.Vendor; // ← IMPORT CORRETO
 import com.leadflow.backend.repository.VendorRepository;
+import com.leadflow.backend.service.subscription.TrialService;
 
 import org.springframework.web.bind.annotation.*;
 
@@ -13,9 +14,12 @@ import java.util.UUID;
 public class VendorController {
 
     private final VendorRepository repository;
+    private final TrialService trialService;
 
-    public VendorController(VendorRepository repository) {
+    public VendorController(VendorRepository repository,
+                            TrialService trialService) {
         this.repository = repository;
+        this.trialService = trialService;
     }
 
     @GetMapping
@@ -39,6 +43,7 @@ public class VendorController {
 
     @PostMapping
     public Vendor create(@RequestBody Vendor vendor) {
+        trialService.initializeTrial(vendor);
         return repository.save(vendor);
     }
 
@@ -56,7 +61,9 @@ public class VendorController {
         vendor.setCorDestaque(data.getCorDestaque());
         vendor.setMensagemBoasVindas(data.getMensagemBoasVindas());
         vendor.setSlug(data.getSlug());
-        vendor.setStatusAssinatura(data.getStatusAssinatura());
+        if (data.getSubscriptionStatus() != null) {
+            vendor.setSubscriptionStatus(data.getSubscriptionStatus());
+        }
 
         return repository.save(vendor);
     }

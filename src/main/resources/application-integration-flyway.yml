@@ -16,10 +16,10 @@ spring:
       ddl-auto: none   # 🔥 Flyway gerencia schema, não Hibernate
     properties:
       hibernate:
-        format_sql: true
+        "[format_sql]": true
         multiTenancy: SCHEMA
         jdbc:
-          time_zone: UTC
+          "[time_zone]": UTC
 
   flyway:
     enabled: true
@@ -36,6 +36,6 @@ multitenancy:
 logging:
   level:
     root: WARN
-    org.hibernate.SQL: DEBUG
-    org.hibernate.orm.jdbc.bind: TRACE
-    org.springframework.test.context: INFO
+    "[org.hibernate.SQL]": DEBUG
+    "[org.hibernate.orm.jdbc.bind]": TRACE
+    "[org.springframework.test.context]": INFO

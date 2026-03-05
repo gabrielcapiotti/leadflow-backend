@@ -1,0 +1,9 @@
+# Duplicados por conteúdo (SHA256)
+
+## HASH: E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855 | count=2
+- C:\Users\Gabri\OneDrive\Área de Trabalho\leadflow-backend\src\main\java\com\leadflow\backend\service\audit\RefreshTokenService.java
+- C:\Users\Gabri\OneDrive\Área de Trabalho\leadflow-backend\src\test\java\com\leadflow\backend\controller\user\UserControllerTest.java
+
+## HASH: 209C8A06D6B3D5881ED33E50837040C37ED7DB2BE7B6FA33C9F0C8D99EB29DE9 | count=2
+- C:\Users\Gabri\OneDrive\Área de Trabalho\leadflow-backend\src\main\resources\db\migration\tenant\V70__add_production_performance_indexes.sql
+- C:\Users\Gabri\OneDrive\Área de Trabalho\leadflow-backend\src\main\resources\db\migration\V20260304_1__add_production_performance_indexes.sql

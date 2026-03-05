@@ -1,0 +1,187 @@
+erDiagram
+    USERS ||--o{ VENDORS : owns
+    ROLES ||--o{ USERS : grants
+    TENANTS ||--o{ USER_SESSIONS : scopes
+    TENANTS ||--o{ LOGIN_AUDIT : scopes
+    USERS ||--o{ USER_SESSIONS : has
+    USERS ||--o{ REFRESH_TOKENS : rotates
+    USERS ||--o{ PASSWORD_RESET_TOKEN : resets
+    VENDORS ||--o{ VENDOR_LEADS : contains
+    VENDOR_LEADS ||--o{ VENDOR_LEAD_STAGE_HISTORY : tracks
+    VENDORS ||--o{ VENDOR_USAGE : consumes
+    VENDORS ||--o{ VENDOR_RISK_ALERTS : triggers
+    VENDORS ||--o{ SUBSCRIPTION_HISTORY : changes
+    VENDORS ||--o{ VENDOR_AUDIT_LOGS : emits
+
+    USERS {
+      uuid id PK
+      varchar email UK
+      varchar password
+      varchar name
+      uuid role_id FK
+      timestamptz created_at
+      timestamptz updated_at
+      timestamptz deleted_at
+    }
+
+    ROLES {
+      uuid id PK
+      varchar name UK
+      jsonb permissions
+      timestamptz created_at
+      timestamptz updated_at
+    }
+
+    TENANTS {
+      uuid id PK
+      varchar name
+      varchar schema_name UK
+      timestamptz created_at
+      timestamptz updated_at
+      timestamptz deleted_at
+    }
+
+    VENDORS {
+      uuid id PK
+      varchar user_email UK
+      varchar nome_vendedor
+      varchar whatsapp_vendedor
+      varchar nome_empresa
+      varchar logo_url
+      varchar cor_destaque
+      text mensagem_boas_vindas
+      varchar slug UK
+      subscription_status subscription_status
+      timestamptz subscription_started_at
+      timestamptz subscription_expires_at
+      bool email_invalid
+      timestamptz created_at
+      timestamptz updated_at
+      timestamptz deleted_at
+    }
+
+    VENDOR_LEADS {
+      uuid id PK
+      uuid vendor_id FK
+      varchar nome_completo
+      varchar whatsapp
+      varchar tipo_consorcio
+      varchar valor_credito
+      varchar urgencia
+      lead_stage stage
+      int score
+      varchar owner_email
+      timestamptz created_at
+      timestamptz updated_at
+      timestamptz deleted_at
+    }
+
+    VENDOR_LEAD_STAGE_HISTORY {
+      uuid id PK
+      uuid vendor_lead_id FK
+      lead_stage previous_stage
+      lead_stage new_stage
+      timestamptz changed_at
+    }
+
+    VENDOR_USAGE {
+      uuid id PK
+      uuid vendor_id FK
+      quota_type quota_type
+      int used
+      timestamptz period_start
+      timestamptz period_end
+      bool alert_80_sent
+      bool alert_100_sent
+      timestamptz created_at
+      timestamptz updated_at
+    }
+
+    VENDOR_RISK_ALERTS {
+      uuid id PK
+      uuid vendor_id FK
+      int score
+      risk_level risk_level
+      bool resolved
+      timestamptz created_at
+      timestamptz updated_at
+    }
+
+    SUBSCRIPTION_HISTORY {
+      uuid id PK
+      uuid vendor_id FK
+      subscription_status previous_status
+      subscription_status new_status
+      timestamptz changed_at
+      varchar reason
+    }
+
+    EMAIL_EVENTS {
+      uuid id PK
+      varchar email
+      varchar event_type
+      varchar reason
+      timestamptz occurred_at
+    }
+
+    VENDOR_AUDIT_LOGS {
+      uuid id PK
+      uuid vendor_id FK
+      varchar user_email
+      varchar acao
+      varchar entity_type
+      uuid entidade_id
+      text details
+      timestamptz created_at
+    }
+
+    USER_SESSIONS {
+      uuid id PK
+      uuid user_id FK
+      uuid tenant_id FK
+      varchar token_id UK
+      bool active
+      bool suspicious
+      timestamptz last_access_at
+      timestamptz revoked_at
+      timestamptz created_at
+    }
+
+    REFRESH_TOKENS {
+      uuid id PK
+      uuid user_id FK
+      varchar token_hash UK
+      varchar device_fingerprint
+      timestamptz expires_at
+      bool revoked
+      timestamptz created_at
+    }
+
+    LOGIN_AUDIT {
+      uuid id PK
+      uuid user_id
+      uuid tenant_id FK
+      varchar email
+      bool success
+      varchar failure_reason
+      bool suspicious
+      timestamptz created_at
+    }
+
+    SECURITY_AUDIT_LOGS {
+      uuid id PK
+      varchar action
+      varchar email
+      varchar tenant
+      bool success
+      timestamptz created_at
+    }
+
+    PASSWORD_RESET_TOKEN {
+      uuid id PK
+      uuid user_id FK
+      varchar token_hash UK
+      timestamptz expires_at
+      bool used
+      timestamptz created_at
+    }

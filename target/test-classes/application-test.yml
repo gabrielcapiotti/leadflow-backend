@@ -24,26 +24,56 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
+        "[format_sql]": true
         multiTenancy: SCHEMA   # ativa suporte a multi-tenancy nos testes
         jdbc:
           lob:
-            non_contextual_creation: true
+            "[non_contextual_creation]": true
 
   flyway:
     enabled: false            # Flyway desabilitado nos testes de integração
 
+sendgrid:
+  api-key: test-sendgrid-api-key
+  from-email: no-reply@test.local
+  webhook:
+    verify-signature: false
+    public-key: test-public-key
+  retry:
+    max-attempts: 2
+    initial-backoff-ms: 10
+    multiplier: 2.0
+    worker:
+      max-attempts: 3
+      delay-seconds: 1
+      fixed-delay-ms: 1000
+
 logging:
   level:
     root: WARN
-    org.hibernate.SQL: DEBUG
-    org.hibernate.orm.jdbc.bind: TRACE
-    org.springframework.test: WARN
+    "[org.hibernate.SQL]": DEBUG
+    "[org.hibernate.orm.jdbc.bind]": TRACE
+    "[org.springframework.test]": WARN
 
 security:
   jwt:
     secret: 0123456789abcdef0123456789abcdef0123456789abcdef
     expiration: 3600000
+  rate-limit:
+    enabled: false
 
 multitenancy:
   enabled: true              # habilita filtro e resolver de tenant nos testes
+
+openai:
+  api:
+    key: test-key
+  retry:
+    max-attempts: 2
+    initial-backoff-ms: 10
+    multiplier: 2.0
+
+subscription:
+  limits:
+    active-leads: 500
+    ai-executions: 1000

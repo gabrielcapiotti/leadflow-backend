@@ -14,7 +14,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * ✔ Compatível com Flyway
  * ✔ Compatível com multi-tenant SCHEMA
  */
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 public abstract class PostgreSQLTestContainerConfig {
 
     private static final String IMAGE = "postgres:16-alpine";

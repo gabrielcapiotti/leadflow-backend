@@ -15,10 +15,10 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
-        format_sql: false
+        "[format_sql]": false
         multiTenancy: NONE
         jdbc:
-          time_zone: UTC
+          "[time_zone]": UTC
 
   flyway:
     enabled: true
@@ -30,8 +30,8 @@ spring:
 logging:
   level:
     root: WARN
-    org.hibernate.SQL: DEBUG
-    org.hibernate.orm.jdbc.bind: TRACE
+    "[org.hibernate.SQL]": DEBUG
+    "[org.hibernate.orm.jdbc.bind]": TRACE
 
 multitenancy:
   enabled: true

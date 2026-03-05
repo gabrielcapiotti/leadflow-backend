@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,15 +16,21 @@ import java.io.IOException;
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
 
+    private static final String GLOBAL_SCOPE = "global";
     private static final String AI_SCOPE = "ai";
-    private static final String DASHBOARD_SCOPE = "dashboard";
-    private static final String LEADS_SCOPE = "leads";
-    private static final String LOGIN_SCOPE = "login";
+    private static final String AUTH_SCOPE = "auth";
+    private static final String ADMIN_SCOPE = "admin";
+    private static final String WEBHOOK_SCOPE = "webhook";
 
     private final RateLimitService rateLimitService;
+    private final boolean rateLimitEnabled;
 
-    public RateLimitFilter(RateLimitService rateLimitService) {
+    public RateLimitFilter(
+            RateLimitService rateLimitService,
+            @Value("${security.rate-limit.enabled:true}") boolean rateLimitEnabled
+    ) {
         this.rateLimitService = rateLimitService;
+        this.rateLimitEnabled = rateLimitEnabled;
     }
 
     @Override
@@ -32,7 +39,24 @@ public class RateLimitFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
+        if (!rateLimitEnabled) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String requestPath = extractRequestPath(request);
+        String clientIp = resolveClientIp(request);
+
+        boolean globalAllowed = rateLimitService.tryConsume(
+                GLOBAL_SCOPE + ":" + clientIp,
+                GLOBAL_SCOPE
+        );
+
+        if (!globalAllowed) {
+            writeLimitExceeded(response);
+            return;
+        }
+
         String scope = resolveScope(requestPath);
 
         if (scope == null) {
@@ -43,12 +67,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
         String principal = resolvePrincipalOrIp(request);
         String rateLimitKey = scope + ":" + principal;
 
-        boolean allowed = rateLimitService.tryConsume(rateLimitKey);
+        boolean allowed = rateLimitService.tryConsume(rateLimitKey, scope);
 
         if (!allowed) {
-            response.setStatus(429); // HTTP 429 - Too Many Requests
-            response.setContentType("text/plain;charset=UTF-8");
-            response.getWriter().write("Limite de requisições excedido.");
+            writeLimitExceeded(response);
             return;
         }
 
@@ -75,21 +97,29 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return AI_SCOPE;
         }
 
-        if (requestPath.equals("/dashboard") ||
-            requestPath.startsWith("/vendors/dashboard")) {
-            return DASHBOARD_SCOPE;
+        if (requestPath.startsWith("/auth")) {
+            return AUTH_SCOPE;
         }
 
-        if (requestPath.startsWith("/leads") ||
-            requestPath.startsWith("/vendor-leads")) {
-            return LEADS_SCOPE;
+        if (requestPath.startsWith("/admin")) {
+            return ADMIN_SCOPE;
         }
 
-        if (requestPath.equals("/auth/login")) {
-            return LOGIN_SCOPE;
+        if (requestPath.startsWith("/webhooks")) {
+            return WEBHOOK_SCOPE;
         }
 
         return null;
+    }
+
+    private String resolveClientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+
+        return request.getRemoteAddr();
     }
 
     private String resolvePrincipalOrIp(HttpServletRequest request) {
@@ -111,5 +141,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
 
         return request.getRemoteAddr();
+    }
+
+    private void writeLimitExceeded(HttpServletResponse response) throws IOException {
+        response.setStatus(429);
+        response.setContentType("text/plain;charset=UTF-8");
+        response.getWriter().write("Too many requests");
     }
 }

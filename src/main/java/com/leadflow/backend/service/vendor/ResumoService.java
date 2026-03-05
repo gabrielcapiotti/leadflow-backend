@@ -14,7 +14,7 @@ import com.leadflow.backend.repository.VendorRepository;
 import com.leadflow.backend.security.VendorContext;
 import com.leadflow.backend.service.ai.AiService;
 import com.leadflow.backend.service.monitoring.MetricsService;
-import com.leadflow.backend.service.notification.EmailService;
+import com.leadflow.backend.service.notification.SendGridEmailService;
 
 import org.springframework.stereotype.Service;
 
@@ -33,7 +33,7 @@ public class ResumoService {
     private final ConversationService conversationService;
     private final AiService aiService;
         private final AlertNotificationService notificationService;
-                private final EmailService emailService;
+                private final SendGridEmailService emailService;
                                 private final VendorContext vendorContext;
                                                                 private final AuditService auditService;
                                                                 private final MetricsService metricsService;
@@ -44,7 +44,7 @@ public class ResumoService {
                                                  ConversationService conversationService,
                                                  AiService aiService,
                                                  AlertNotificationService notificationService,
-                                                 EmailService emailService,
+                                                 SendGridEmailService emailService,
                                                  VendorContext vendorContext,
                                                  AuditService auditService,
                                                  MetricsService metricsService) {
@@ -131,6 +131,7 @@ public class ResumoService {
 
                         auditService.log(
                                         "RESUMO_GERADO",
+                                        "VendorLead",
                                         lead.getId(),
                                         "Resumo estratégico atualizado"
                         );
@@ -226,6 +227,7 @@ public class ResumoService {
 
                 auditService.log(
                                 "ALERTA_CRIADO",
+                                "VendorLeadAlert",
                                 lead.getId(),
                                 "Alerta HOT_LEAD criado"
                 );
@@ -245,11 +247,24 @@ public class ResumoService {
                 );
 
                 int score = lead.getScore() != null ? lead.getScore() : 0;
-                emailService.sendHotLeadEmail(
-                                destinationEmail,
-                                lead.getId().toString(),
-                                score
-                );
+                                                                emailService.sendEmail(
+                                                                                                                                destinationEmail,
+                                                                                                                                "🔥 Lead Quente Detectado",
+                                                                                                                                """
+                                                                                                                                <html>
+                                                                                                                                <body style="font-family: Arial; background:#f4f4f4; padding:20px;">
+                                                                                                                                        <div style="max-width:600px; margin:auto; background:white; padding:30px; border-radius:10px;">
+                                                                                                                                                <h2 style="color:#8B0000;">🔥 Lead Quente Detectado</h2>
+                                                                                                                                                <p>Um lead com alta probabilidade de fechamento foi detectado.</p>
+                                                                                                                                                <p><strong>Lead ID:</strong> %s</p>
+                                                                                                                                                <p><strong>Score:</strong> %d</p>
+                                                                                                                                                <p>Acesse o sistema para agir imediatamente.</p>
+                                                                                                                                                <p style="margin-top:30px; font-size:12px; color:#888;">Leadflow AI</p>
+                                                                                                                                        </div>
+                                                                                                                                </body>
+                                                                                                                                </html>
+                                                                                                                                """.formatted(lead.getId(), score)
+                                                                );
         }
 
         private String resolverEmailDestino(VendorLead lead) {

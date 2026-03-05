@@ -4,12 +4,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leadflow.backend.dto.lead.CreateLeadRequest;
 import com.leadflow.backend.entities.enums.LeadStatus;
 import com.leadflow.backend.entities.lead.Lead;
+import com.leadflow.backend.entities.vendor.Vendor;
+import com.leadflow.backend.entities.vendor.SubscriptionAccessLevel;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.exception.GlobalExceptionHandler;
 import com.leadflow.backend.security.RateLimitService;
+import com.leadflow.backend.security.VendorContext;
+import com.leadflow.backend.security.SubscriptionGuard;
 import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.lead.LeadService;
+import com.leadflow.backend.service.vendor.QuotaService;
 import com.leadflow.backend.service.user.UserService;
 import com.leadflow.backend.multitenancy.service.TenantService;
 import org.junit.jupiter.api.AfterEach;
@@ -19,11 +24,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -47,26 +52,34 @@ class LeadControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+        @MockitoBean
     private LeadService leadService;
 
-    @MockBean
+        @MockitoBean
     private UserService userService;
 
-    @MockBean
+        @MockitoBean
     private JwtService jwtService;
 
-    @MockBean
+                @MockitoBean
+        private SubscriptionGuard subscriptionGuard;
+
+                @MockitoBean
+        private VendorContext vendorContext;
+
+                @MockitoBean
+        private QuotaService quotaService;
+
+        @MockitoBean
     private TenantService tenantService;
 
-        @MockBean
+                @MockitoBean
         private RateLimitService rateLimitService;
 
     private Lead lead;
     private User user;
     private UUID leadId;
-
-    private static final String TENANT = "tenant_test";
+        private Vendor vendor;
 
     /* ====================================================== */
     /* SETUP / TEARDOWN                                       */
@@ -102,6 +115,16 @@ class LeadControllerTest {
 
         when(userService.getActiveByEmail("test@example.com"))
                 .thenReturn(user);
+
+        when(subscriptionGuard.resolveAccess())
+                .thenReturn(SubscriptionAccessLevel.FULL);
+
+        vendor = new Vendor();
+        ReflectionTestUtils.setField(vendor, "id", UUID.randomUUID());
+        vendor.setUserEmail("test@example.com");
+
+        when(vendorContext.getCurrentVendor())
+                .thenReturn(vendor);
     }
 
     @AfterEach

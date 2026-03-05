@@ -12,7 +12,6 @@ import com.leadflow.backend.security.jwt.JwtToken;
 import com.leadflow.backend.service.auth.AuthService;
 import com.leadflow.backend.service.auth.RefreshTokenService;
 import com.leadflow.backend.service.auth.UserSessionService;
-import com.leadflow.domain.auth.service.PasswordResetService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -34,7 +33,6 @@ public class AuthController {
     private final AuthService authService;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
-    private final PasswordResetService passwordResetService;
     private final UserSessionService userSessionService;
     private final TenantService tenantService;
 
@@ -42,14 +40,12 @@ public class AuthController {
             AuthService authService,
             JwtService jwtService,
             RefreshTokenService refreshTokenService,
-            PasswordResetService passwordResetService,
             UserSessionService userSessionService,
             TenantService tenantService
     ) {
         this.authService = authService;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
-        this.passwordResetService = passwordResetService;
         this.userSessionService = userSessionService;
         this.tenantService = tenantService;
     }

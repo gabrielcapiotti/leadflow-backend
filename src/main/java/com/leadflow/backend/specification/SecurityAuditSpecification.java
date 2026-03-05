@@ -73,7 +73,7 @@ public final class SecurityAuditSpecification {
             }
 
             // Ordenação padrão por data desc se não houver sort explícito
-            if (query.getOrderList().isEmpty()) {
+            if (query != null && query.getOrderList().isEmpty()) {
                 query.orderBy(cb.desc(root.get("createdAt")));
             }
 

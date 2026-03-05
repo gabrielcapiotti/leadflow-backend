@@ -16,8 +16,8 @@ import com.leadflow.backend.repository.VendorRiskAlertRepository;
 import com.leadflow.backend.repository.VendorRepository;
 import com.leadflow.backend.repository.VendorUsageRepository;
 import com.leadflow.backend.service.notification.SendGridEmailService;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.sql.Date;
@@ -143,6 +143,7 @@ public class AdminService {
                 return cancellations / (double) activeBase;
         }
 
+        @Cacheable("ltv")
         public double calculateLTV() {
 
                 double arpu = calculateARPU();
@@ -221,6 +222,7 @@ public class AdminService {
         return new GrowthResponse(vendors, revenue, leads, ai);
     }
 
+        @Cacheable("cohorts")
         public List<CohortResponse> calculateCohorts() {
 
                 List<Vendor> vendors = vendorRepository.findAllWithSubscriptionStart();
@@ -258,6 +260,7 @@ public class AdminService {
                 return result;
         }
 
+        @Cacheable(value = "forecast", key = "#months")
         public List<ForecastPoint> forecastMRR(int months) {
 
                 int safeMonths = months <= 0
@@ -338,7 +341,6 @@ public class AdminService {
                 notifyVendorAtRisk(vendorId, health);
         }
 
-        @Scheduled(cron = "0 0 3 * * *")
         public void evaluateAllVendorsRisk() {
 
                 vendorRepository.findAll()
