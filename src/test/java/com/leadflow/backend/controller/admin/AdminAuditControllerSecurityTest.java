@@ -8,17 +8,25 @@ import com.leadflow.backend.repository.audit.SecurityAuditLogRepository;
 import com.leadflow.backend.security.RateLimitService;
 import com.leadflow.backend.security.TestSecurityConfig;
 import com.leadflow.backend.security.jwt.JwtService;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
+
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
+
 import org.springframework.security.test.context.support.WithMockUser;
+
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,6 +36,7 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -39,6 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 classes = TenantFilter.class
         )
 )
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
 class AdminAuditControllerSecurityTest {
@@ -49,7 +59,7 @@ class AdminAuditControllerSecurityTest {
     @MockitoBean
     private SecurityAuditLogRepository securityAuditLogRepository;
 
-    @MockitoBean
+    @MockBean
     private VendorAuditLogRepository vendorAuditLogRepository;
 
     @MockitoBean
@@ -60,6 +70,17 @@ class AdminAuditControllerSecurityTest {
 
     @MockitoBean
     private RateLimitService rateLimitService;
+
+    @BeforeEach
+    void setUp() {
+
+        when(vendorAuditLogRepository.findAll(
+                any(Specification.class),
+                any(Pageable.class)
+        )).thenReturn(
+                new PageImpl<>(List.of(), PageRequest.of(0, 20), 1)
+        );
+    }
 
     @Test
     void shouldReturn401WhenNotAuthenticated() throws Exception {
@@ -77,11 +98,13 @@ class AdminAuditControllerSecurityTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void shouldReturn400WhenDateRangeIsInvalid() throws Exception {
+
         mockMvc.perform(get("/admin/audit/vendor")
                         .param("from", "2026-03-04T15:00:00Z")
                         .param("to", "2026-03-04T10:00:00Z"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Invalid date range: 'from' must be before 'to'"));
+                .andExpect(jsonPath("$.message")
+                        .value("Invalid date range: 'from' must be before 'to'"));
     }
 
     @Test
@@ -99,8 +122,12 @@ class AdminAuditControllerSecurityTest {
         log.setEntidadeId(entidadeId);
         log.setDetalhes("owner changed");
 
-        when(vendorAuditLogRepository.findAll(org.mockito.ArgumentMatchers.<Specification<VendorAuditLog>>any(), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(log), PageRequest.of(0, 20), 1));
+        when(vendorAuditLogRepository.findAll(
+                any(Specification.class),
+                any(Pageable.class)
+        )).thenReturn(
+                new PageImpl<>(List.of(log), PageRequest.of(0, 20), 1)
+        );
 
         mockMvc.perform(get("/admin/audit/vendor")
                         .param("vendorId", vendorId.toString())

@@ -48,11 +48,13 @@ public class TenantProvisioningService {
 
     /**
      * Provisiona um novo tenant baseado em SCHEMA.
+     *
      * Processo:
-     * 1. Normaliza e valida schema
-     * 2. Cria schema
-     * 3. Executa migrations Flyway
-     * 4. Registra tenant no schema público
+     * 1. Normaliza nome
+     * 2. Valida formato
+     * 3. Cria schema
+     * 4. Executa migrations
+     * 5. Registra tenant no schema public
      */
     public synchronized void provisionTenant(String tenantName) {
 
@@ -62,24 +64,24 @@ public class TenantProvisioningService {
 
         validateSchemaFormat(schemaName);
 
-        if (tenantRepository
-                .existsBySchemaNameIgnoreCaseAndDeletedAtIsNull(schemaName)) {
-
+        if (tenantRepository.existsBySchemaNameIgnoreCaseAndDeletedAtIsNull(schemaName)) {
             logger.info("Tenant already provisioned: {}", schemaName);
             return;
         }
 
         try {
+
             createSchema(schemaName);
+
             runTenantMigrations(schemaName);
+
             registerTenantTransactional(tenantName, schemaName);
 
             logger.info("Tenant successfully provisioned: {}", schemaName);
 
         } catch (Exception ex) {
 
-            logger.error("Tenant provisioning failed for schema {}",
-                    schemaName, ex);
+            logger.error("Tenant provisioning failed for schema {}", schemaName, ex);
 
             cleanupSchema(schemaName);
 
@@ -96,8 +98,13 @@ public class TenantProvisioningService {
 
     private void createSchema(String schemaName) {
 
-        // Seguro porque schema já foi validado por regex restritiva
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS " + schemaName);
+        /*
+         * Quote identifier para segurança.
+         * Evita problemas com caracteres especiais.
+         */
+        String sql = "CREATE SCHEMA IF NOT EXISTS \"" + schemaName + "\"";
+
+        jdbcTemplate.execute(sql);
 
         logger.debug("Schema created: {}", schemaName);
     }
@@ -105,13 +112,15 @@ public class TenantProvisioningService {
     private void cleanupSchema(String schemaName) {
 
         try {
-            jdbcTemplate.execute(
-                    "DROP SCHEMA IF EXISTS " + schemaName + " CASCADE"
-            );
+
+            String sql = "DROP SCHEMA IF EXISTS \"" + schemaName + "\" CASCADE";
+
+            jdbcTemplate.execute(sql);
 
             logger.warn("Schema rolled back: {}", schemaName);
 
         } catch (Exception ex) {
+
             logger.error("Failed to cleanup schema {}", schemaName, ex);
         }
     }
@@ -133,7 +142,7 @@ public class TenantProvisioningService {
 
         flyway.migrate();
 
-        logger.debug("Migrations executed for schema: {}", schemaName);
+        logger.debug("Tenant migrations executed for schema: {}", schemaName);
     }
 
     /* ======================================================

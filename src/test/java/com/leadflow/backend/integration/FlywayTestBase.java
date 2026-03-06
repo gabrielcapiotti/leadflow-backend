@@ -1,6 +1,5 @@
 package com.leadflow.backend.integration;
 
-import org.junit.jupiter.api.AfterAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -63,11 +62,6 @@ public abstract class FlywayTestBase {
 
         registry.add("spring.test.database.replace", () -> "none");
         registry.add("multitenancy.enabled", () -> "true");
-    }
-
-    @AfterAll
-    static void stopPostgres() {
-        postgres.stop();
     }
 
     @Autowired

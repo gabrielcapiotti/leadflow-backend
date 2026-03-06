@@ -5,7 +5,6 @@ import com.leadflow.backend.dto.vendor.DashboardResponse;
 import com.leadflow.backend.entities.vendor.LeadStage;
 import com.leadflow.backend.entities.vendor.VendorLead;
 import com.leadflow.backend.multitenancy.service.TenantService;
-import com.leadflow.backend.security.RateLimitService;
 import com.leadflow.backend.security.SubscriptionGuard;
 import com.leadflow.backend.service.vendor.DashboardService;
 import org.junit.jupiter.api.Test;
@@ -40,9 +39,6 @@ class DashboardControllerTest {
 
     @MockitoBean
     private TenantService tenantService;
-
-    @MockitoBean
-    private RateLimitService rateLimitService;
 
     @MockitoBean
     private SubscriptionGuard subscriptionGuard;

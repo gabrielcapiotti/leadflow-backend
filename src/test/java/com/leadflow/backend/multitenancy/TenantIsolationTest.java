@@ -9,12 +9,15 @@ import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.repository.lead.LeadRepository;
 import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
+import com.leadflow.backend.repository.tenant.TenantRepository;
 import com.leadflow.backend.util.TestTenantFactory;
 
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.util.UUID;
 
@@ -22,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ActiveProfiles("test")
 @Tag("integration")
+@Import(TestTenantFactory.class)
 class TenantIsolationTest extends IntegrationTestBase {
 
     @Autowired
@@ -39,16 +43,19 @@ class TenantIsolationTest extends IntegrationTestBase {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @MockBean
+    private TenantRepository tenantRepository;
+
     private Tenant tenantA;
     private Tenant tenantB;
 
     @BeforeEach
     void setup() {
-
         TenantContext.clear();
+        tenantRepository.deleteAll();
 
-        tenantA = testTenantFactory.createTenant("Tenant A");
-        tenantB = testTenantFactory.createTenant("Tenant B");
+        tenantA = testTenantFactory.createTenant("tenant_a");
+        tenantB = testTenantFactory.createTenant("tenant_b");
 
         createSchemaIfNotExists(tenantA.getSchemaName());
         createSchemaIfNotExists(tenantB.getSchemaName());

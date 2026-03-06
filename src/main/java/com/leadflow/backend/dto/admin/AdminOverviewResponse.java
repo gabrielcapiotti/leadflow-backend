@@ -1,108 +1,129 @@
 package com.leadflow.backend.dto.admin;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.math.BigDecimal;
+
 public class AdminOverviewResponse {
 
-    private final long total_vendors;
-    private final long active_subscriptions;
-    private final long trial_subscriptions;
-    private final long inadimplentes;
-    private final long expiradas;
+    private final long totalVendors;
+    private final long activeSubscriptions;
+    private final long trialSubscriptions;
+    private final long overdueSubscriptions;
+    private final long expiredSubscriptions;
 
-    private final long total_leads;
-    private final long total_ai_executions_current_cycle;
+    private final long totalLeads;
+    private final long totalAiExecutionsCurrentCycle;
 
-    private final double estimated_monthly_revenue;
-    private final double mrr_real;
-    private final double churn_rate_30d;
-    private final double trial_to_paid_conversion_30d;
-    private final double arpu;
-    private final double churn_rate;
-    private final double ltv;
+    private final BigDecimal estimatedMonthlyRevenue;
+    private final BigDecimal mrrReal;
 
-    public AdminOverviewResponse(long totalVendors,
-                                 long active,
-                                 long trial,
-                                 long inadimplentes,
-                                 long expiradas,
-                                 long totalLeads,
-                                 long totalAi,
-                                 double revenue,
-                                 double mrrReal,
-                                 double churnRate30d,
-                                 double trialToPaidConversion30d,
-                                 double arpu,
-                                 double churnRate,
-                                 double ltv) {
+    private final double churnRate30d;
+    private final double trialToPaidConversion30d;
 
-        this.total_vendors = totalVendors;
-        this.active_subscriptions = active;
-        this.trial_subscriptions = trial;
-        this.inadimplentes = inadimplentes;
-        this.expiradas = expiradas;
-        this.total_leads = totalLeads;
-        this.total_ai_executions_current_cycle = totalAi;
-        this.estimated_monthly_revenue = revenue;
-        this.mrr_real = mrrReal;
-        this.churn_rate_30d = churnRate30d;
-        this.trial_to_paid_conversion_30d = trialToPaidConversion30d;
+    private final BigDecimal arpu;
+    private final double churnRate;
+    private final BigDecimal ltv;
+
+    public AdminOverviewResponse(
+            long totalVendors,
+            long activeSubscriptions,
+            long trialSubscriptions,
+            long overdueSubscriptions,
+            long expiredSubscriptions,
+            long totalLeads,
+            long totalAiExecutionsCurrentCycle,
+            BigDecimal estimatedMonthlyRevenue,
+            BigDecimal mrrReal,
+            double churnRate30d,
+            double trialToPaidConversion30d,
+            BigDecimal arpu,
+            double churnRate,
+            BigDecimal ltv
+    ) {
+        this.totalVendors = totalVendors;
+        this.activeSubscriptions = activeSubscriptions;
+        this.trialSubscriptions = trialSubscriptions;
+        this.overdueSubscriptions = overdueSubscriptions;
+        this.expiredSubscriptions = expiredSubscriptions;
+        this.totalLeads = totalLeads;
+        this.totalAiExecutionsCurrentCycle = totalAiExecutionsCurrentCycle;
+        this.estimatedMonthlyRevenue = estimatedMonthlyRevenue;
+        this.mrrReal = mrrReal;
+        this.churnRate30d = churnRate30d;
+        this.trialToPaidConversion30d = trialToPaidConversion30d;
         this.arpu = arpu;
-        this.churn_rate = churnRate;
+        this.churnRate = churnRate;
         this.ltv = ltv;
     }
 
-    public long getTotal_vendors() {
-        return total_vendors;
+    @JsonProperty("total_vendors")
+    public long getTotalVendors() {
+        return totalVendors;
     }
 
-    public long getActive_subscriptions() {
-        return active_subscriptions;
+    @JsonProperty("active_subscriptions")
+    public long getActiveSubscriptions() {
+        return activeSubscriptions;
     }
 
-    public long getTrial_subscriptions() {
-        return trial_subscriptions;
+    @JsonProperty("trial_subscriptions")
+    public long getTrialSubscriptions() {
+        return trialSubscriptions;
     }
 
-    public long getInadimplentes() {
-        return inadimplentes;
+    @JsonProperty("inadimplentes")
+    public long getOverdueSubscriptions() {
+        return overdueSubscriptions;
     }
 
-    public long getExpiradas() {
-        return expiradas;
+    @JsonProperty("expiradas")
+    public long getExpiredSubscriptions() {
+        return expiredSubscriptions;
     }
 
-    public long getTotal_leads() {
-        return total_leads;
+    @JsonProperty("total_leads")
+    public long getTotalLeads() {
+        return totalLeads;
     }
 
-    public long getTotal_ai_executions_current_cycle() {
-        return total_ai_executions_current_cycle;
+    @JsonProperty("total_ai_executions_current_cycle")
+    public long getTotalAiExecutionsCurrentCycle() {
+        return totalAiExecutionsCurrentCycle;
     }
 
-    public double getEstimated_monthly_revenue() {
-        return estimated_monthly_revenue;
+    @JsonProperty("estimated_monthly_revenue")
+    public BigDecimal getEstimatedMonthlyRevenue() {
+        return estimatedMonthlyRevenue;
     }
 
-    public double getMrr_real() {
-        return mrr_real;
+    @JsonProperty("mrr_real")
+    public BigDecimal getMrrReal() {
+        return mrrReal;
     }
 
-    public double getChurn_rate_30d() {
-        return churn_rate_30d;
+    @JsonProperty("churn_rate_30d")
+    public double getChurnRate30d() {
+        return churnRate30d;
     }
 
-    public double getTrial_to_paid_conversion_30d() {
-        return trial_to_paid_conversion_30d;
+    @JsonProperty("trial_to_paid_conversion_30d")
+    public double getTrialToPaidConversion30d() {
+        return trialToPaidConversion30d;
     }
 
-    public double getArpu() {
+    @JsonProperty("arpu")
+    public BigDecimal getArpu() {
         return arpu;
     }
 
-    public double getChurn_rate() {
-        return churn_rate;
+    @JsonProperty("churn_rate")
+    public double getChurnRate() {
+        return churnRate;
     }
 
-    public double getLtv() {
+    @JsonProperty("ltv")
+    public BigDecimal getLtv() {
         return ltv;
     }
 }

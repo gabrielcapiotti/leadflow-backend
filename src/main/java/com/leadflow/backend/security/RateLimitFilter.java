@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -34,10 +35,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
         if (!rateLimitEnabled) {
             filterChain.doFilter(request, response);
@@ -47,8 +49,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
         String requestPath = extractRequestPath(request);
         String clientIp = resolveClientIp(request);
 
+        // GLOBAL rate limit (proteção básica contra flood)
         boolean globalAllowed = rateLimitService.tryConsume(
-                GLOBAL_SCOPE + ":" + clientIp,
+                clientIp,
                 GLOBAL_SCOPE
         );
 
@@ -65,9 +68,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
 
         String principal = resolvePrincipalOrIp(request);
-        String rateLimitKey = scope + ":" + principal;
 
-        boolean allowed = rateLimitService.tryConsume(rateLimitKey, scope);
+        boolean allowed = rateLimitService.tryConsume(
+                principal,
+                scope
+        );
 
         if (!allowed) {
             writeLimitExceeded(response);
@@ -78,10 +83,14 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private String extractRequestPath(HttpServletRequest request) {
+
         String uri = request.getRequestURI();
         String contextPath = request.getContextPath();
 
-        if (contextPath != null && !contextPath.isBlank() && uri.startsWith(contextPath)) {
+        if (contextPath != null &&
+            !contextPath.isBlank() &&
+            uri.startsWith(contextPath)) {
+
             return uri.substring(contextPath.length());
         }
 
@@ -89,6 +98,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private String resolveScope(String requestPath) {
+
         if (requestPath == null || requestPath.isBlank()) {
             return null;
         }
@@ -105,7 +115,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return ADMIN_SCOPE;
         }
 
-        if (requestPath.startsWith("/webhooks")) {
+        if (requestPath.startsWith("/billing/webhook")) {
             return WEBHOOK_SCOPE;
         }
 
@@ -113,6 +123,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private String resolveClientIp(HttpServletRequest request) {
+
         String forwarded = request.getHeader("X-Forwarded-For");
 
         if (forwarded != null && !forwarded.isBlank()) {
@@ -123,29 +134,34 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private String resolvePrincipalOrIp(HttpServletRequest request) {
+
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication != null &&
             authentication.isAuthenticated() &&
-            !(authentication instanceof AnonymousAuthenticationToken) &&
-            authentication.getName() != null &&
-            !authentication.getName().isBlank()) {
+            !(authentication instanceof AnonymousAuthenticationToken)) {
 
-            return authentication.getName();
+            String principal = authentication.getName();
+
+            if (principal != null && !principal.isBlank()) {
+                return principal;
+            }
         }
 
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
-
-        return request.getRemoteAddr();
+        return resolveClientIp(request);
     }
 
     private void writeLimitExceeded(HttpServletResponse response) throws IOException {
-        response.setStatus(429);
-        response.setContentType("text/plain;charset=UTF-8");
-        response.getWriter().write("Too many requests");
+
+        response.setStatus(429); // Replaced SC_TOO_MANY_REQUESTS with literal value
+        response.setContentType("application/json;charset=UTF-8");
+
+        response.getWriter().write("""
+        {
+          "error": "rate_limit_exceeded",
+          "message": "Too many requests"
+        }
+        """);
     }
 }

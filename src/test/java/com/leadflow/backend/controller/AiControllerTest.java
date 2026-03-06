@@ -33,7 +33,6 @@ import java.util.Collections;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -42,10 +41,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = AiController.class)
+@WebMvcTest
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
-@Import(GlobalExceptionHandler.class)
+@Import({AiController.class, GlobalExceptionHandler.class})
 class AiControllerTest {
 
     @Autowired
@@ -91,7 +90,6 @@ class AiControllerTest {
 
     @BeforeEach
     void setUp() {
-
         vendorId = UUID.randomUUID();
 
         Vendor vendor = new Vendor();
@@ -100,6 +98,7 @@ class AiControllerTest {
 
         when(vendorContext.getCurrentVendor()).thenReturn(vendor);
         when(subscriptionGuard.resolveAccess()).thenReturn(SubscriptionAccessLevel.FULL);
+        when(subscriptionGuard.isActive()).thenReturn(true);
     }
 
     @Test
@@ -110,8 +109,12 @@ class AiControllerTest {
         request.setLeadId(UUID.randomUUID());
         request.setMessage("olá");
 
-        when(vendorFeatureService.isEnabled(vendorId, com.leadflow.backend.entities.vendor.VendorFeatureKey.AI_CHAT))
+        when(vendorFeatureService.isEnabled(
+                vendorId,
+                com.leadflow.backend.entities.vendor.VendorFeatureKey.AI_CHAT))
                 .thenReturn(false);
+
+        when(aiRateLimiter.allow(vendorId)).thenReturn(true);
 
         mockMvc.perform(post("/ai/chat")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -130,10 +133,16 @@ class AiControllerTest {
         request.setLeadId(UUID.randomUUID());
         request.setMessage("responda");
 
-        when(vendorFeatureService.isEnabled(vendorId, com.leadflow.backend.entities.vendor.VendorFeatureKey.AI_CHAT))
+        when(vendorFeatureService.isEnabled(
+                vendorId,
+                com.leadflow.backend.entities.vendor.VendorFeatureKey.AI_CHAT))
                 .thenReturn(true);
+
         when(aiRateLimiter.allow(vendorId)).thenReturn(true);
-        when(conversationService.getConversation(eq(request.getLeadId()))).thenReturn(Collections.emptyList());
+
+        when(conversationService.getConversation(any()))
+                .thenReturn(Collections.emptyList());
+
         when(aiService.generate(any())).thenReturn("ok");
 
         mockMvc.perform(post("/ai/chat")

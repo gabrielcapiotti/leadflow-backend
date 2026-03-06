@@ -11,7 +11,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableRetry
 @EnableCaching
 @EnableAspectJAutoProxy
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {
+    "com.leadflow.backend.service.vendor",
+    "com.leadflow.backend.service.system"
+})
 public class BackendApplication {
 
     public static void main(String[] args) {

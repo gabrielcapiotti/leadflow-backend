@@ -1,10 +1,11 @@
 package com.leadflow.backend.audit;
 
-import com.leadflow.backend.service.system.AuditService;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
+
+import com.leadflow.backend.service.audit.AuditService;
 
 import java.util.UUID;
 

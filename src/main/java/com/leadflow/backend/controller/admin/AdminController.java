@@ -6,12 +6,15 @@ import com.leadflow.backend.dto.admin.ForecastPoint;
 import com.leadflow.backend.dto.admin.GrowthResponse;
 import com.leadflow.backend.dto.admin.VendorHealthResponse;
 import com.leadflow.backend.service.admin.AdminService;
+
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,6 +22,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/admin")
 @PreAuthorize("hasRole('ADMIN')")
+@Validated
 public class AdminController {
 
     private final AdminService adminService;
@@ -27,28 +31,60 @@ public class AdminController {
         this.adminService = adminService;
     }
 
+    /* ======================================================
+       OVERVIEW
+       ====================================================== */
+
     @GetMapping("/overview")
-    public AdminOverviewResponse overview() {
-        return adminService.getOverview();
+    public ResponseEntity<AdminOverviewResponse> overview() {
+        return ResponseEntity.ok(adminService.getOverview());
     }
+
+    /* ======================================================
+       GROWTH METRICS
+       ====================================================== */
 
     @GetMapping("/metrics/growth")
-    public GrowthResponse growth(@RequestParam(defaultValue = "30") int days) {
-        return adminService.getGrowth(days);
+    public ResponseEntity<GrowthResponse> growth(
+            @RequestParam(defaultValue = "30")
+            @Min(1) @Max(365)
+            int days
+    ) {
+        return ResponseEntity.ok(adminService.getGrowth(days));
     }
+
+    /* ======================================================
+       COHORT ANALYSIS
+       ====================================================== */
 
     @GetMapping("/metrics/cohorts")
-    public List<CohortResponse> cohorts() {
-        return adminService.calculateCohorts();
+    public ResponseEntity<List<CohortResponse>> cohorts() {
+        return ResponseEntity.ok(adminService.calculateCohorts());
     }
+
+    /* ======================================================
+       MRR FORECAST
+       ====================================================== */
 
     @GetMapping("/metrics/forecast")
-    public List<ForecastPoint> forecast(@RequestParam(defaultValue = "6") int months) {
-        return adminService.forecastMRR(months);
+    public ResponseEntity<List<ForecastPoint>> forecast(
+            @RequestParam(defaultValue = "6")
+            @Min(1) @Max(24)
+            int months
+    ) {
+        return ResponseEntity.ok(adminService.forecastMRR(months));
     }
 
+    /* ======================================================
+       VENDOR HEALTH
+       ====================================================== */
+
     @GetMapping("/metrics/health/{vendorId}")
-    public VendorHealthResponse health(@PathVariable UUID vendorId) {
-        return adminService.calculateHealth(vendorId);
+    public ResponseEntity<VendorHealthResponse> health(
+            @PathVariable
+            @NotNull
+            UUID vendorId
+    ) {
+        return ResponseEntity.ok(adminService.calculateHealth(vendorId));
     }
 }

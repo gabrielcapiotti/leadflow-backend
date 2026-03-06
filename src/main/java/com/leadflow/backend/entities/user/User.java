@@ -103,7 +103,7 @@ public class User {
        CONSTRUCTORS
        ====================================================== */
 
-    protected User() {}
+    public User() {}
 
     public User(String name,
                 String email,
@@ -198,6 +198,10 @@ public class User {
 
         // 🔒 INVALIDA TODOS JWT
         this.credentialsUpdatedAt = LocalDateTime.now();
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     /* ======================================================

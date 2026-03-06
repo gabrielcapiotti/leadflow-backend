@@ -23,6 +23,15 @@ public class CreateLeadRequest {
     )
     private String phone;
 
+    @Size(max = 50, message = "Tipo de consórcio deve ter no máximo 50 caracteres")
+    private String tipoConsorcio;
+
+    @Size(max = 50, message = "Valor de crédito deve ter no máximo 50 caracteres")
+    private String valorCredito;
+
+    @Pattern(regexp = "quero_fechar|analisando|pesquisando", message = "Urgência inválida")
+    private String urgencia;
+
     /* ======================================================
        CONSTRUTORES
        ====================================================== */
@@ -46,7 +55,7 @@ public class CreateLeadRequest {
     }
 
     public void setName(String name) {
-        this.name = name != null ? name.trim() : null;
+        this.name = name;
     }
 
     public String getEmail() {
@@ -54,7 +63,7 @@ public class CreateLeadRequest {
     }
 
     public void setEmail(String email) {
-        this.email = email != null ? email.trim().toLowerCase() : null;
+        this.email = email;
     }
 
     public String getPhone() {
@@ -62,6 +71,30 @@ public class CreateLeadRequest {
     }
 
     public void setPhone(String phone) {
-        this.phone = phone != null ? phone.trim() : null;
+        this.phone = phone;
+    }
+
+    public String getTipoConsorcio() {
+        return tipoConsorcio;
+    }
+
+    public void setTipoConsorcio(String tipoConsorcio) {
+        this.tipoConsorcio = tipoConsorcio;
+    }
+
+    public String getValorCredito() {
+        return valorCredito;
+    }
+
+    public void setValorCredito(String valorCredito) {
+        this.valorCredito = valorCredito;
+    }
+
+    public String getUrgencia() {
+        return urgencia;
+    }
+
+    public void setUrgencia(String urgencia) {
+        this.urgencia = urgencia;
     }
 }
