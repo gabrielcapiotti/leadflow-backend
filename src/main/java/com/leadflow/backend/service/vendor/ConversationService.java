@@ -1,7 +1,8 @@
 package com.leadflow.backend.service.vendor;
 
 import com.leadflow.backend.entities.vendor.VendorLeadConversation;
-import com.leadflow.backend.repository.VendorLeadConversationRepository;
+import com.leadflow.backend.repository.vendor.VendorLeadConversationRepository;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;

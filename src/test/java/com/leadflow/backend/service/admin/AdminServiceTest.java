@@ -76,10 +76,10 @@ class AdminServiceTest {
     void shouldReturnOverviewWithAggregatedMetrics() {
 
         when(vendorRepository.countAllGlobal()).thenReturn(42L);
-        when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.ATIVA.name())).thenReturn(35L);
-        when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.TRIAL.name())).thenReturn(4L);
-        when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.INADIMPLENTE.name())).thenReturn(2L);
-        when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.EXPIRADA.name())).thenReturn(1L);
+        when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.ATIVA)).thenReturn(35L);
+        when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.TRIAL)).thenReturn(4L);
+        when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.INADIMPLENTE)).thenReturn(2L);
+        when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.EXPIRADA)).thenReturn(1L);
         when(vendorRepository.countActiveSubscriptionsGlobal()).thenReturn(35L);
         when(leadRepository.countAllGlobal()).thenReturn(8123L);
         when(usageRepository.sumUsedByQuotaTypeGlobal(QuotaType.AI_EXECUTIONS.name())).thenReturn(21450L);
@@ -88,20 +88,23 @@ class AdminServiceTest {
 
         AdminOverviewResponse response = adminService.getOverview();
 
-        assertEquals(42L, response.getTotal_vendors());
-        assertEquals(35L, response.getActive_subscriptions());
-        assertEquals(4L, response.getTrial_subscriptions());
-        assertEquals(2L, response.getInadimplentes());
-        assertEquals(1L, response.getExpiradas());
-        assertEquals(8123L, response.getTotal_leads());
-        assertEquals(21450L, response.getTotal_ai_executions_current_cycle());
-        assertEquals(6895.0, response.getEstimated_monthly_revenue());
-        assertEquals(6895.0, response.getMrr_real());
-        assertEquals(0.2, response.getChurn_rate_30d());
-        assertEquals(0.5, response.getTrial_to_paid_conversion_30d());
-        assertEquals(197.0, response.getArpu());
-        assertEquals(0.2, response.getChurn_rate());
-        assertEquals(985.0, response.getLtv());
+        assertEquals(42L, response.getTotalVendors());
+        assertEquals(35L, response.getActiveSubscriptions());
+        assertEquals(4L, response.getTrialSubscriptions());
+        assertEquals(2L, response.getOverdueSubscriptions());
+        assertEquals(1L, response.getExpiredSubscriptions());
+        assertEquals(8123L, response.getTotalLeads());
+        assertEquals(21450L, response.getTotalAiExecutionsCurrentCycle());
+
+        assertEquals(6895.0, response.getEstimatedMonthlyRevenue().doubleValue());
+        assertEquals(6895.0, response.getMrrReal().doubleValue());
+
+        assertEquals(0.2, response.getChurnRate30d());
+        assertEquals(0.5, response.getTrialToPaidConversion30d());
+
+        assertEquals(197.0, response.getArpu().doubleValue());
+        assertEquals(0.2, response.getChurnRate());
+        assertEquals(985.0, response.getLtv().doubleValue());
     }
 
         @Test
@@ -176,8 +179,8 @@ class AdminServiceTest {
         when(historyRepository.countCancellationsSinceGlobal(any())).thenReturn(5L);
         when(historyRepository.countTrialConversionsSinceGlobal(any())).thenReturn(4L);
         when(vendorRepository.countActiveSubscriptionsGlobal()).thenReturn(100L);
-        when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.ATIVA.name())).thenReturn(100L);
-        when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.TRIAL.name())).thenReturn(20L);
+        when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.ATIVA)).thenReturn(100L);
+        when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.TRIAL)).thenReturn(20L);
 
         List<ForecastPoint> forecast = adminService.forecastMRR(3);
 
@@ -193,8 +196,8 @@ class AdminServiceTest {
         when(historyRepository.countCancellationsSinceGlobal(any())).thenReturn(5L);
         when(historyRepository.countTrialConversionsSinceGlobal(any())).thenReturn(4L);
         when(vendorRepository.countActiveSubscriptionsGlobal()).thenReturn(100L);
-        when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.ATIVA.name())).thenReturn(100L);
-        when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.TRIAL.name())).thenReturn(20L);
+        when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.ATIVA)).thenReturn(100L);
+        when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.TRIAL)).thenReturn(20L);
 
         List<ForecastPoint> forecast = adminService.forecastMRR(0);
 
@@ -207,8 +210,8 @@ class AdminServiceTest {
         when(historyRepository.countCancellationsSinceGlobal(any())).thenReturn(5L);
         when(historyRepository.countTrialConversionsSinceGlobal(any())).thenReturn(4L);
         when(vendorRepository.countActiveSubscriptionsGlobal()).thenReturn(100L);
-        when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.ATIVA.name())).thenReturn(100L);
-        when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.TRIAL.name())).thenReturn(20L);
+        when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.ATIVA)).thenReturn(100L);
+        when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.TRIAL)).thenReturn(20L);
 
         List<ForecastPoint> forecast = adminService.forecastMRR(72);
 

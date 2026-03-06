@@ -4,20 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leadflow.backend.dto.lead.CreateLeadRequest;
 import com.leadflow.backend.entities.enums.LeadStatus;
 import com.leadflow.backend.entities.lead.Lead;
-import com.leadflow.backend.entities.vendor.Vendor;
-import com.leadflow.backend.entities.vendor.SubscriptionAccessLevel;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
+import com.leadflow.backend.entities.vendor.SubscriptionAccessLevel;
 import com.leadflow.backend.exception.GlobalExceptionHandler;
-import com.leadflow.backend.security.RateLimitService;
-import com.leadflow.backend.security.VendorContext;
 import com.leadflow.backend.security.SubscriptionGuard;
-import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.lead.LeadService;
-import com.leadflow.backend.service.vendor.QuotaService;
 import com.leadflow.backend.service.user.UserService;
-import com.leadflow.backend.multitenancy.service.TenantService;
-import org.junit.jupiter.api.AfterEach;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,6 +27,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -40,10 +35,10 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = LeadController.class)
+@WebMvcTest
 @AutoConfigureMockMvc(addFilters = false)
-@ActiveProfiles("test") // Use o profile 'test' para padronizar os testes
-@Import(GlobalExceptionHandler.class)
+@ActiveProfiles("test")
+@Import({LeadController.class, GlobalExceptionHandler.class})
 class LeadControllerTest {
 
     @Autowired
@@ -52,37 +47,21 @@ class LeadControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-        @MockitoBean
+    @MockitoBean
     private LeadService leadService;
 
-        @MockitoBean
+    @MockitoBean
     private UserService userService;
 
-        @MockitoBean
-    private JwtService jwtService;
-
-                @MockitoBean
-        private SubscriptionGuard subscriptionGuard;
-
-                @MockitoBean
-        private VendorContext vendorContext;
-
-                @MockitoBean
-        private QuotaService quotaService;
-
-        @MockitoBean
-    private TenantService tenantService;
-
-                @MockitoBean
-        private RateLimitService rateLimitService;
+    @MockitoBean
+    private SubscriptionGuard subscriptionGuard;
 
     private Lead lead;
     private User user;
     private UUID leadId;
-        private Vendor vendor;
 
     /* ====================================================== */
-    /* SETUP / TEARDOWN                                       */
+    /* SETUP                                                  */
     /* ====================================================== */
 
     @BeforeEach
@@ -118,17 +97,6 @@ class LeadControllerTest {
 
         when(subscriptionGuard.resolveAccess())
                 .thenReturn(SubscriptionAccessLevel.FULL);
-
-        vendor = new Vendor();
-        ReflectionTestUtils.setField(vendor, "id", UUID.randomUUID());
-        vendor.setUserEmail("test@example.com");
-
-        when(vendorContext.getCurrentVendor())
-                .thenReturn(vendor);
-    }
-
-    @AfterEach
-    void tearDown() {
     }
 
     /* ====================================================== */
@@ -139,7 +107,6 @@ class LeadControllerTest {
     @WithMockUser(username = "test@example.com")
     void createLead_ShouldReturnCreatedLead() throws Exception {
 
-        // Arrange
         when(leadService.createLead(
                 anyString(),
                 anyString(),
@@ -153,7 +120,6 @@ class LeadControllerTest {
                 "123456789"
         );
 
-        // Act & Assert
         mockMvc.perform(post("/api/leads")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -171,6 +137,25 @@ class LeadControllerTest {
     }
 
     /* ====================================================== */
+    /* LIST                                                   */
+    /* ====================================================== */
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void listLeads_ShouldReturnLeadList() throws Exception {
+
+        when(leadService.listActiveLeads(user))
+                .thenReturn(List.of(lead));
+
+        mockMvc.perform(get("/api/leads"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(leadId.toString()))
+                .andExpect(jsonPath("$[0].name").value("Test Lead"));
+
+        verify(leadService).listActiveLeads(user);
+    }
+
+    /* ====================================================== */
     /* UPDATE STATUS                                          */
     /* ====================================================== */
 
@@ -178,7 +163,6 @@ class LeadControllerTest {
     @WithMockUser(username = "test@example.com")
     void updateLeadStatus_ShouldReturnUpdatedLead() throws Exception {
 
-        // Arrange
         lead.changeStatus(LeadStatus.CONTACTED);
 
         when(leadService.updateStatus(
@@ -187,7 +171,6 @@ class LeadControllerTest {
                 eq(user)
         )).thenReturn(lead);
 
-        // Act & Assert
         mockMvc.perform(patch("/api/leads/{id}/status", leadId)
                         .param("status", "CONTACTED"))
                 .andExpect(status().isOk())
@@ -205,7 +188,6 @@ class LeadControllerTest {
     @WithMockUser(username = "test@example.com")
     void deleteLead_ShouldReturnNoContent() throws Exception {
 
-        // Act & Assert
         mockMvc.perform(delete("/api/leads/{id}", leadId))
                 .andExpect(status().isNoContent());
 

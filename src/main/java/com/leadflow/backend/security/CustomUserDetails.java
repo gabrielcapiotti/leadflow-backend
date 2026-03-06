@@ -14,12 +14,11 @@ import java.util.UUID;
 
 public final class CustomUserDetails implements UserDetails {
 
-    private final User user;
-
     private final UUID id;
     private final String email;
     private final String password;
-    private final String role;
+
+    private final List<GrantedAuthority> authorities;
 
     private final boolean enabled;
     private final boolean accountNonLocked;
@@ -36,16 +35,25 @@ public final class CustomUserDetails implements UserDetails {
             throw new IllegalArgumentException("User ID cannot be null");
         }
 
-        if (user.getRole() == null) {
-            throw new IllegalStateException("User role cannot be null");
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            throw new IllegalArgumentException("User email cannot be null or blank");
         }
 
-        this.user = user;
+        if (user.getPassword() == null) {
+            throw new IllegalArgumentException("User password cannot be null");
+        }
+
+        if (user.getRole() == null || user.getRole().getName() == null) {
+            throw new IllegalStateException("User role cannot be null");
+        }
 
         this.id = user.getId();
         this.email = user.getEmail();
         this.password = user.getPassword();
-        this.role = normalizeRole(user.getRole().getName());
+
+        this.authorities = List.of(
+                new SimpleGrantedAuthority(normalizeRole(user.getRole().getName()))
+        );
 
         this.enabled = !user.isDeleted();
         this.accountNonLocked = !user.isAccountLocked();
@@ -57,10 +65,6 @@ public final class CustomUserDetails implements UserDetails {
        ====================================================== */
 
     private String normalizeRole(String roleName) {
-
-        if (roleName == null || roleName.isBlank()) {
-            throw new IllegalStateException("Role name cannot be blank");
-        }
 
         String normalized = roleName.trim().toUpperCase();
 
@@ -83,17 +87,13 @@ public final class CustomUserDetails implements UserDetails {
         return credentialsUpdatedAt;
     }
 
-    public User getUser() {
-        return user;
-    }
-
     /* ======================================================
        USERDETAILS IMPLEMENTATION
        ====================================================== */
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role));
+        return authorities;
     }
 
     @Override
@@ -134,7 +134,7 @@ public final class CustomUserDetails implements UserDetails {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof CustomUserDetails that)) return false;
-        return id.equals(that.id);
+        return Objects.equals(id, that.id);
     }
 
     @Override

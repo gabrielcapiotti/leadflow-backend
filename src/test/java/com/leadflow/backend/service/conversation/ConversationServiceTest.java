@@ -2,8 +2,8 @@ package com.leadflow.backend.service.conversation;
 
 import com.leadflow.backend.dto.ai.ChatRequest;
 import com.leadflow.backend.entities.vendor.VendorLeadConversation;
-import com.leadflow.backend.repository.VendorLeadConversationRepository;
 import com.leadflow.backend.repository.VendorLeadRepository;
+import com.leadflow.backend.repository.vendor.VendorLeadConversationRepository;
 import com.leadflow.backend.service.ai.AiService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

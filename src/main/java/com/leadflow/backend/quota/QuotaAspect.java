@@ -18,7 +18,10 @@ public class QuotaAspect {
     private final QuotaService quotaService;
     private final VendorContext vendorContext;
 
-    public QuotaAspect(QuotaService quotaService, VendorContext vendorContext) {
+    public QuotaAspect(
+            QuotaService quotaService,
+            VendorContext vendorContext
+    ) {
         this.quotaService = quotaService;
         this.vendorContext = vendorContext;
     }
@@ -26,45 +29,54 @@ public class QuotaAspect {
     @Around("@annotation(checkQuota)")
     public Object around(ProceedingJoinPoint joinPoint, CheckQuota checkQuota) throws Throwable {
 
-        UUID vendorId = extractVendorId(joinPoint);
-        QuotaType quotaType = mapQuotaType(checkQuota.type());
+        UUID vendorId = resolveVendorId();
+        QuotaType quotaType = resolveQuotaType(checkQuota.type());
 
+        // Valida limite antes da execução
         quotaService.checkQuota(vendorId, quotaType);
 
-        Object result = joinPoint.proceed();
+        Object result;
 
+        try {
+            result = joinPoint.proceed();
+        } catch (Throwable ex) {
+            // Não incrementa quota se operação falhar
+            throw ex;
+        }
+
+        // Incrementa quota apenas após execução bem-sucedida
         quotaService.increment(vendorId, quotaType);
 
         return result;
     }
 
-    private UUID extractVendorId(ProceedingJoinPoint joinPoint) {
+    private UUID resolveVendorId() {
 
-        for (Object arg : joinPoint.getArgs()) {
-            if (arg instanceof UUID id) {
-                return id;
-            }
+        if (vendorContext == null || vendorContext.getCurrentVendor() == null) {
+            throw new IllegalStateException("Vendor context not available");
         }
 
-        if (vendorContext.getCurrentVendor() != null && vendorContext.getCurrentVendor().getId() != null) {
-            return vendorContext.getCurrentVendor().getId();
+        UUID vendorId = vendorContext.getCurrentVendor().getId();
+
+        if (vendorId == null) {
+            throw new IllegalStateException("Vendor ID not available in VendorContext");
         }
 
-        throw new RuntimeException("VendorId not found in method arguments");
+        return vendorId;
     }
 
-    private QuotaType mapQuotaType(String type) {
+    private QuotaType resolveQuotaType(String type) {
 
         if (type == null || type.isBlank()) {
-            throw new RuntimeException("Quota type is required");
+            throw new IllegalArgumentException("Quota type must be provided");
         }
 
         String normalized = type.trim().toUpperCase(Locale.ROOT);
 
         return switch (normalized) {
-            case "IA_EXECUTION", "AI_EXECUTION", "AI_EXECUTIONS" -> QuotaType.AI_EXECUTIONS;
+            case "AI_EXECUTION", "AI_EXECUTIONS", "IA_EXECUTION" -> QuotaType.AI_EXECUTIONS;
             case "LEAD_CREATION", "LEAD_CREATIONS", "ACTIVE_LEADS" -> QuotaType.ACTIVE_LEADS;
-            default -> throw new RuntimeException("Unsupported quota type: " + type);
+            default -> throw new IllegalArgumentException("Unsupported quota type: " + type);
         };
     }
 }

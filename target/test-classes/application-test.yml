@@ -1,6 +1,6 @@
 spring:
   application:
-    name: leadflow-backend
+    name: leadflow-backend-test
 
   datasource:
     url: jdbc:tc:postgresql:15:///leadflow_test
@@ -31,7 +31,9 @@ spring:
             "[non_contextual_creation]": true
 
   flyway:
-    enabled: false            # Flyway desabilitado nos testes de integração
+    enabled: false  # Disable Flyway migrations to avoid conflicts with ddl-auto
+    validate-on-migrate: true
+    baseline-on-migrate: true
 
 sendgrid:
   api-key: test-sendgrid-api-key

@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.leadflow.backend.service.vendor.VendorFeatureServiceTest
 -------------------------------------------------------------------------------
-Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.137 s -- in com.leadflow.backend.service.vendor.VendorFeatureServiceTest
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.070 s -- in com.leadflow.backend.service.vendor.VendorFeatureServiceTest

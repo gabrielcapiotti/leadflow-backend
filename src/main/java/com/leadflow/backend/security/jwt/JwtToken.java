@@ -2,14 +2,20 @@ package com.leadflow.backend.security.jwt;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 
 /**
  * Immutable representation of a generated JWT and its metadata.
  *
- * This object contains only transport-safe information.
- * It does NOT expose claims directly.
+ * This object contains only transport-safe information and does not expose
+ * JWT claims directly.
+ *
+ * Used by:
+ * - JwtService
+ * - Authentication responses
+ * - Security filters
  */
 public final class JwtToken implements Serializable {
 
@@ -24,17 +30,34 @@ public final class JwtToken implements Serializable {
                     String tokenId,
                     Instant expiresAt) {
 
-        this.token = Objects.requireNonNull(token, "token cannot be null");
-        this.tokenId = Objects.requireNonNull(tokenId, "tokenId cannot be null");
-        this.expiresAt = Objects.requireNonNull(expiresAt, "expiresAt cannot be null");
+        this.token = validateToken(token);
+        this.tokenId = validateTokenId(tokenId);
+        this.expiresAt = Objects.requireNonNull(
+                expiresAt,
+                "expiresAt cannot be null"
+        );
+    }
+
+    private static String validateToken(String token) {
+
+        Objects.requireNonNull(token, "token cannot be null");
 
         if (token.isBlank()) {
             throw new IllegalArgumentException("token cannot be blank");
         }
 
+        return token;
+    }
+
+    private static String validateTokenId(String tokenId) {
+
+        Objects.requireNonNull(tokenId, "tokenId cannot be null");
+
         if (tokenId.isBlank()) {
             throw new IllegalArgumentException("tokenId cannot be blank");
         }
+
+        return tokenId;
     }
 
     public String getToken() {
@@ -50,26 +73,48 @@ public final class JwtToken implements Serializable {
     }
 
     /**
-     * Indicates whether the token is already expired
-     * based on the provided reference time.
+     * Returns true if the token is already expired.
      */
-    public boolean isExpired(Instant referenceTime) {
-        return expiresAt.isBefore(referenceTime);
+    public boolean isExpired() {
+        return expiresAt.isBefore(Instant.now());
+    }
+
+    /**
+     * Returns true if the token is still valid.
+     */
+    public boolean isValid() {
+        return !isExpired();
+    }
+
+    /**
+     * Remaining lifetime of the token.
+     */
+    public Duration getRemainingLifetime() {
+
+        if (isExpired()) {
+            return Duration.ZERO;
+        }
+
+        return Duration.between(Instant.now(), expiresAt);
     }
 
     @Override
     public String toString() {
+
         return "JwtToken{" +
                 "tokenId='" + tokenId + '\'' +
                 ", expiresAt=" + expiresAt +
                 '}';
-        // Intentionally NOT printing the token itself
+        // Token intentionally omitted for security
     }
 
     @Override
     public boolean equals(Object o) {
+
         if (this == o) return true;
+
         if (!(o instanceof JwtToken that)) return false;
+
         return tokenId.equals(that.tokenId);
     }
 

@@ -4,55 +4,81 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 @Service
 public class MetricsService {
 
     private final MeterRegistry registry;
-    private final Counter leadsCreated;
-    private final Counter hotLeads;
-    private final Counter aiCalls;
+
+    private final Counter leadsCreatedTotal;
+    private final Counter hotLeadsTotal;
+    private final Counter aiExecutionsTotal;
+
+    /*
+     * Cache de counters por vendor para evitar recriação constante
+     */
+    private final Map<String, Counter> vendorLeadCounters = new ConcurrentHashMap<>();
+    private final Map<String, Counter> vendorAiCounters = new ConcurrentHashMap<>();
 
     public MetricsService(MeterRegistry registry) {
+
         this.registry = registry;
 
-        this.leadsCreated = Counter.builder("lead.created")
-                .description("Total leads created")
-                .register(registry);
+        this.leadsCreatedTotal =
+                registry.counter("lead.created.total");
 
-        this.hotLeads = Counter.builder("lead.hot")
-                .description("Total hot leads")
-                .register(registry);
+        this.hotLeadsTotal =
+                registry.counter("lead.hot.total");
 
-        this.aiCalls = Counter.builder("ai.executions")
-                .description("Total AI executions")
-                .register(registry);
+        this.aiExecutionsTotal =
+                registry.counter("ai.executions.total");
     }
+
+    /*
+     * ------------------------------
+     * LEADS
+     * ------------------------------
+     */
 
     public void incrementLeadCreated() {
-        leadsCreated.increment();
+        leadsCreatedTotal.increment();
     }
 
-    public void leadCreated() {
-        incrementLeadCreated();
-    }
+    public void incrementLeadCreated(String vendorId) {
 
-    public void leadCreated(String vendorId) {
-        Counter.builder("lead.created")
-                .description("Total leads created")
-                .tag("vendor", vendorId)
-                .register(registry)
+        vendorLeadCounters
+                .computeIfAbsent(vendorId, id ->
+                        registry.counter(
+                                "lead.created.total",
+                                "vendor", id
+                        ))
                 .increment();
     }
 
     public void incrementHotLead() {
-        hotLeads.increment();
+        hotLeadsTotal.increment();
     }
 
-    public void incrementAiCalls() {
-        aiCalls.increment();
+    /*
+     * ------------------------------
+     * AI
+     * ------------------------------
+     */
+
+    public void incrementAiExecutions() {
+        aiExecutionsTotal.increment();
     }
 
-    public void aiExecution() {
-        incrementAiCalls();
+    public void incrementAiExecutions(String vendorId) {
+
+        vendorAiCounters
+                .computeIfAbsent(vendorId, id ->
+                        registry.counter(
+                                "ai.executions.total",
+                                "vendor", id
+                        ))
+                .increment();
     }
 }

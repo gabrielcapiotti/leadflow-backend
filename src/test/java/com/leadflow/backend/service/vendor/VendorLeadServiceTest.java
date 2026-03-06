@@ -5,6 +5,7 @@ import com.leadflow.backend.dto.vendor.StageConversionResponse;
 import com.leadflow.backend.dto.vendor.StageTimeMetricsResponse;
 import com.leadflow.backend.entities.vendor.*;
 import com.leadflow.backend.repository.*;
+import com.leadflow.backend.repository.vendor.VendorLeadConversationRepository;
 import com.leadflow.backend.security.VendorContext;
 import com.leadflow.backend.service.monitoring.MetricsService;
 import org.junit.jupiter.api.BeforeEach;

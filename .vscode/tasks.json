@@ -65,6 +65,26 @@
 				"$java"
 			],
 			"group": "test"
+		},
+		{
+			"label": "Run AdminControllerSecurityTest",
+			"type": "shell",
+			"command": "mvn",
+			"args": [
+				"clean",
+				"test",
+				"-Dtest=AdminControllerSecurityTest"
+			]
+		},
+		{
+			"label": "Re-run AdminControllerSecurityTest",
+			"type": "shell",
+			"command": "mvn",
+			"args": [
+				"clean",
+				"test",
+				"-Dtest=AdminControllerSecurityTest"
+			]
 		}
 	]
 }

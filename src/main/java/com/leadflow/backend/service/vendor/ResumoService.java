@@ -13,6 +13,7 @@ import com.leadflow.backend.repository.VendorLeadRepository;
 import com.leadflow.backend.repository.VendorRepository;
 import com.leadflow.backend.security.VendorContext;
 import com.leadflow.backend.service.ai.AiService;
+import com.leadflow.backend.service.audit.AuditService;
 import com.leadflow.backend.service.monitoring.MetricsService;
 import com.leadflow.backend.service.notification.SendGridEmailService;
 

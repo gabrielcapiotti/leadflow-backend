@@ -91,8 +91,8 @@ public class Lead {
        CONSTRUCTORS
        ====================================================== */
 
-    protected Lead() {
-        // Required by JPA
+    public Lead() {
+        // Default constructor
     }
 
     public Lead(UUID userId, String name, String email, String phone) {
@@ -102,6 +102,25 @@ public class Lead {
         setEmail(email);
         this.phone = normalizePhone(phone);
         this.status = LeadStatus.NEW;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public void setEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email cannot be blank");
+        }
+        this.email = email.trim().toLowerCase();
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public void setStatus(LeadStatus status) {
+        this.status = status;
     }
 
     /* ======================================================
@@ -127,18 +146,11 @@ public class Lead {
             throw new IllegalArgumentException("UserId cannot be null");
     }
 
-    private void setName(String name) {
+    public void setName(String name) {
         if (name == null || name.isBlank())
             throw new IllegalArgumentException("Name cannot be blank");
 
         this.name = name.trim();
-    }
-
-    private void setEmail(String email) {
-        if (email == null || email.isBlank())
-            throw new IllegalArgumentException("Email cannot be blank");
-
-        this.email = email.trim().toLowerCase();
     }
 
     private String normalizePhone(String phone) {

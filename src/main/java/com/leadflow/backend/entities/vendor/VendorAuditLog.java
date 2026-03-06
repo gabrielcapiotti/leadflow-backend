@@ -36,6 +36,16 @@ public class VendorAuditLog {
 
     public VendorAuditLog() {}
 
+    public VendorAuditLog(UUID vendorId, String userEmail, String acao, String entityType, UUID entidadeId, String detalhes) {
+        this.vendorId = vendorId;
+        this.userEmail = userEmail;
+        this.acao = acao;
+        this.entityType = entityType;
+        this.entidadeId = entidadeId;
+        this.detalhes = detalhes;
+        this.createdAt = Instant.now();
+    }
+
     @PrePersist
     public void onCreate() {
         this.createdAt = Instant.now();
@@ -50,10 +60,12 @@ public class VendorAuditLog {
     public String getDetalhes() { return detalhes; }
     public Instant getCreatedAt() { return createdAt; }
 
-    public void setVendorId(UUID vendorId) { this.vendorId = vendorId; }
     public void setUserEmail(String userEmail) { this.userEmail = userEmail; }
     public void setAcao(String acao) { this.acao = acao; }
     public void setEntityType(String entityType) { this.entityType = entityType; }
     public void setEntidadeId(UUID entidadeId) { this.entidadeId = entidadeId; }
     public void setDetalhes(String detalhes) { this.detalhes = detalhes; }
+    public void setVendorId(UUID vendorId) {
+        this.vendorId = vendorId;
+    }
 }

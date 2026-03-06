@@ -65,6 +65,9 @@ public class Vendor {
 
     private String schemaName;
 
+    @Column(name = "name", nullable = true)
+    private String name;
+
     public Vendor() {}
 
     @PrePersist
@@ -161,6 +164,10 @@ public class Vendor {
         return schemaName;
     }
 
+    public String getName() {
+        return name;
+    }
+
     // ======================
     // SETTERS
     // ======================
@@ -247,5 +254,9 @@ public class Vendor {
 
     public void setSchemaName(String schemaName) {
         this.schemaName = schemaName;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

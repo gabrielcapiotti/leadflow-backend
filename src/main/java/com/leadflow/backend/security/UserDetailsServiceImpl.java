@@ -2,19 +2,26 @@ package com.leadflow.backend.security;
 
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.repository.user.UserRepository;
-import org.springframework.security.core.userdetails.*;
+
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Objects;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UserRepository userRepository;
 
-    public UserDetailsServiceImpl(
-            UserRepository userRepository
-    ) {
-        this.userRepository = userRepository;
+    public UserDetailsServiceImpl(UserRepository userRepository) {
+        this.userRepository = Objects.requireNonNull(
+                userRepository,
+                "userRepository cannot be null"
+        );
     }
 
     /* ======================================================
@@ -26,19 +33,16 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String email)
             throws UsernameNotFoundException {
 
-        if (email == null || email.isBlank()) {
-            throw new UsernameNotFoundException("Invalid email");
-        }
+        String normalizedEmail = normalizeEmail(email);
 
         User user = userRepository
-                .findByEmailIgnoreCaseAndDeletedAtIsNull(email.trim())
+                .findByEmailIgnoreCaseAndDeletedAtIsNull(normalizedEmail)
                 .orElseThrow(() ->
                         new UsernameNotFoundException("User not found")
                 );
 
         validateUser(user);
 
-        // 🔐 Retorna seu próprio UserDetails customizado
         return new CustomUserDetails(user);
     }
 
@@ -59,5 +63,28 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         if (user.getRole() == null || user.getRole().getName() == null) {
             throw new IllegalStateException("User role not configured properly");
         }
+
+        if (user.isAccountLocked()) {
+            throw new UsernameNotFoundException("User account locked");
+        }
+    }
+
+    /* ======================================================
+       HELPERS
+       ====================================================== */
+
+    private String normalizeEmail(String email) {
+
+        if (email == null) {
+            throw new UsernameNotFoundException("Email cannot be null");
+        }
+
+        String normalized = email.trim();
+
+        if (normalized.isBlank()) {
+            throw new UsernameNotFoundException("Email cannot be blank");
+        }
+
+        return normalized;
     }
 }

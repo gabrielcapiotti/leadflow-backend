@@ -33,30 +33,36 @@ public class AdminAuditController {
     private static final Logger logger =
             LoggerFactory.getLogger(AdminAuditController.class);
 
-    private final SecurityAuditLogRepository repository;
-        private final VendorAuditLogRepository vendorAuditLogRepository;
+    private final SecurityAuditLogRepository securityAuditLogRepository;
+    private final VendorAuditLogRepository vendorAuditLogRepository;
 
-        public AdminAuditController(SecurityAuditLogRepository repository,
-                                                                VendorAuditLogRepository vendorAuditLogRepository) {
-        this.repository = repository;
-                this.vendorAuditLogRepository = vendorAuditLogRepository;
+    public AdminAuditController(
+            SecurityAuditLogRepository securityAuditLogRepository,
+            VendorAuditLogRepository vendorAuditLogRepository
+    ) {
+        this.securityAuditLogRepository = securityAuditLogRepository;
+        this.vendorAuditLogRepository = vendorAuditLogRepository;
     }
 
-    /**
-     * Consulta logs de auditoria de segurança com filtros opcionais.
-     */
+    /* ======================================================
+       SECURITY AUDIT
+       ====================================================== */
+
     @GetMapping("/security")
     public ResponseEntity<Page<SecurityAuditResponse>> getAuditLogs(
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String tenant,
             @RequestParam(required = false) SecurityAction action,
             @RequestParam(required = false) Boolean success,
+
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime from,
+
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime to,
+
             Pageable pageable
     ) {
 
@@ -72,41 +78,61 @@ public class AdminAuditController {
                         to
                 );
 
-        Page<SecurityAuditResponse> response = repository
-                .findAll(specification, pageable)
-                .map(this::mapToResponse);
+        Page<SecurityAuditResponse> response =
+                securityAuditLogRepository
+                        .findAll(specification, pageable)
+                        .map(this::mapSecurityAuditResponse);
 
-        logger.info("Admin audit query executed - filters: email={}, tenant={}, action={}, success={}",
-                email, tenant, action, success);
+        logger.info(
+                "Admin security audit query executed - email={}, tenant={}, action={}, success={}",
+                email, tenant, action, success
+        );
 
         return ResponseEntity.ok(response);
     }
 
+    /* ======================================================
+       VENDOR AUDIT
+       ====================================================== */
+
     @GetMapping("/vendor")
     public ResponseEntity<Page<VendorAuditResponse>> getVendorAuditLogs(
+
             @RequestParam(required = false) UUID vendorId,
             @RequestParam(required = false) String acao,
             @RequestParam(required = false) String entityType,
+
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             Instant from,
+
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             Instant to,
+
             Pageable pageable
     ) {
 
         validateDateRange(from, to);
 
         Specification<VendorAuditLog> specification =
-                VendorAuditSpecification.filter(vendorId, acao, entityType, from, to);
+                VendorAuditSpecification.filter(
+                        vendorId,
+                        acao,
+                        entityType,
+                        from,
+                        to
+                );
 
-        Page<VendorAuditResponse> response = vendorAuditLogRepository
-                .findAll(specification, pageable)
-                .map(this::mapVendorAuditResponse);
+        Page<VendorAuditResponse> response =
+                vendorAuditLogRepository
+                        .findAll(specification, pageable)
+                        .map(this::mapVendorAuditResponse);
 
-        logger.info("Admin vendor audit query executed - filters: vendorId={}, acao={}, entityType={}",
-                vendorId, acao, entityType);
+        logger.info(
+                "Admin vendor audit query executed - vendorId={}, acao={}, entityType={}",
+                vendorId, acao, entityType
+        );
 
         return ResponseEntity.ok(response);
     }
@@ -115,7 +141,8 @@ public class AdminAuditController {
        MAPPING
        ====================================================== */
 
-    private SecurityAuditResponse mapToResponse(SecurityAuditLog log) {
+    private SecurityAuditResponse mapSecurityAuditResponse(SecurityAuditLog log) {
+
         return new SecurityAuditResponse(
                 log.getId(),
                 log.getAction(),
@@ -129,18 +156,19 @@ public class AdminAuditController {
         );
     }
 
-        private VendorAuditResponse mapVendorAuditResponse(VendorAuditLog log) {
-                return new VendorAuditResponse(
-                                log.getId(),
-                                log.getVendorId(),
-                                log.getUserEmail(),
-                                log.getAcao(),
-                                log.getEntityType(),
-                                log.getEntidadeId(),
-                                log.getDetalhes(),
-                                log.getCreatedAt()
-                );
-        }
+    private VendorAuditResponse mapVendorAuditResponse(VendorAuditLog log) {
+
+        return new VendorAuditResponse(
+                log.getId(),
+                log.getVendorId(),
+                log.getUserEmail(),
+                log.getAcao(),
+                log.getEntityType(),
+                log.getEntidadeId(),
+                log.getDetalhes(),
+                log.getCreatedAt()
+        );
+    }
 
     /* ======================================================
        VALIDATION
@@ -149,14 +177,18 @@ public class AdminAuditController {
     private void validateDateRange(LocalDateTime from, LocalDateTime to) {
 
         if (from != null && to != null && from.isAfter(to)) {
-            throw new IllegalArgumentException("Invalid date range: 'from' must be before 'to'");
+            throw new IllegalArgumentException(
+                    "Invalid date range: 'from' must be before 'to'"
+            );
         }
     }
 
-        private void validateDateRange(Instant from, Instant to) {
+    private void validateDateRange(Instant from, Instant to) {
 
-                if (from != null && to != null && from.isAfter(to)) {
-                        throw new IllegalArgumentException("Invalid date range: 'from' must be before 'to'");
-                }
+        if (from != null && to != null && from.isAfter(to)) {
+            throw new IllegalArgumentException(
+                    "Invalid date range: 'from' must be before 'to'"
+            );
         }
+    }
 }

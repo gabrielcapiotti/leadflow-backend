@@ -12,6 +12,7 @@ import com.leadflow.backend.security.jwt.JwtToken;
 import com.leadflow.backend.service.auth.AuthService;
 import com.leadflow.backend.service.auth.RefreshTokenService;
 import com.leadflow.backend.service.auth.UserSessionService;
+import com.leadflow.backend.service.user.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -35,19 +36,22 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
     private final UserSessionService userSessionService;
     private final TenantService tenantService;
+    private final UserService userService;
 
     public AuthController(
             AuthService authService,
             JwtService jwtService,
             RefreshTokenService refreshTokenService,
             UserSessionService userSessionService,
-            TenantService tenantService
+            TenantService tenantService,
+            UserService userService
     ) {
         this.authService = authService;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
         this.userSessionService = userSessionService;
         this.tenantService = tenantService;
+        this.userService = userService;
     }
 
     /* ======================================================
@@ -124,8 +128,9 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<UserResponse> me(Authentication authentication) {
 
-        CustomUserDetails userDetails = requireAuthenticatedUser(authentication);
-        User user = userDetails.getUser();
+        CustomUserDetails principal = requireAuthenticatedUser(authentication);
+
+        User user = userService.getActiveByEmail(principal.getUsername());
 
         return ResponseEntity.ok(
                 new UserResponse(
@@ -167,8 +172,7 @@ public class AuthController {
     @DeleteMapping("/sessions/{sessionId}")
     public ResponseEntity<Void> revokeSession(
             @PathVariable UUID sessionId,
-            Authentication authentication,
-            HttpServletRequest request
+            Authentication authentication
     ) {
 
         CustomUserDetails user = requireAuthenticatedUser(authentication);

@@ -11,12 +11,13 @@ import com.leadflow.backend.entities.vendor.LeadStage;
 import com.leadflow.backend.entities.vendor.VendorLead;
 import com.leadflow.backend.entities.vendor.VendorLeadConversation;
 import com.leadflow.backend.entities.vendor.VendorLeadStageHistory;
-import com.leadflow.backend.repository.VendorLeadConversationRepository;
 import com.leadflow.backend.repository.VendorLeadRepository;
 import com.leadflow.backend.repository.VendorLeadStageHistoryRepository;
+import com.leadflow.backend.repository.vendor.VendorLeadConversationRepository;
 import com.leadflow.backend.quota.CheckQuota;
 import com.leadflow.backend.security.VendorContext;
 import com.leadflow.backend.service.monitoring.MetricsService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,18 +26,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Pattern;
 
 @Service
 public class VendorLeadService {
 
     private static final Logger log = LoggerFactory.getLogger(VendorLeadService.class);
-    private static final Pattern WHATSAPP_PATTERN = Pattern.compile("^[0-9+()\\-\\s]{8,20}$");
-    private static final Pattern VALOR_CREDITO_PATTERN = Pattern.compile("^[0-9.,\\s]{1,30}$");
+
+    private static final Pattern WHATSAPP_PATTERN =
+            Pattern.compile("^[0-9+()\\-\\s]{8,20}$");
+
+    private static final Pattern VALOR_CREDITO_PATTERN =
+            Pattern.compile("^[0-9.,\\s]{1,30}$");
 
     private final VendorLeadRepository repository;
     private final VendorLeadConversationRepository conversationRepository;
@@ -45,12 +47,14 @@ public class VendorLeadService {
     private final MetricsService metricsService;
     private final ObjectMapper objectMapper;
 
-    public VendorLeadService(VendorLeadRepository repository,
-                             VendorLeadConversationRepository conversationRepository,
-                             VendorLeadStageHistoryRepository historyRepository,
-                             VendorContext vendorContext,
-                             MetricsService metricsService,
-                             ObjectMapper objectMapper) {
+    public VendorLeadService(
+            VendorLeadRepository repository,
+            VendorLeadConversationRepository conversationRepository,
+            VendorLeadStageHistoryRepository historyRepository,
+            VendorContext vendorContext,
+            MetricsService metricsService,
+            ObjectMapper objectMapper) {
+
         this.repository = repository;
         this.conversationRepository = conversationRepository;
         this.historyRepository = historyRepository;
@@ -64,21 +68,30 @@ public class VendorLeadService {
     public VendorLead createFromAi(UUID vendorId, String json) {
 
         try {
+
             JsonNode node = objectMapper.readTree(json);
 
             if (node.hasNonNull("nomeCompleto") &&
                 node.hasNonNull("whatsapp")) {
 
-                String nomeCompleto = sanitizeNomeCompleto(node.get("nomeCompleto").asText());
-                String whatsapp = sanitizeWhatsapp(node.get("whatsapp").asText());
-                String valorCredito = sanitizeValorCredito(node.path("valorCredito").asText(null));
+                String nomeCompleto =
+                        sanitizeNomeCompleto(node.get("nomeCompleto").asText());
+
+                String whatsapp =
+                        sanitizeWhatsapp(node.get("whatsapp").asText());
+
+                String valorCredito =
+                        sanitizeValorCredito(node.path("valorCredito").asText(null));
 
                 if (nomeCompleto == null || whatsapp == null) {
                     return null;
                 }
 
-                var existingLead = repository
-                    .findFirstByVendorIdAndWhatsappOrderByCreatedDateDesc(vendorId, whatsapp);
+                var existingLead =
+                        repository.findFirstByVendorIdAndWhatsappOrderByCreatedDateDesc(
+                                vendorId,
+                                whatsapp
+                        );
 
                 boolean isNewLead = existingLead.isEmpty();
 
@@ -95,19 +108,32 @@ public class VendorLeadService {
                 lead.setUrgencia(node.path("urgencia").asText(null));
 
                 lead.setScore(calculateScore(lead));
+
                 VendorLead savedLead = repository.save(lead);
 
                 if (isNewLead) {
+
                     metricsService.incrementLeadCreated();
-                    metricsService.leadCreated(vendorId.toString());
-                    log.info("lead_created vendor={} lead={}", vendorId, savedLead.getId());
+                    metricsService.incrementLeadCreated(vendorId.toString());
+
+                    log.info(
+                            "lead_created vendor={} lead={}",
+                            vendorId,
+                            savedLead.getId()
+                    );
                 }
 
                 return savedLead;
             }
 
         } catch (Exception e) {
-            // futuramente log estruturado
+
+            log.error(
+                    "error_creating_lead_from_ai vendor={} json={}",
+                    vendorId,
+                    json,
+                    e
+            );
         }
 
         return null;
@@ -128,28 +154,38 @@ public class VendorLeadService {
         }
 
         VendorLead lead = new VendorLead();
+
         lead.setVendorId(vendorId);
         lead.setNomeCompleto(nomeCompleto);
         lead.setWhatsapp(whatsapp);
         lead.setTipoConsorcio(request.getTipoConsorcio());
         lead.setValorCredito(valorCredito);
         lead.setUrgencia(request.getUrgencia());
+
         lead.setScore(calculateScore(lead));
 
         VendorLead savedLead = repository.save(lead);
+
         metricsService.incrementLeadCreated();
-        metricsService.leadCreated(vendorId.toString());
-        log.info("lead_created vendor={} lead={}", vendorId, savedLead.getId());
+        metricsService.incrementLeadCreated(vendorId.toString());
+
+        log.info(
+                "lead_created vendor={} lead={}",
+                vendorId,
+                savedLead.getId()
+        );
 
         return savedLead;
     }
 
     private String sanitizeNomeCompleto(String value) {
+
         if (value == null) {
             return null;
         }
 
         String sanitized = value.trim().replaceAll("\\s+", " ");
+
         if (sanitized.length() < 2 || sanitized.length() > 100) {
             return null;
         }
@@ -158,11 +194,13 @@ public class VendorLeadService {
     }
 
     private String sanitizeWhatsapp(String value) {
+
         if (value == null) {
             return null;
         }
 
         String sanitized = value.trim();
+
         if (!WHATSAPP_PATTERN.matcher(sanitized).matches()) {
             return null;
         }
@@ -171,11 +209,13 @@ public class VendorLeadService {
     }
 
     private String sanitizeValorCredito(String value) {
+
         if (value == null) {
             return null;
         }
 
         String sanitized = value.trim();
+
         if (sanitized.isBlank()) {
             return null;
         }
@@ -188,6 +228,7 @@ public class VendorLeadService {
     }
 
     public void saveConversation(UUID leadId, String userMessage, String aiMessage) {
+
         if (leadId == null || userMessage == null || aiMessage == null) {
             return;
         }
@@ -201,7 +242,8 @@ public class VendorLeadService {
     }
 
     public List<VendorLeadConversation> getConversation(UUID leadId) {
-        return conversationRepository.findByVendorLeadIdOrderByCreatedAtAsc(leadId);
+        return conversationRepository
+                .findByVendorLeadIdOrderByCreatedAtAsc(leadId);
     }
 
     @Audit(action = "UPDATE_STAGE", entity = "VendorLead")
@@ -209,8 +251,10 @@ public class VendorLeadService {
 
         UUID vendorId = vendorContext.getCurrentVendor().getId();
 
-        VendorLead lead = repository.findByIdAndVendorId(leadId, vendorId)
-            .orElseThrow(() -> new RuntimeException("Lead não encontrado ou acesso negado"));
+        VendorLead lead =
+                repository.findByIdAndVendorId(leadId, vendorId)
+                        .orElseThrow(() ->
+                                new RuntimeException("Lead não encontrado ou acesso negado"));
 
         LeadStage currentStage = lead.getStage();
 
@@ -219,8 +263,12 @@ public class VendorLeadService {
         }
 
         if (!currentStage.canTransitionTo(newStage)) {
+
             throw new IllegalStateException(
-                    "Transição inválida: " + currentStage + " → " + newStage
+                    "Transição inválida: " +
+                            currentStage +
+                            " → " +
+                            newStage
             );
         }
 
@@ -229,13 +277,16 @@ public class VendorLeadService {
 
         repository.save(lead);
 
-        log.info("lead_stage_changed vendorId={} leadId={} from={} to={}",
-            vendorId,
-            leadId,
-            currentStage,
-            newStage);
+        log.info(
+                "lead_stage_changed vendorId={} leadId={} from={} to={}",
+                vendorId,
+                leadId,
+                currentStage,
+                newStage
+        );
 
         VendorLeadStageHistory history = new VendorLeadStageHistory();
+
         history.setVendorLeadId(leadId);
         history.setPreviousStage(currentStage.name());
         history.setNewStage(newStage.name());
@@ -250,17 +301,21 @@ public class VendorLeadService {
 
         var vendor = vendorContext.getCurrentVendor();
 
-        VendorLead lead = repository.findByIdAndVendorId(leadId, vendor.getId())
-            .orElseThrow(() -> new RuntimeException("Lead não encontrado ou acesso negado"));
+        VendorLead lead =
+                repository.findByIdAndVendorId(leadId, vendor.getId())
+                        .orElseThrow(() ->
+                                new RuntimeException("Lead não encontrado ou acesso negado"));
 
         lead.setOwnerEmail(vendor.getUserEmail());
 
-        VendorLead savedLead = repository.save(lead); // nunca null
+        VendorLead savedLead = repository.save(lead);
 
-        log.info("lead_owner_assigned vendorId={} leadId={} ownerEmail={}",
-            vendor.getId(),
-            leadId,
-            vendor.getUserEmail());
+        log.info(
+                "lead_owner_assigned vendorId={} leadId={} ownerEmail={}",
+                vendor.getId(),
+                leadId,
+                vendor.getUserEmail()
+        );
 
         return savedLead;
     }
@@ -275,11 +330,13 @@ public class VendorLeadService {
 
         var results = repository.countByStage(vendorId);
 
-        java.util.Map<String, Long> map = new java.util.HashMap<>();
+        Map<String, Long> map = new HashMap<>();
 
         for (Object[] row : results) {
+
             String stage = (String) row[0];
             Long count = (Long) row[1];
+
             map.put(stage, count);
         }
 
@@ -287,39 +344,53 @@ public class VendorLeadService {
     }
 
     public List<VendorLead> getRankingForCurrentVendor() {
+
         UUID vendorId = vendorContext.getCurrentVendor().getId();
+
         return repository.findByVendorIdOrderByScoreDesc(vendorId);
     }
 
     public Page<VendorLead> listForCurrentVendor(Pageable pageable) {
+
         UUID vendorId = vendorContext.getCurrentVendor().getId();
+
         return repository.findByVendorId(vendorId, pageable);
     }
 
     public VendorLead getLeadForCurrentVendor(UUID leadId) {
+
         UUID vendorId = vendorContext.getCurrentVendor().getId();
 
-        return repository.findByIdAndVendorId(leadId, vendorId)
-                .orElseThrow(() -> new RuntimeException("Lead não encontrado ou acesso negado"));
+        return repository
+                .findByIdAndVendorId(leadId, vendorId)
+                .orElseThrow(() ->
+                        new RuntimeException("Lead não encontrado ou acesso negado"));
     }
 
     private int calculateScore(VendorLead lead) {
 
-        int base = switch (lead.getUrgencia() == null ? "" : lead.getUrgencia()) {
-            case "quero_fechar" -> 100;
-            case "analisando" -> 60;
-            case "pesquisando" -> 30;
-            default -> 10;
-        };
+        int base =
+                switch (lead.getUrgencia() == null ? "" : lead.getUrgencia()) {
+
+                    case "quero_fechar" -> 100;
+                    case "analisando" -> 60;
+                    case "pesquisando" -> 30;
+
+                    default -> 10;
+                };
 
         int bonus = 0;
 
         if (lead.getStage() != null) {
-            bonus = switch (lead.getStage()) {
-                case PROPOSTA -> 20;
-                case CONTATO -> 10;
-                default -> 0;
-            };
+
+            bonus =
+                    switch (lead.getStage()) {
+
+                        case PROPOSTA -> 20;
+                        case CONTATO -> 10;
+
+                        default -> 0;
+                    };
         }
 
         return base + bonus;
@@ -335,8 +406,9 @@ public class VendorLeadService {
 
         for (var lead : leads) {
 
-            var history = historyRepository
-                    .findByVendorLeadIdOrderByChangedAtDesc(lead.getId());
+            var history =
+                    historyRepository
+                            .findByVendorLeadIdOrderByChangedAtDesc(lead.getId());
 
             Instant previous = lead.getCreatedDate();
 
@@ -350,8 +422,10 @@ public class VendorLeadService {
                                 .toHours();
 
                 stageDurations
-                        .computeIfAbsent(record.getPreviousStage(),
-                                k -> new java.util.ArrayList<>())
+                        .computeIfAbsent(
+                                record.getPreviousStage(),
+                                k -> new ArrayList<>()
+                        )
                         .add(duration);
 
                 previous = record.getChangedAt();
@@ -362,11 +436,12 @@ public class VendorLeadService {
 
         for (var entry : stageDurations.entrySet()) {
 
-            double avg = entry.getValue()
-                    .stream()
-                    .mapToLong(Long::longValue)
-                    .average()
-                    .orElse(0);
+            double avg =
+                    entry.getValue()
+                            .stream()
+                            .mapToLong(Long::longValue)
+                            .average()
+                            .orElse(0);
 
             averages.put(entry.getKey(), avg);
         }
@@ -378,7 +453,8 @@ public class VendorLeadService {
 
         UUID vendorId = vendorContext.getCurrentVendor().getId();
 
-        var results = historyRepository.countTransitionsByVendor(vendorId);
+        var results =
+                historyRepository.countTransitionsByVendor(vendorId);
 
         Map<String, Long> stageTotals = new HashMap<>();
         Map<String, Long> transitions = new HashMap<>();
@@ -389,8 +465,10 @@ public class VendorLeadService {
             String to = (String) row[1];
             Long count = (Long) row[2];
 
-            stageTotals.put(from,
-                    stageTotals.getOrDefault(from, 0L) + count);
+            stageTotals.put(
+                    from,
+                    stageTotals.getOrDefault(from, 0L) + count
+            );
 
             transitions.put(from + "→" + to, count);
         }
@@ -400,9 +478,11 @@ public class VendorLeadService {
         for (var entry : transitions.entrySet()) {
 
             String from = entry.getKey().split("→")[0];
+
             long totalFrom = stageTotals.getOrDefault(from, 1L);
 
-            double rate = (double) entry.getValue() / totalFrom * 100.0;
+            double rate =
+                    (double) entry.getValue() / totalFrom * 100.0;
 
             conversion.put(entry.getKey(), rate);
         }
@@ -411,10 +491,13 @@ public class VendorLeadService {
     }
 
     private void saveConversationMessage(UUID leadId, String role, String content) {
+
         VendorLeadConversation conversation = new VendorLeadConversation();
+
         conversation.setVendorLeadId(leadId);
         conversation.setRole(role);
         conversation.setContent(content.trim());
+
         conversationRepository.save(conversation);
     }
 }
