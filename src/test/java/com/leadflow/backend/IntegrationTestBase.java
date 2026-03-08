@@ -1,6 +1,7 @@
 package com.leadflow.backend;
 
 import com.leadflow.backend.multitenancy.service.TenantProvisioningService;
+import com.leadflow.backend.security.RateLimitService;
 import com.leadflow.backend.security.VendorContext;
 import com.leadflow.backend.service.admin.AdminService;
 import com.leadflow.backend.service.ai.AiRateLimiter;
@@ -17,41 +18,47 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+
 import org.springframework.test.web.servlet.MockMvc;
 
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Testcontainers
 public abstract class IntegrationTestBase {
 
     private static final String IMAGE = "postgres:16-alpine";
 
-    @SuppressWarnings("resource")
+    /* ======================================================
+       Testcontainer PostgreSQL
+       ====================================================== */
+
+    @Container
     static final PostgreSQLContainer<?> postgres =
             new PostgreSQLContainer<>(IMAGE)
                     .withDatabaseName("leadflow_test")
                     .withUsername("postgres")
                     .withPassword("postgres");
 
-    static {
-        postgres.start();
-    }
-
     /* ======================================================
        Infra mocks (dependências externas / cross-cutting)
        ====================================================== */
 
-    // WebSocket (AlertNotificationService)
+    // WebSocket
     @MockBean
     protected SimpMessagingTemplate messagingTemplate;
 
-    // Contexto de segurança do vendor
+    // Contexto de segurança
     @MockBean
     protected VendorContext vendorContext;
 
@@ -59,66 +66,69 @@ public abstract class IntegrationTestBase {
     @MockBean
     protected MetricsService metricsService;
 
-    // Email (SendGrid)
+    // Email
     @MockBean
     protected SendGridEmailService sendGridEmailService;
 
-    // IA (usado por AiController e ResumoService)
+    // AI
     @MockBean
     protected AiService aiService;
 
-    // Auditoria (usado por ResumoService)
+    // Auditoria
     @MockBean
     protected AuditService auditService;
 
-    // AI Rate Limiter (used by AiController)
+    // AI Rate Limiter
     @MockBean
     protected AiRateLimiter aiRateLimiter;
 
-    // AI Metrics Service (used by AiController)
+    // AI Metrics
     @MockBean
     protected AiMetricsService aiMetricsService;
 
-    // Conversation Service (used by ResumoService and AiController)
+    // Conversation
     @MockBean
     protected ConversationService conversationService;
 
-    // Vendor Feature Service (used by AiController)
+    // Vendor features
     @MockBean
     protected VendorFeatureService vendorFeatureService;
 
-    // Vendor Lead Service (used by AiController)
+    // Vendor leads
     @MockBean
     protected VendorLeadService vendorLeadService;
 
-    // Admin Service (used by AiController)
+    // Admin
     @MockBean
     protected AdminService adminService;
 
-    // Tenant Provisioning Service (used by AiController)
+    // Tenant provisioning
     @MockBean
     protected TenantProvisioningService tenantProvisioningService;
 
+    // Rate limit
+    @MockBean
+    protected RateLimitService rateLimitService;
+
     /* ======================================================
-       Configuração dinâmica do banco (Testcontainers)
+       Configuração dinâmica do banco
        ====================================================== */
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
 
-        // Datasource
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.datasource.driver-class-name", postgres::getDriverClassName);
 
         // JPA
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "none");
         registry.add("spring.jpa.open-in-view", () -> "false");
         registry.add("spring.jpa.properties.hibernate.multiTenancy", () -> "SCHEMA");
 
-        // Flyway desabilitado para testes
-        registry.add("spring.flyway.enabled", () -> "false");
+        // Flyway ativado para testes
+        registry.add("spring.flyway.enabled", () -> "true");
 
         // Multitenancy
         registry.add("multitenancy.enabled", () -> "true");

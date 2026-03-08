@@ -5,6 +5,8 @@ import com.leadflow.backend.dto.vendor.UsageResponse;
 import com.leadflow.backend.entities.vendor.Vendor;
 import com.leadflow.backend.multitenancy.service.TenantService;
 import com.leadflow.backend.repository.VendorRepository;
+import org.springframework.context.annotation.FilterType;
+import com.leadflow.backend.security.RateLimitInterceptor;
 import com.leadflow.backend.security.RateLimitService;
 import com.leadflow.backend.security.SubscriptionGuard;
 import com.leadflow.backend.service.vendor.QuotaService;
@@ -12,9 +14,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -27,7 +30,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = UsageController.class)
+@WebMvcTest(
+    controllers = UsageController.class,
+    excludeFilters = @ComponentScan.Filter(
+        type = FilterType.ASSIGNABLE_TYPE,
+        classes = RateLimitInterceptor.class
+    )
+)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 class UsageControllerTest {
@@ -35,20 +44,23 @@ class UsageControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-        @MockitoBean
+        @MockBean
     private QuotaService quotaService;
 
-        @MockitoBean
+        @MockBean
     private VendorRepository vendorRepository;
 
-        @MockitoBean
+        @MockBean
     private TenantService tenantService;
 
-        @MockitoBean
-    private RateLimitService rateLimitService;
-
-        @MockitoBean
+        @MockBean
     private SubscriptionGuard subscriptionGuard;
+
+        @MockBean
+    private RateLimitInterceptor rateLimitInterceptor;
+
+        @MockBean
+    private RateLimitService rateLimitService;
 
     @Test
     @WithMockUser(username = "vendor@test.com")

@@ -37,7 +37,6 @@ class JwtServiceTest {
                 Clock.systemUTC()
         );
 
-        // 🔥 Importante para versão enterprise
         jwtService.afterPropertiesSet();
 
         userId = UUID.randomUUID();

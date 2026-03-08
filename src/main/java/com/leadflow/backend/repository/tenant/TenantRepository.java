@@ -1,7 +1,6 @@
 package com.leadflow.backend.repository.tenant;
 
 import com.leadflow.backend.entities.Tenant;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -46,7 +45,6 @@ public interface TenantRepository extends JpaRepository<Tenant, UUID> {
 
     /**
      * Busca tenant (ativo ou deletado) pelo schemaName.
-     * Usado para validações administrativas.
      */
     Optional<Tenant> findBySchemaNameIgnoreCase(String schemaName);
 

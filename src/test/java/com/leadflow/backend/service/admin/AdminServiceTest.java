@@ -8,6 +8,7 @@ import com.leadflow.backend.dto.admin.VendorHealthResponse;
 import com.leadflow.backend.entities.vendor.QuotaType;
 import com.leadflow.backend.entities.vendor.SubscriptionStatus;
 import com.leadflow.backend.entities.vendor.Vendor;
+import com.leadflow.backend.entities.vendor.VendorRiskAlert;
 import com.leadflow.backend.repository.SubscriptionHistoryRepository;
 import com.leadflow.backend.repository.VendorLeadRepository;
 import com.leadflow.backend.repository.VendorRiskAlertRepository;
@@ -23,6 +24,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -34,6 +39,7 @@ import java.sql.Date;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -74,7 +80,6 @@ class AdminServiceTest {
 
     @Test
     void shouldReturnOverviewWithAggregatedMetrics() {
-
         when(vendorRepository.countAllGlobal()).thenReturn(42L);
         when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.ATIVA)).thenReturn(35L);
         when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.TRIAL)).thenReturn(4L);
@@ -105,6 +110,8 @@ class AdminServiceTest {
         assertEquals(197.0, response.getArpu().doubleValue());
         assertEquals(0.2, response.getChurnRate());
         assertEquals(985.0, response.getLtv().doubleValue());
+
+        verify(vendorRepository).countAllGlobal();
     }
 
         @Test
@@ -226,12 +233,12 @@ class AdminServiceTest {
         vendor.setId(vendorId);
         vendor.setSubscriptionStatus(SubscriptionStatus.ATIVA);
 
-        when(vendorRepository.findById(vendorId)).thenReturn(java.util.Optional.of(vendor));
+        when(vendorRepository.findById(vendorId)).thenReturn(Optional.of(vendor));
         when(usageRepository.sumLast30Days(any(), any(), any())).thenReturn(600L);
         when(leadRepository.countLast30Days(any(), any())).thenReturn(30L);
         when(usageRepository.lastActivity(any())).thenReturn(Instant.now().minus(2, java.time.temporal.ChronoUnit.DAYS));
 
-        VendorHealthResponse response = adminService.calculateHealth(vendorId);
+        VendorHealthResponse response = adminService.calculateHealth(Objects.requireNonNull(vendorId));
 
         assertEquals(vendorId, response.getVendorId());
         assertEquals("LOW", response.getRiskLevel());
@@ -255,11 +262,11 @@ class AdminServiceTest {
 
         adminService.evaluateRisk(vendorId);
 
-        verify(riskAlertRepository).save(any());
+        verify(riskAlertRepository).save(any(VendorRiskAlert.class));
         verify(emailService).sendEmail(
-            org.mockito.ArgumentMatchers.eq("vendor@example.com"),
-            org.mockito.ArgumentMatchers.eq("Percebemos pouca atividade na sua conta"),
-            any()
+            eq("vendor@example.com"),
+            contains("Percebemos pouca atividade na sua conta"),
+            anyString()
         );
     }
 
@@ -272,15 +279,12 @@ class AdminServiceTest {
         vendor.setSubscriptionStatus(SubscriptionStatus.INADIMPLENTE);
 
         when(vendorRepository.findById(vendorId)).thenReturn(Optional.of(vendor));
-        when(usageRepository.sumLast30Days(any(), any(), any())).thenReturn(0L);
-        when(leadRepository.countLast30Days(any(), any())).thenReturn(0L);
-        when(usageRepository.lastActivity(any())).thenReturn(Instant.now().minus(25, java.time.temporal.ChronoUnit.DAYS));
         when(riskAlertRepository.existsByVendorIdAndResolvedFalse(vendorId)).thenReturn(true);
 
         adminService.evaluateRisk(vendorId);
 
-        verify(riskAlertRepository, never()).save(any());
-        verify(emailService, never()).sendEmail(any(), any(), any());
+        verify(riskAlertRepository, never()).save(any(VendorRiskAlert.class));
+        verify(emailService, never()).sendEmail(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -295,11 +299,11 @@ class AdminServiceTest {
         vendor2.setId(UUID.randomUUID());
 
         when(vendorRepository.findAll()).thenReturn(List.of(vendor1, vendor2));
-        doNothing().when(spyService).evaluateRisk(any());
+        doNothing().when(spyService).evaluateRisk(argThat((UUID id) -> id != null));
 
-        spyService.evaluateAllVendorsRisk();
+        spyService.evaluateAllVendorsRiskDaily();
 
-        verify(spyService, times(2)).evaluateRisk(any());
+        verify(spyService, times(2)).evaluateRisk(any(UUID.class));
     }
 
         private Vendor buildVendor(Instant startedAt,

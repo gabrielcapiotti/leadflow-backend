@@ -5,6 +5,8 @@ import com.leadflow.backend.dto.vendor.DashboardResponse;
 import com.leadflow.backend.entities.vendor.LeadStage;
 import com.leadflow.backend.entities.vendor.VendorLead;
 import com.leadflow.backend.multitenancy.service.TenantService;
+import com.leadflow.backend.security.RateLimitInterceptor;
+import com.leadflow.backend.security.RateLimitService;
 import com.leadflow.backend.security.SubscriptionGuard;
 import com.leadflow.backend.service.vendor.DashboardService;
 import org.junit.jupiter.api.Test;
@@ -12,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -42,6 +45,12 @@ class DashboardControllerTest {
 
     @MockitoBean
     private SubscriptionGuard subscriptionGuard;
+
+    @MockBean
+    private RateLimitInterceptor rateLimitInterceptor;
+
+    @MockBean
+    private RateLimitService rateLimitService;
 
     @Test
     void getDashboard_ShouldReturnDashboardResponse() throws Exception {

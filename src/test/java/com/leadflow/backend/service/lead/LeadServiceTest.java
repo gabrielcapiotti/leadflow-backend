@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
@@ -66,8 +67,9 @@ class LeadServiceTest {
     void shouldCreateLead() {
 
         when(leadRepository.existsByUserIdAndEmailIgnoreCaseAndDeletedAtIsNull(
-                user.getId(), "lead@example.com"))
-                .thenReturn(false);
+                user.getId(),
+                "lead@example.com"
+        )).thenReturn(false);
 
         when(leadRepository.save(any(Lead.class)))
                 .thenAnswer(invocation -> {
@@ -75,6 +77,9 @@ class LeadServiceTest {
                     ReflectionTestUtils.setField(lead, "id", leadId);
                     return lead;
                 });
+
+        when(historyRepository.save(any(LeadStatusHistory.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         Lead created = leadService.createLead(
                 "Lead",
@@ -95,11 +100,17 @@ class LeadServiceTest {
     void shouldNotAllowDuplicateEmail() {
 
         when(leadRepository.existsByUserIdAndEmailIgnoreCaseAndDeletedAtIsNull(
-                user.getId(), "duplicate@example.com"))
-                .thenReturn(true);
+                user.getId(),
+                "duplicate@example.com"
+        )).thenReturn(true);
 
         assertThatThrownBy(() ->
-                leadService.createLead("New", "duplicate@example.com", "456", user)
+                leadService.createLead(
+                        "New",
+                        "duplicate@example.com",
+                        "456",
+                        user
+                )
         )
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("Email already in use");
@@ -185,6 +196,8 @@ class LeadServiceTest {
                 "123"
         );
 
+        ReflectionTestUtils.setField(lead, "id", leadId);
+
         lead.changeStatus(LeadStatus.CONTACTED);
 
         when(leadRepository
@@ -192,7 +205,11 @@ class LeadServiceTest {
                 .thenReturn(Optional.of(lead));
 
         assertThatThrownBy(() ->
-                leadService.updateStatus(leadId, LeadStatus.NEW, user)
+                leadService.updateStatus(
+                        leadId,
+                        LeadStatus.NEW,
+                        user
+                )
         )
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("Invalid status transition");
@@ -212,6 +229,8 @@ class LeadServiceTest {
                 "123"
         );
 
+        ReflectionTestUtils.setField(lead, "id", leadId);
+
         when(leadRepository
                 .findByIdAndUserIdAndDeletedAtIsNull(leadId, user.getId()))
                 .thenReturn(Optional.of(lead));
@@ -220,7 +239,6 @@ class LeadServiceTest {
 
         assertThat(lead.getDeletedAt()).isNotNull();
 
-        // NÃO deve chamar save (dirty checking)
         verify(leadRepository, never()).save(any());
     }
 }

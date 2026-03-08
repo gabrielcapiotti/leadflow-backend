@@ -5,21 +5,28 @@ import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.lead.Lead;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
+
 import com.leadflow.backend.multitenancy.context.TenantContext;
+
 import com.leadflow.backend.repository.lead.LeadRepository;
+import com.leadflow.backend.repository.tenant.TenantRepository;
 import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
-import com.leadflow.backend.repository.tenant.TenantRepository;
+
 import com.leadflow.backend.util.TestTenantFactory;
 
-import org.junit.jupiter.api.*;
+import java.util.Objects;
+import java.util.UUID;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.context.annotation.Import;
-import org.springframework.boot.test.mock.mockito.MockBean;
-
-import java.util.UUID;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,6 +37,9 @@ class TenantIsolationTest extends IntegrationTestBase {
 
     @Autowired
     private LeadRepository leadRepository;
+
+    @Autowired
+    private TenantRepository tenantRepository;
 
     @Autowired
     private RoleRepository roleRepository;
@@ -43,27 +53,24 @@ class TenantIsolationTest extends IntegrationTestBase {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    @MockBean
-    private TenantRepository tenantRepository;
-
     private Tenant tenantA;
     private Tenant tenantB;
 
     @BeforeEach
     void setup() {
+
         TenantContext.clear();
+
         tenantRepository.deleteAll();
 
-        tenantA = testTenantFactory.createTenant("tenant_a");
-        tenantB = testTenantFactory.createTenant("tenant_b");
+        tenantA = testTenantFactory.createTenant("tenantA");
+        tenantB = testTenantFactory.createTenant("tenantB");
 
         createSchemaIfNotExists(tenantA.getSchemaName());
         createSchemaIfNotExists(tenantB.getSchemaName());
 
-        // Garante que ROLE_USER exista apenas uma vez (global)
         ensureRoleExists("ROLE_USER");
 
-        // Força criação das tabelas tenant
         initializeTenant(tenantA.getSchemaName());
         initializeTenant(tenantB.getSchemaName());
 
@@ -76,13 +83,11 @@ class TenantIsolationTest extends IntegrationTestBase {
     }
 
     private void createSchemaIfNotExists(String schema) {
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS " + schema);
+        jdbcTemplate.execute(
+                "CREATE SCHEMA IF NOT EXISTS \"" + schema + "\""
+        );
     }
 
-    /**
-     * Roles são globais (public schema).
-     * Portanto devem ser criadas apenas uma vez.
-     */
     private Role ensureRoleExists(String roleName) {
         return roleRepository.findByNameIgnoreCase(roleName)
                 .orElseGet(() ->
@@ -90,44 +95,48 @@ class TenantIsolationTest extends IntegrationTestBase {
                 );
     }
 
-    /**
-     * Apenas força criação das tabelas do schema tenant.
-     * NÃO cria role aqui.
-     */
     private void initializeTenant(String schema) {
+
         TenantContext.setTenant(schema);
 
-        // força criação das tabelas se ainda não existirem
-        leadRepository.count();
-    }
+        jdbcTemplate.execute(
+                "SET search_path TO \"" + schema + "\""
+        );
 
-    /* ======================================================
-       TEST 1 — Count Isolation
-       ====================================================== */
+        // força inicialização das entidades
+        leadRepository.count();
+        userRepository.count();
+        roleRepository.count();
+
+        TenantContext.clear();
+    }
 
     @Test
     void shouldIsolateDataBetweenSchemas() {
 
         TenantContext.setTenant(tenantA.getSchemaName());
 
-        Role role = roleRepository.findByNameIgnoreCase("ROLE_USER")
-                .orElseThrow();
+        Role role =
+                roleRepository.findByNameIgnoreCase("ROLE_USER")
+                        .orElseThrow();
 
-        User userA = userRepository.saveAndFlush(
-                new User(
-                        "User A",
-                        "a_" + UUID.randomUUID() + "@mail.com",
-                        "pass12345",
-                        role
-                )
-        );
+        User userA =
+                userRepository.saveAndFlush(
+                        new User(
+                                "User A",
+                                "a_" + UUID.randomUUID() + "@mail.com",
+                                "pass12345",
+                                role
+                        )
+                );
 
-        Lead leadA = new Lead(
-                userA.getId(),
-                "Lead A",
-                "lead_a_" + UUID.randomUUID() + "@mail.com",
-                "111"
-        );
+        Lead leadA =
+                new Lead(
+                        userA.getId(),
+                        "Lead A",
+                        "lead_a_" + UUID.randomUUID() + "@mail.com",
+                        "111"
+                );
 
         leadRepository.saveAndFlush(leadA);
 
@@ -139,41 +148,43 @@ class TenantIsolationTest extends IntegrationTestBase {
         assertThat(leadRepository.count()).isZero();
     }
 
-    /* ======================================================
-       TEST 2 — Direct ID Isolation
-       ====================================================== */
-
     @Test
     void shouldNotAccessOtherTenantData() {
 
         TenantContext.setTenant(tenantA.getSchemaName());
 
-        Role role = roleRepository.findByNameIgnoreCase("ROLE_USER")
-                .orElseThrow();
+        Role role =
+                roleRepository.findByNameIgnoreCase("ROLE_USER")
+                        .orElseThrow();
 
-        User userA = userRepository.saveAndFlush(
-                new User(
-                        "User B",
-                        "b_" + UUID.randomUUID() + "@mail.com",
-                        "pass12345",
-                        role
-                )
-        );
+        User userA =
+                userRepository.saveAndFlush(
+                        new User(
+                                "User B",
+                                "b_" + UUID.randomUUID() + "@mail.com",
+                                "pass12345",
+                                role
+                        )
+                );
 
-        Lead leadA = leadRepository.saveAndFlush(
-                new Lead(
-                        userA.getId(),
-                        "Lead B",
-                        "lead_b_" + UUID.randomUUID() + "@mail.com",
-                        "111"
-                )
-        );
+        Lead leadA =
+                leadRepository.saveAndFlush(
+                        new Lead(
+                                userA.getId(),
+                                "Lead B",
+                                "lead_b_" + UUID.randomUUID() + "@mail.com",
+                                "111"
+                        )
+                );
 
-        UUID leadId = leadA.getId();
+        UUID leadId =
+                Objects.requireNonNull(leadA.getId());
 
         TenantContext.clear();
         TenantContext.setTenant(tenantB.getSchemaName());
 
-        assertThat(leadRepository.findById(leadId)).isEmpty();
+        assertThat(
+                leadRepository.findById(leadId)
+        ).isEmpty();
     }
 }

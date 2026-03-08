@@ -24,6 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -44,8 +45,9 @@ class QuotaServiceTest {
     @BeforeEach
     void setUp() {
         quotaService = new QuotaService(repository, vendorRepository, emailService);
-        when(repository.save(any(VendorUsage.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        lenient().when(repository.save(any(VendorUsage.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Test
@@ -53,10 +55,8 @@ class QuotaServiceTest {
 
         UUID vendorId = UUID.randomUUID();
         VendorUsage usage = buildUsage(vendorId, QuotaType.ACTIVE_LEADS, 399, Instant.now().plusSeconds(3600));
+        when(repository.findByVendorIdAndQuotaType(vendorId, QuotaType.ACTIVE_LEADS)).thenReturn(Optional.of(usage));
         Vendor vendor = buildVendor(vendorId);
-
-        when(repository.findByVendorIdAndQuotaType(vendorId, QuotaType.ACTIVE_LEADS))
-                .thenReturn(Optional.of(usage));
         when(vendorRepository.findById(vendorId)).thenReturn(Optional.of(vendor));
 
         quotaService.increment(vendorId, QuotaType.ACTIVE_LEADS);
@@ -76,43 +76,70 @@ class QuotaServiceTest {
     void shouldMark100PercentAlertWhenLimitIsReached() {
 
         UUID vendorId = UUID.randomUUID();
-        VendorUsage usage = buildUsage(vendorId, QuotaType.ACTIVE_LEADS, 499, Instant.now().plusSeconds(3600));
-        Vendor vendor = buildVendor(vendorId);
+
+        VendorUsage usage = buildUsage(
+                vendorId,
+                QuotaType.ACTIVE_LEADS,
+                499,
+                Instant.now().plusSeconds(3600)
+        );
+
         usage.setAlert80Sent(true);
+
+        Vendor vendor = buildVendor(vendorId);
 
         when(repository.findByVendorIdAndQuotaType(vendorId, QuotaType.ACTIVE_LEADS))
                 .thenReturn(Optional.of(usage));
-        when(vendorRepository.findById(vendorId)).thenReturn(Optional.of(vendor));
+
+        when(vendorRepository.findById(vendorId))
+                .thenReturn(Optional.of(vendor));
 
         quotaService.increment(vendorId, QuotaType.ACTIVE_LEADS);
 
-        ArgumentCaptor<VendorUsage> captor = ArgumentCaptor.forClass(VendorUsage.class);
+        ArgumentCaptor<VendorUsage> captor =
+                ArgumentCaptor.forClass(VendorUsage.class);
+
         verify(repository).save(captor.capture());
 
         VendorUsage saved = captor.getValue();
+
         assertEquals(500, saved.getUsed());
         assertTrue(saved.isAlert80Sent());
         assertTrue(saved.isAlert100Sent());
-        verify(emailService).sendEmail(eq("vendor@test.com"), contains("Limite"), any(String.class));
+
+        verify(emailService)
+                .sendEmail(eq("vendor@test.com"), contains("Limite"), any(String.class));
     }
 
     @Test
     void shouldResetAlertsWhenPeriodRenews() {
 
         UUID vendorId = UUID.randomUUID();
-        VendorUsage usage = buildUsage(vendorId, QuotaType.ACTIVE_LEADS, 500, Instant.now().minusSeconds(30));
+
+        VendorUsage usage = buildUsage(
+                vendorId,
+                QuotaType.ACTIVE_LEADS,
+                500,
+                Instant.now().minusSeconds(30)
+        );
+
         usage.setAlert80Sent(true);
         usage.setAlert100Sent(true);
 
         when(repository.findByVendorIdAndQuotaType(vendorId, QuotaType.ACTIVE_LEADS))
-                .thenReturn(Optional.of(usage));
+            .thenReturn(Optional.of(usage));
+
+        when(repository.save(any(VendorUsage.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
 
         quotaService.increment(vendorId, QuotaType.ACTIVE_LEADS);
 
         ArgumentCaptor<VendorUsage> captor = ArgumentCaptor.forClass(VendorUsage.class);
+
         verify(repository, atLeastOnce()).save(captor.capture());
 
         VendorUsage latestSaved = captor.getAllValues().get(captor.getAllValues().size() - 1);
+
         assertEquals(1, latestSaved.getUsed());
         assertFalse(latestSaved.isAlert80Sent());
         assertFalse(latestSaved.isAlert100Sent());

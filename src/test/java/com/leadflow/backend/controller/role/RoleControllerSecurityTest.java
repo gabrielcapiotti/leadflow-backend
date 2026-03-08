@@ -1,17 +1,20 @@
 package com.leadflow.backend.controller.role;
 
 import com.leadflow.backend.exception.GlobalExceptionHandler;
+import com.leadflow.backend.security.RateLimitInterceptor;
 import com.leadflow.backend.security.RateLimitService;
 import com.leadflow.backend.security.TestSecurityConfig;
 import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.RoleService;
 import com.leadflow.backend.multitenancy.filter.TenantFilter;
 import com.leadflow.backend.multitenancy.service.TenantService;
+import com.leadflow.backend.repository.user.UserRepository;
 
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import org.springframework.context.annotation.ComponentScan;
@@ -41,8 +44,11 @@ class RoleControllerSecurityTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
+    @MockBean
     private RoleService roleService;
+
+    @MockBean
+    private UserRepository userRepository;
 
     @MockitoBean
     private JwtService jwtService;
@@ -50,7 +56,10 @@ class RoleControllerSecurityTest {
     @MockitoBean
     private TenantService tenantService;
 
-    @MockitoBean
+    @MockBean
+    private RateLimitInterceptor rateLimitInterceptor;
+
+    @MockBean
     private RateLimitService rateLimitService;
 
     private static final String TENANT_HEADER = "X-Tenant-ID";

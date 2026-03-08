@@ -1,14 +1,17 @@
 package com.leadflow.backend.integration;
 
 import com.leadflow.backend.security.RateLimitService;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import com.leadflow.backend.exception.GlobalExceptionHandler;
 
-@WebMvcTest
+@SpringBootTest
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import(GlobalExceptionHandler.class)
 class FlywayIntegrationTest extends FlywayTestBase {

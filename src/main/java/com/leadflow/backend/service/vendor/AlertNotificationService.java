@@ -4,6 +4,8 @@ import org.springframework.lang.Nullable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
 @Service
 public class AlertNotificationService {
 
@@ -24,10 +26,17 @@ public class AlertNotificationService {
             return;
         }
 
+        if (userEmail == null || userEmail.isBlank() || payload == null) {
+            return;
+        }
+
+        String safeUserEmail = Objects.requireNonNull(userEmail);
+        Object safePayload = Objects.requireNonNull(payload);
+
         messagingTemplate.convertAndSendToUser(
-                userEmail,
+                safeUserEmail,
                 "/queue/alerts",
-                payload
+                safePayload
         );
     }
 }

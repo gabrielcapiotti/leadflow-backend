@@ -6,7 +6,7 @@ import com.leadflow.backend.repository.*;
 import com.leadflow.backend.service.notification.SendGridEmailService;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -42,12 +42,12 @@ public class AdminService {
             VendorRiskAlertRepository riskAlertRepository,
             SendGridEmailService emailService
     ) {
-        this.vendorRepository = vendorRepository;
-        this.leadRepository = leadRepository;
-        this.usageRepository = usageRepository;
-        this.historyRepository = historyRepository;
-        this.riskAlertRepository = riskAlertRepository;
-        this.emailService = emailService;
+        this.vendorRepository = Objects.requireNonNull(vendorRepository);
+        this.leadRepository = Objects.requireNonNull(leadRepository);
+        this.usageRepository = Objects.requireNonNull(usageRepository);
+        this.historyRepository = Objects.requireNonNull(historyRepository);
+        this.riskAlertRepository = Objects.requireNonNull(riskAlertRepository);
+        this.emailService = Objects.requireNonNull(emailService);
     }
 
     /* ======================================================
@@ -59,8 +59,9 @@ public class AdminService {
         long totalVendors = vendorRepository.countAllGlobal();
         long active = vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.ATIVA);
         long trial = vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.TRIAL);
-        long inadimplentes = vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.INADIMPLENTE);
-        long expiradas = vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.EXPIRADA);
+        long overdue = vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.INADIMPLENTE);
+        long expired = vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.EXPIRADA);
+
         long totalLeads = leadRepository.countAllGlobal();
 
         long totalAi = Optional.ofNullable(
@@ -78,8 +79,8 @@ public class AdminService {
                 totalVendors,
                 active,
                 trial,
-                inadimplentes,
-                expiradas,
+                overdue,
+                expired,
                 totalLeads,
                 totalAi,
                 BigDecimal.valueOf(mrr),
@@ -104,7 +105,9 @@ public class AdminService {
     public double calculateARPU() {
 
         long active = vendorRepository.countActiveSubscriptionsGlobal();
-        if (active == 0) return 0;
+        if (active == 0) {
+            return 0;
+        }
 
         return calculateMRR() / active;
     }
@@ -116,7 +119,9 @@ public class AdminService {
         long cancellations = historyRepository.countCancellationsSinceGlobal(since);
         long activeBase = vendorRepository.countActiveSubscriptionsGlobal();
 
-        if (activeBase == 0) return 0;
+        if (activeBase == 0) {
+            return 0;
+        }
 
         return cancellations / (double) activeBase;
     }
@@ -126,7 +131,9 @@ public class AdminService {
         double arpu = calculateARPU();
         double churn = calculateMonthlyChurn();
 
-        if (churn == 0) return arpu * 24;
+        if (churn == 0) {
+            return arpu * 24;
+        }
 
         return arpu / churn;
     }
@@ -140,7 +147,9 @@ public class AdminService {
         long cancellations = historyRepository.countCancellationsSinceGlobal(since);
         long activeBase = vendorRepository.countActiveSubscriptionsGlobal();
 
-        if (activeBase == 0) return 0;
+        if (activeBase == 0) {
+            return 0;
+        }
 
         return cancellations / (double) activeBase;
     }
@@ -154,19 +163,20 @@ public class AdminService {
         long conversions = historyRepository.countTrialConversionsSinceGlobal(since);
         long trials = vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.TRIAL);
 
-        if (trials == 0) return 0;
+        if (trials == 0) {
+            return 0;
+        }
 
         return conversions / (double) trials;
     }
 
     /* ======================================================
-       GROWTH METRICS
+       GROWTH
        ====================================================== */
 
     public GrowthResponse getGrowth(int days) {
 
         int safeDays = days > 0 ? days : DEFAULT_GROWTH_DAYS;
-
         Instant since = Instant.now().minus(safeDays, ChronoUnit.DAYS);
 
         List<GrowthPoint> vendors = mapToPoints(
@@ -195,12 +205,112 @@ public class AdminService {
     }
 
     /* ======================================================
-       VENDOR HEALTH
+       COHORT
        ====================================================== */
 
-    public VendorHealthResponse calculateHealth(UUID vendorId) {
+    public List<CohortResponse> calculateCohorts() {
 
-        Vendor vendor = vendorRepository.findById(vendorId)
+        List<Vendor> vendors = vendorRepository.findAllWithSubscriptionStart();
+
+        Map<YearMonth, List<Vendor>> cohorts =
+                vendors.stream()
+                        .collect(Collectors.groupingBy(v ->
+                                YearMonth.from(
+                                        v.getSubscriptionStartedAt()
+                                                .atZone(ZoneOffset.UTC)
+                                )
+                        ));
+
+        List<CohortResponse> result = new ArrayList<>();
+
+        cohorts.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(entry -> {
+
+                    YearMonth cohortMonth = entry.getKey();
+                    List<Vendor> cohortVendors = entry.getValue();
+                    int total = cohortVendors.size();
+
+                    Map<Integer, Double> retention = new LinkedHashMap<>();
+
+                    for (int month = 0; month <= 12; month++) {
+
+                        YearMonth checkMonth = cohortMonth.plusMonths(month);
+
+                        long active =
+                                cohortVendors.stream()
+                                        .filter(v -> isActiveInMonth(v, checkMonth))
+                                        .count();
+
+                        double percentage =
+                                total == 0 ? 0 : (active / (double) total) * 100;
+
+                        retention.put(month, percentage);
+                    }
+
+                    result.add(new CohortResponse(cohortMonth.toString(), retention));
+                });
+
+        return result;
+    }
+
+    /* ======================================================
+       FORECAST
+       ====================================================== */
+
+    public List<ForecastPoint> forecastMRR(int months) {
+
+        int safeMonths =
+                months <= 0
+                        ? DEFAULT_FORECAST_MONTHS
+                        : Math.min(months, MAX_FORECAST_MONTHS);
+
+        double churnRate = calculateMonthlyChurn();
+        double conversionRate = calculateTrialConversion(30);
+
+        long active =
+                vendorRepository.countBySubscriptionStatusGlobal(
+                        SubscriptionStatus.ATIVA
+                );
+
+        long trials =
+                vendorRepository.countBySubscriptionStatusGlobal(
+                        SubscriptionStatus.TRIAL
+                );
+
+        YearMonth current = YearMonth.now(ZoneOffset.UTC);
+
+        List<ForecastPoint> forecast = new ArrayList<>();
+
+        for (int month = 1; month <= safeMonths; month++) {
+
+            long churned = Math.round(active * churnRate);
+            long converted = Math.round(trials * conversionRate);
+
+            active = Math.max(0, active + converted - churned);
+
+            double projectedMRR = active * PLAN_PRICE;
+
+            forecast.add(
+                    new ForecastPoint(
+                            current.plusMonths(month).toString(),
+                            projectedMRR
+                    )
+            );
+        }
+
+        return forecast;
+    }
+
+    /* ======================================================
+       HEALTH SCORE
+       ====================================================== */
+
+    public VendorHealthResponse calculateHealth(@NonNull UUID vendorId) {
+
+        UUID safeVendorId = Objects.requireNonNull(vendorId);
+
+        Vendor vendor = vendorRepository.findById(safeVendorId)
                 .orElseThrow(() -> new RuntimeException("Vendor não encontrado"));
 
         double score =
@@ -217,48 +327,60 @@ public class AdminService {
                         : finalScore >= 50 ? "MEDIUM"
                         : "HIGH";
 
-        return new VendorHealthResponse(vendorId, finalScore, riskLevel);
+        return new VendorHealthResponse(safeVendorId, finalScore, riskLevel);
     }
 
-    public void evaluateRisk(UUID vendorId) {
+    public void evaluateRisk(@NonNull UUID vendorId) {
 
-        VendorHealthResponse health = calculateHealth(vendorId);
+        UUID safeVendorId = Objects.requireNonNull(vendorId);
+
+        VendorHealthResponse health = calculateHealth(safeVendorId);
 
         boolean highRisk =
-                "HIGH".equals(health.getRiskLevel()) || health.getScore() < 50;
+                "HIGH".equals(health.getRiskLevel()) ||
+                health.getScore() < 50;
 
-        if (!highRisk) return;
+        if (!highRisk) {
+            return;
+        }
 
         boolean exists =
-                riskAlertRepository.existsByVendorIdAndResolvedFalse(vendorId);
+                riskAlertRepository.existsByVendorIdAndResolvedFalse(safeVendorId);
 
-        if (exists) return;
+        if (exists) {
+            return;
+        }
 
         VendorRiskAlert alert = new VendorRiskAlert();
-        alert.setVendorId(vendorId);
+        alert.setVendorId(safeVendorId);
         alert.setScore(health.getScore());
         alert.setRiskLevel(health.getRiskLevel());
 
         riskAlertRepository.save(alert);
 
-        notifyVendorAtRisk(vendorId, health);
+        notifyVendorAtRisk(safeVendorId, health);
     }
 
-    @Scheduled(cron = "0 0 3 * * *")
     public void evaluateAllVendorsRisk() {
 
         vendorRepository.findAll()
-                .forEach(v -> evaluateRisk(v.getId()));
+                                .stream()
+                                .map(Vendor::getId)
+                                .filter(Objects::nonNull)
+                                .forEach(this::evaluateRisk);
     }
 
-    /* ======================================================
-       EMAIL NOTIFICATION
-       ====================================================== */
+    public void evaluateAllVendorsRiskDaily() {
+        vendorRepository.findAll()
+            .forEach(vendor -> evaluateRisk(vendor.getId()));
+    }
 
     private void notifyVendorAtRisk(UUID vendorId,
                                     VendorHealthResponse health) {
 
-        Vendor vendor = vendorRepository.findById(vendorId)
+        UUID safeVendorId = Objects.requireNonNull(vendorId);
+
+        Vendor vendor = vendorRepository.findById(safeVendorId)
                 .orElseThrow(() -> new RuntimeException("Vendor não encontrado"));
 
         String html = """
@@ -273,32 +395,10 @@ public class AdminService {
                 "Percebemos pouca atividade na sua conta",
                 html
         );
-
-        if (riskAlertAdminEmail != null && !riskAlertAdminEmail.isBlank()) {
-
-            String adminHtml = """
-                    <h2>Vendor em risco detectado</h2>
-                    <p>Vendor ID: <strong>%s</strong></p>
-                    <p>E-mail: <strong>%s</strong></p>
-                    <p>Health Score: <strong>%d</strong></p>
-                    <p>Risk Level: <strong>%s</strong></p>
-                    """.formatted(
-                    vendor.getId(),
-                    vendor.getUserEmail(),
-                    health.getScore(),
-                    health.getRiskLevel()
-            );
-
-            emailService.sendEmail(
-                    riskAlertAdminEmail,
-                    "[Admin] Vendor com risco alto detectado",
-                    adminHtml
-            );
-        }
     }
 
     /* ======================================================
-       HEALTH SCORE COMPONENTS
+       SCORE COMPONENTS
        ====================================================== */
 
     private int scoreUsage(Vendor vendor) {
@@ -350,12 +450,18 @@ public class AdminService {
 
     private int scoreSubscription(Vendor vendor) {
 
-        return switch (vendor.getSubscriptionStatus()) {
+        SubscriptionStatus status = vendor.getSubscriptionStatus();
+
+        if (status == null) {
+            return 0;
+        }
+
+        return switch (status) {
             case ATIVA -> 100;
             case TRIAL -> 70;
             case INADIMPLENTE -> 20;
             case EXPIRADA -> 10;
-            default -> 10;
+            default -> 0;
         };
     }
 
@@ -368,6 +474,33 @@ public class AdminService {
     /* ======================================================
        HELPERS
        ====================================================== */
+
+    private boolean isActiveInMonth(Vendor vendor, YearMonth month) {
+
+        if (vendor.getSubscriptionStatus() != SubscriptionStatus.ATIVA) {
+            return false;
+        }
+
+        Instant start = vendor.getSubscriptionStartedAt();
+        Instant end = vendor.getSubscriptionExpiresAt();
+
+        if (start == null) return false;
+
+        YearMonth vendorStart =
+                YearMonth.from(start.atZone(ZoneOffset.UTC));
+
+        if (vendorStart.isAfter(month)) return false;
+
+        if (end != null) {
+
+            YearMonth vendorEnd =
+                    YearMonth.from(end.atZone(ZoneOffset.UTC));
+
+            return !vendorEnd.isBefore(month);
+        }
+
+        return true;
+    }
 
     private List<GrowthPoint> mapToPoints(List<Object[]> rows) {
 
@@ -386,132 +519,5 @@ public class AdminService {
         if (rawDate instanceof Date d) return d.toLocalDate();
 
         return LocalDate.parse(rawDate.toString());
-    }
-
-    public List<CohortResponse> calculateCohorts() {
-
-        List<Vendor> vendors = vendorRepository.findAllWithSubscriptionStart();
-
-        Map<YearMonth, List<Vendor>> cohorts =
-                vendors.stream()
-                        .collect(Collectors.groupingBy(v ->
-                                YearMonth.from(
-                                        v.getSubscriptionStartedAt()
-                                                .atZone(ZoneOffset.UTC)
-                                )
-                        ));
-
-        List<CohortResponse> result = new ArrayList<>();
-
-        cohorts.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .forEach(entry -> {
-
-                    YearMonth cohortMonth = entry.getKey();
-                    List<Vendor> cohortVendors = entry.getValue();
-
-                    int total = cohortVendors.size();
-
-                    Map<Integer, Double> retention = new LinkedHashMap<>();
-
-                    for (int month = 0; month <= 12; month++) {
-
-                        YearMonth checkMonth = cohortMonth.plusMonths(month);
-
-                        long active =
-                                cohortVendors.stream()
-                                        .filter(v -> isActiveInMonth(v, checkMonth))
-                                        .count();
-
-                        double percentage =
-                                total == 0 ? 0 : (active / (double) total) * 100;
-
-                        retention.put(month, percentage);
-                    }
-
-                    result.add(
-                            new CohortResponse(
-                                    cohortMonth.toString(),
-                                    retention
-                            )
-                    );
-                });
-
-        return result;
-    }
-
-    public List<ForecastPoint> forecastMRR(int months) {
-
-        int safeMonths =
-                months <= 0
-                        ? DEFAULT_FORECAST_MONTHS
-                        : Math.min(months, MAX_FORECAST_MONTHS);
-
-        double churnRate = calculateMonthlyChurn();
-        double conversionRate = calculateTrialConversion(30);
-
-        long active =
-                vendorRepository.countBySubscriptionStatusGlobal(
-                        SubscriptionStatus.ATIVA
-                );
-
-        long trials =
-                vendorRepository.countBySubscriptionStatusGlobal(
-                        SubscriptionStatus.TRIAL
-                );
-
-        YearMonth current = YearMonth.now(ZoneOffset.UTC);
-
-        List<ForecastPoint> forecast = new ArrayList<>();
-
-        for (int month = 1; month <= safeMonths; month++) {
-
-            long churned = Math.round(active * churnRate);
-            long converted = Math.round(trials * conversionRate);
-
-            active = Math.max(0, active + converted - churned);
-
-            double projectedMRR = active * PLAN_PRICE;
-
-            forecast.add(
-                    new ForecastPoint(
-                            current.plusMonths(month).toString(),
-                            projectedMRR
-                    )
-            );
-        }
-
-        return forecast;
-    }
-
-    private boolean isActiveInMonth(Vendor vendor, YearMonth month) {
-
-        if (vendor.getSubscriptionStatus() != SubscriptionStatus.ATIVA) {
-            return false;
-        }
-
-        Instant start = vendor.getSubscriptionStartedAt();
-        Instant end = vendor.getSubscriptionExpiresAt();
-
-        if (start == null) {
-            return false;
-        }
-
-        YearMonth vendorStart =
-                YearMonth.from(start.atZone(ZoneOffset.UTC));
-
-        if (vendorStart.isAfter(month)) {
-            return false;
-        }
-
-        if (end != null) {
-
-            YearMonth vendorEnd =
-                    YearMonth.from(end.atZone(ZoneOffset.UTC));
-
-            return !vendorEnd.isBefore(month);
-        }
-
-        return true;
     }
 }

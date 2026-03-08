@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Objects;
 
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
@@ -30,56 +32,60 @@ public class RateLimitFilter extends OncePerRequestFilter {
             RateLimitService rateLimitService,
             @Value("${security.rate-limit.enabled:true}") boolean rateLimitEnabled
     ) {
-        this.rateLimitService = rateLimitService;
+        this.rateLimitService =
+                Objects.requireNonNull(rateLimitService, "RateLimitService must not be null");
+
         this.rateLimitEnabled = rateLimitEnabled;
     }
 
     @Override
     protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
+        HttpServletRequest safeRequest =
+                Objects.requireNonNull(request, "HttpServletRequest must not be null");
+
+        HttpServletResponse safeResponse =
+                Objects.requireNonNull(response, "HttpServletResponse must not be null");
+
+        FilterChain safeFilterChain =
+                Objects.requireNonNull(filterChain, "FilterChain must not be null");
+
         if (!rateLimitEnabled) {
-            filterChain.doFilter(request, response);
+            safeFilterChain.doFilter(safeRequest, safeResponse);
             return;
         }
 
-        String requestPath = extractRequestPath(request);
-        String clientIp = resolveClientIp(request);
+        String requestPath = extractRequestPath(safeRequest);
+        String clientIp = resolveClientIp(safeRequest);
 
-        // GLOBAL rate limit (proteção básica contra flood)
-        boolean globalAllowed = rateLimitService.tryConsume(
-                clientIp,
-                GLOBAL_SCOPE
-        );
+        boolean globalAllowed = rateLimitService.tryConsume(clientIp, GLOBAL_SCOPE);
 
         if (!globalAllowed) {
-            writeLimitExceeded(response);
+            writeLimitExceeded(safeResponse);
             return;
         }
 
         String scope = resolveScope(requestPath);
 
         if (scope == null) {
-            filterChain.doFilter(request, response);
+            safeFilterChain.doFilter(safeRequest, safeResponse);
             return;
         }
 
-        String principal = resolvePrincipalOrIp(request);
+        String principal = resolvePrincipalOrIp(safeRequest);
 
-        boolean allowed = rateLimitService.tryConsume(
-                principal,
-                scope
-        );
+        boolean allowed = rateLimitService.tryConsume(principal, scope);
 
         if (!allowed) {
-            writeLimitExceeded(response);
+            writeLimitExceeded(safeResponse);
             return;
         }
 
-        filterChain.doFilter(request, response);
+        safeFilterChain.doFilter(safeRequest, safeResponse);
     }
 
     private String extractRequestPath(HttpServletRequest request) {
@@ -154,7 +160,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private void writeLimitExceeded(HttpServletResponse response) throws IOException {
 
-        response.setStatus(429); // Replaced SC_TOO_MANY_REQUESTS with literal value
+        response.setStatus(429);
         response.setContentType("application/json;charset=UTF-8");
 
         response.getWriter().write("""

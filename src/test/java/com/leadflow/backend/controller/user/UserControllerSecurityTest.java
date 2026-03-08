@@ -1,15 +1,17 @@
 package com.leadflow.backend.controller.user;
 
 import com.leadflow.backend.security.jwt.JwtService;
+import com.leadflow.backend.security.RateLimitInterceptor;
 import com.leadflow.backend.security.RateLimitService;
 import com.leadflow.backend.security.TestSecurityConfig;
 import com.leadflow.backend.service.user.UserService;
 import com.leadflow.backend.multitenancy.filter.TenantFilter;
 import com.leadflow.backend.multitenancy.service.TenantService;
+import com.leadflow.backend.repository.user.UserRepository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -23,10 +25,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.test.context.support.WithMockUser;
 
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -50,28 +52,33 @@ class UserControllerSecurityTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
+    @MockBean
     private UserService userService;
 
-    @MockitoBean
+    @MockBean
+    private UserRepository userRepository;
+
+    @MockBean
     private JwtService jwtService;
 
-    @MockitoBean
+    @MockBean
     private TenantService tenantService;
 
-    @MockitoBean
+    @MockBean
+    private RateLimitInterceptor rateLimitInterceptor;
+
+    @MockBean
     private RateLimitService rateLimitService;
 
     @BeforeEach
     void setup() {
-
         // Corrige inconsistência de tenant
         when(tenantService.resolveSchemaByTenantIdentifier(any()))
                 .thenReturn(Optional.of("tenant_id_123"));
 
         // Página vazia simulada
         when(userService.listActiveUsers(any(Pageable.class)))
-                .thenReturn(new PageImpl<>(Collections.emptyList()));
+            .thenReturn(new PageImpl<>(Objects.requireNonNull(Collections.<com.leadflow.backend.entities.user.User>emptyList())));
 
         // JWT válido por padrão
         when(jwtService.isValid(any())).thenReturn(true);

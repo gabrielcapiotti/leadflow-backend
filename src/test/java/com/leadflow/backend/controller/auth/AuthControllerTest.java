@@ -6,45 +6,50 @@ import com.leadflow.backend.dto.auth.RegisterRequest;
 import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.exception.GlobalExceptionHandler;
+import com.leadflow.backend.multitenancy.TenantContextTestCleaner;
 import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.multitenancy.service.TenantService;
 import com.leadflow.backend.security.CustomUserDetails;
+import com.leadflow.backend.security.RateLimitInterceptor;
 import com.leadflow.backend.security.RateLimitService;
 import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.security.jwt.JwtToken;
 import com.leadflow.backend.service.auth.AuthService;
 import com.leadflow.backend.service.auth.RefreshTokenService;
 import com.leadflow.backend.service.auth.UserSessionService;
+import com.leadflow.backend.service.user.UserService;
 import com.leadflow.domain.auth.service.PasswordResetService;
+import com.leadflow.backend.repository.user.UserRepository;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Bean;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+
 import org.springframework.http.MediaType;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
+import org.springframework.boot.test.mock.mockito.MockBean;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
+
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -52,6 +57,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import({GlobalExceptionHandler.class, AuthControllerTest.AuthTestSecurityConfig.class})
 @ActiveProfiles("test")
+@TestExecutionListeners(
+    listeners = TenantContextTestCleaner.class,
+    mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS
+)
 class AuthControllerTest {
 
     @Autowired
@@ -60,20 +69,48 @@ class AuthControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-        @MockitoBean private AuthService authService;
-        @MockitoBean private JwtService jwtService;
-        @MockitoBean private RefreshTokenService refreshTokenService;
-        @MockitoBean private PasswordResetService passwordResetService;
-        @MockitoBean private UserSessionService userSessionService;
-        @MockitoBean private TenantService tenantService;
-        @MockitoBean private RateLimitService rateLimitService;
+    /* ======================================================
+       MOCKED DEPENDENCIES
+       ====================================================== */
+
+    @MockBean
+    private AuthService authService;
+
+    @MockBean
+    private UserRepository userRepository;
+
+    @MockBean
+    private JwtService jwtService;
+
+    @MockBean
+    private RefreshTokenService refreshTokenService;
+
+    @MockBean
+    private PasswordResetService passwordResetService;
+
+    @MockBean
+    private UserSessionService userSessionService;
+
+    @MockBean
+    private TenantService tenantService;
+
+    @MockBean
+    private RateLimitInterceptor rateLimitInterceptor;
+
+    @MockBean
+    private RateLimitService rateLimitService;
+
+    @MockBean
+    private UserService userService;
 
     private User mockUser;
+
     private static final String TENANT = "tenant_test";
 
     @BeforeEach
     void setup() {
-                TenantContext.setTenant(TENANT);
+
+        TenantContext.setTenant(TENANT);
 
         Role role = new Role("ROLE_USER");
 
@@ -83,7 +120,6 @@ class AuthControllerTest {
                 "password",
                 role
         );
-
         ReflectionTestUtils.setField(mockUser, "id", UUID.randomUUID());
 
         when(authService.registerUser(anyString(), anyString(), anyString()))
@@ -99,31 +135,34 @@ class AuthControllerTest {
                         Instant.now().plusSeconds(3600)
                 ));
 
-        when(refreshTokenService.generate(
-                any(User.class),
-                anyString(),
-                anyString()
-        )).thenReturn("mocked-refresh-token");
+        when(refreshTokenService.generate(any(User.class), anyString(), anyString()))
+                .thenReturn("mocked-refresh-token");
 
         when(tenantService.resolveSchemaByTenantIdentifier(anyString()))
                 .thenReturn(Optional.of(TENANT));
 
         when(tenantService.getTenantIdBySchema(anyString()))
                 .thenReturn(UUID.randomUUID());
+        when(userService.getActiveByEmail(anyString()))
+                .thenReturn(mockUser);
     }
 
-        @AfterEach
-        void cleanup() {
-                TenantContext.clear();
-        }
+    @AfterEach
+    void cleanup() {
+        TenantContext.clear();
+    }
+
+    /* ======================================================
+       TESTS
+       ====================================================== */
 
     @Test
     @DisplayName("Should register user and return JWT token")
     void shouldRegisterUserAndReturnToken() throws Exception {
 
-        RegisterRequest registerRequest = new RegisterRequest(
+        RegisterRequest request = new RegisterRequest(
                 "Test User",
-                "user" + UUID.randomUUID() + "@test.com",
+                "user@test.com",
                 "12345678"
         );
 
@@ -131,12 +170,8 @@ class AuthControllerTest {
                 post("/auth/register")
                         .header("X-Tenant-ID", TENANT)
                         .header("User-Agent", "JUnit-Test")
-                        .with(req -> {
-                            req.setRemoteAddr("127.0.0.1");
-                            return req;
-                        })
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(registerRequest))
+                        .content(objectMapper.writeValueAsString(request))
         )
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.accessToken").value("mocked-jwt-token"))
@@ -147,7 +182,7 @@ class AuthControllerTest {
     @DisplayName("Should login and return JWT")
     void shouldLoginAndReturnToken() throws Exception {
 
-        LoginRequest loginRequest = new LoginRequest(
+        LoginRequest request = new LoginRequest(
                 "metest@test.com",
                 "password"
         );
@@ -156,12 +191,8 @@ class AuthControllerTest {
                 post("/auth/login")
                         .header("X-Tenant-ID", TENANT)
                         .header("User-Agent", "JUnit-Test")
-                        .with(req -> {
-                            req.setRemoteAddr("127.0.0.1");
-                            return req;
-                        })
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginRequest))
+                        .content(objectMapper.writeValueAsString(request))
         )
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.accessToken").value("mocked-jwt-token"))
@@ -172,8 +203,7 @@ class AuthControllerTest {
     @DisplayName("Should return authenticated user")
     void shouldReturnAuthenticatedUser() throws Exception {
 
-        CustomUserDetails customUser =
-                new CustomUserDetails(mockUser);
+        CustomUserDetails customUser = new CustomUserDetails(mockUser);
 
         mockMvc.perform(
                 get("/auth/me")
@@ -190,34 +220,35 @@ class AuthControllerTest {
 
         mockMvc.perform(
                 get("/auth/me")
-                        .header("X-Tenant-ID", TENANT)
         )
         .andExpect(status().isUnauthorized());
     }
 
-        @TestConfiguration
-        static class AuthTestSecurityConfig {
+    /* ======================================================
+       TEST SECURITY CONFIG
+       ====================================================== */
 
-                @Bean
-                SecurityFilterChain authTestFilterChain(HttpSecurity http) throws Exception {
-                        return http
-                                        .csrf(csrf -> csrf.disable())
-                                        .sessionManagement(session ->
-                                                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                                        )
-                                        .authorizeHttpRequests(auth -> auth
-                                                        .requestMatchers("/auth/register", "/auth/login").permitAll()
-                                                        .anyRequest().authenticated()
-                                        )
-                                            .exceptionHandling(ex -> ex
-                                                    .authenticationEntryPoint((request, response, authException) ->
-                                                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
-                                                    )
-                                                    .accessDeniedHandler((request, response, accessDeniedException) ->
-                                                            response.sendError(HttpServletResponse.SC_FORBIDDEN)
-                                                    )
-                                            )
-                                        .build();
-                }
+    @TestConfiguration
+    static class AuthTestSecurityConfig {
+
+        @Bean
+        SecurityFilterChain authTestFilterChain(HttpSecurity http) throws Exception {
+
+            return http
+                    .csrf(csrf -> csrf.disable())
+                    .sessionManagement(session ->
+                            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                    )
+                    .exceptionHandling(ex ->
+                            ex.authenticationEntryPoint(
+                                    (req, res, ex2) -> res.sendError(401)
+                            )
+                    )
+                    .authorizeHttpRequests(auth -> auth
+                            .requestMatchers("/auth/register", "/auth/login").permitAll()
+                            .anyRequest().authenticated()
+                    )
+                    .build();
         }
+    }
 }

@@ -44,7 +44,7 @@ class ConversationServiceTest {
         request.setLeadId(leadId);
         request.setMessage("Olá, quero saber sobre consórcio");
 
-        when(leadRepository.existsById(leadId)).thenReturn(true);
+        when(leadRepository.existsById(any(UUID.class))).thenReturn(true);
         when(conversationRepository.findByVendorLeadIdOrderByCreatedAtAsc(leadId))
                 .thenReturn(List.of());
         when(aiService.generate(anyString())).thenReturn("Resposta da IA");

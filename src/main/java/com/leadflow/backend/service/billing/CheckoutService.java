@@ -10,6 +10,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.text.Normalizer;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -43,8 +44,13 @@ public class CheckoutService {
 
         repository.save(checkoutRequest);
 
+        String safeCheckoutBaseUrl =
+                (checkoutBaseUrl == null || checkoutBaseUrl.isBlank())
+                        ? "https://seusite.com/checkout"
+                        : Objects.requireNonNull(checkoutBaseUrl);
+
         String checkoutUrl = UriComponentsBuilder
-            .fromUriString(checkoutBaseUrl)
+            .fromUriString(safeCheckoutBaseUrl)
                 .queryParam("email", email)
                 .queryParam("reference", referenceId)
                 .queryParam("provider", PROVIDER)

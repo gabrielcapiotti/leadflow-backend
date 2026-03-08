@@ -3,7 +3,6 @@ package com.leadflow.backend.multitenancy.context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 public final class TenantContext {
@@ -13,12 +12,13 @@ public final class TenantContext {
 
     /**
      * Apenas lowercase, números e underscore.
-     * Validação mínima — regras mais rígidas devem ficar na camada de domínio.
      */
     private static final Pattern VALID_SCHEMA =
             Pattern.compile("^[a-z0-9_]+$");
 
-    // ❗ SEM valor inicial
+    /**
+     * ThreadLocal que mantém o tenant da requisição atual.
+     */
     private static final ThreadLocal<String> CURRENT_TENANT =
             new ThreadLocal<>();
 
@@ -32,18 +32,18 @@ public final class TenantContext {
 
     public static void setTenant(String tenant) {
 
-        if (Objects.isNull(tenant) || tenant.isBlank()) {
+        if (tenant == null || tenant.isBlank()) {
             throw new IllegalArgumentException(
                     "Tenant identifier cannot be null or blank"
             );
         }
 
-        String normalized = tenant
-                .trim()
-                .toLowerCase();
+        String normalized = tenant.trim().toLowerCase();
 
         if (!VALID_SCHEMA.matcher(normalized).matches()) {
-            logger.error("Invalid tenant identifier: {}", tenant);
+
+            logger.error("Invalid tenant identifier received: {}", tenant);
+
             throw new IllegalArgumentException(
                     "Invalid tenant identifier: " + tenant
             );
@@ -51,7 +51,9 @@ public final class TenantContext {
 
         CURRENT_TENANT.set(normalized);
 
-        logger.debug("Tenant set to: {}", normalized);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Tenant set to {}", normalized);
+        }
     }
 
     /* ======================================================
@@ -59,7 +61,8 @@ public final class TenantContext {
        ====================================================== */
 
     /**
-     * Usar apenas quando tenant é obrigatório.
+     * Deve ser usado apenas quando o tenant é obrigatório
+     * (ex: serviços de domínio).
      */
     public static String getTenant() {
 
@@ -79,7 +82,8 @@ public final class TenantContext {
        ====================================================== */
 
     /**
-     * Usado pelo CurrentTenantIdentifierResolver.
+     * Usado por infraestrutura (Hibernate resolver, logs, etc).
+     * Não lança exceção se não existir tenant.
      */
     public static String getIfPresent() {
         return CURRENT_TENANT.get();
@@ -98,10 +102,15 @@ public final class TenantContext {
        ====================================================== */
 
     /**
-     * Deve ser chamado no finally do filtro.
+     * Deve ser chamado no finally do TenantFilter
+     * para evitar vazamento de tenant entre requests.
      */
     public static void clear() {
-        CURRENT_TENANT.remove(); // correto
-        logger.debug("Tenant context cleared.");
+
+        CURRENT_TENANT.remove();
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Tenant context cleared");
+        }
     }
 }

@@ -106,19 +106,21 @@ class VendorLeadIntegrationTest {
 
         leadRepository.save(lead);
 
+        java.util.UUID safeLeadId = java.util.Objects.requireNonNull(lead.getId());
+
         // Atualizar estágio
-        service.updateStage(lead.getId(), LeadStage.CONTATO);
+        service.updateStage(safeLeadId, LeadStage.CONTATO);
 
         // Verificar no banco
         VendorLead updated =
-                leadRepository.findById(lead.getId()).orElseThrow();
+                leadRepository.findById(safeLeadId).orElseThrow();
 
         assertEquals(LeadStage.CONTATO, updated.getStage());
 
         // Verificar histórico
         var history =
                 historyRepository
-                        .findByVendorLeadIdOrderByChangedAtDesc(lead.getId());
+                        .findByVendorLeadIdOrderByChangedAtDesc(safeLeadId);
 
         assertFalse(history.isEmpty());
         assertEquals("NOVO", history.get(0).getPreviousStage());

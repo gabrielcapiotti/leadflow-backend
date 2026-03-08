@@ -27,7 +27,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
-        # Multi-tenant configuration
+        # MULTITENANCY ATIVO
         multiTenancy: SCHEMA
 
         jdbc:
@@ -35,14 +35,13 @@ spring:
             non_contextual_creation: true
 
   flyway:
-    enabled: false
+    enabled: true
 
   sql:
     init:
       mode: never
 
 logging:
-
   level:
     root: WARN
     org.hibernate.SQL: DEBUG

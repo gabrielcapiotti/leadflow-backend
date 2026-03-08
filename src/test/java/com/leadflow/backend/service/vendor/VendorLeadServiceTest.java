@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -58,7 +59,9 @@ class VendorLeadServiceTest {
         when(vendorContext.getCurrentVendor()).thenReturn(vendor);
 
         when(repository.save(any(VendorLead.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+            .thenAnswer(invocation -> invocation.getArgument(0));
+
+        when(conversationRepository.save(any(VendorLeadConversation.class))).thenReturn(new VendorLeadConversation());
     }
 
     // ========================================
@@ -82,7 +85,7 @@ class VendorLeadServiceTest {
         VendorLead updated = service.updateStage(leadId, LeadStage.CONTATO);
 
         assertEquals(LeadStage.CONTATO, updated.getStage());
-        verify(historyRepository).save(any());
+        verify(historyRepository).save(any(VendorLeadStageHistory.class));
     }
 
     @Test
@@ -196,7 +199,7 @@ class VendorLeadServiceTest {
         service.saveConversation(leadId, "Olá", "Resposta");
 
         verify(conversationRepository, times(2))
-                .save(any(VendorLeadConversation.class));
+            .save(any(VendorLeadConversation.class));
     }
 
     // ========================================

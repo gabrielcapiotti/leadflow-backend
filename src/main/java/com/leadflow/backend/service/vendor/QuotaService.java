@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -153,7 +154,8 @@ public class QuotaService {
     }
 
     private void handle80PercentAlert(UUID vendorId, QuotaType type, VendorUsage usage) {
-        Vendor vendor = vendorRepository.findById(vendorId).orElseThrow();
+        UUID safeVendorId = Objects.requireNonNull(vendorId);
+        Vendor vendor = vendorRepository.findById(safeVendorId).orElseThrow();
 
         int limit = getLimit(type);
         int percentage = (usage.getUsed() * 100) / limit;
@@ -164,11 +166,12 @@ public class QuotaService {
             buildUsageWarningTemplate(type.name(), usage.getUsed(), limit, percentage)
         );
 
-        log.info("Alerta de 80% enviado para vendor {} no recurso {}", vendorId, type);
+        log.info("Alerta de 80% enviado para vendor {} no recurso {}", safeVendorId, type);
     }
 
     private void handle100PercentAlert(UUID vendorId, QuotaType type, VendorUsage usage) {
-        Vendor vendor = vendorRepository.findById(vendorId).orElseThrow();
+        UUID safeVendorId = Objects.requireNonNull(vendorId);
+        Vendor vendor = vendorRepository.findById(safeVendorId).orElseThrow();
 
         int limit = getLimit(type);
 
@@ -178,7 +181,7 @@ public class QuotaService {
             buildLimitReachedTemplate(type.name(), limit)
         );
 
-        log.info("Alerta de 100% enviado para vendor {} no recurso {}", vendorId, type);
+        log.info("Alerta de 100% enviado para vendor {} no recurso {}", safeVendorId, type);
     }
 
     private String buildUsageWarningTemplate(String resource,

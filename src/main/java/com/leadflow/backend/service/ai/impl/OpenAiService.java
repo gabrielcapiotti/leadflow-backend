@@ -28,6 +28,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Objects;
 import java.util.Map;
 
 @Service
@@ -119,9 +120,12 @@ public class OpenAiService implements AiService {
 
         try {
 
+            String safeApiKey = Objects.requireNonNull(apiKey);
+            String safeEndpoint = Objects.requireNonNull(endpoint);
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setBearerAuth(apiKey);
+            headers.setBearerAuth(safeApiKey);
 
             Map<String, Object> requestBody = Map.of(
                     "model", model,
@@ -135,7 +139,7 @@ public class OpenAiService implements AiService {
                     new HttpEntity<>(requestBody, headers);
 
             ResponseEntity<String> response =
-                    restTemplate.postForEntity(endpoint, request, String.class);
+                    restTemplate.postForEntity(safeEndpoint, request, String.class);
 
             if (response.getBody() == null) {
                 log.warn("Resposta vazia da OpenAI");
@@ -150,12 +154,19 @@ public class OpenAiService implements AiService {
                     .path("message")
                     .path("content");
 
-            if (contentNode.isMissingNode() || contentNode.asText().isBlank()) {
+            if (contentNode.isMissingNode()) {
                 log.warn("Resposta inválida da OpenAI");
                 return FALLBACK_RESPONSE;
             }
 
-            return contentNode.asText();
+            String content = contentNode.asText();
+
+            if (content == null || content.isBlank()) {
+                log.warn("Conteúdo vazio retornado pela OpenAI");
+                return FALLBACK_RESPONSE;
+            }
+
+            return content;
 
         } catch (HttpClientErrorException.TooManyRequests |
                  HttpServerErrorException |

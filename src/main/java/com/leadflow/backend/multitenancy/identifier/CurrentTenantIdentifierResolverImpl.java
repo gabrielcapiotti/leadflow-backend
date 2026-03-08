@@ -2,8 +2,10 @@ package com.leadflow.backend.multitenancy.identifier;
 
 import com.leadflow.backend.multitenancy.context.TenantContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.stereotype.Component;
 
 import java.util.Locale;
@@ -19,11 +21,13 @@ public class CurrentTenantIdentifierResolverImpl
     private static final String DEFAULT_TENANT = "public";
 
     /**
-     * PostgreSQL identifier limit = 63 characters.
-     * Only lowercase letters, numbers and underscore allowed.
+     * PostgreSQL identifier limit = 63 characters
      */
     private static final int MAX_IDENTIFIER_LENGTH = 63;
 
+    /**
+     * Only lowercase letters, numbers and underscore allowed
+     */
     private static final Pattern VALID_SCHEMA =
             Pattern.compile("^[a-z0-9_]{1," + MAX_IDENTIFIER_LENGTH + "}$");
 
@@ -34,13 +38,15 @@ public class CurrentTenantIdentifierResolverImpl
     @Override
     public String resolveCurrentTenantIdentifier() {
 
-        // ✅ NÃO usar getTenant() aqui
+        // NÃO usar getTenant() aqui
         String tenant = TenantContext.getIfPresent();
 
         if (tenant == null || tenant.isBlank()) {
 
-            log.trace("No tenant found in context. Falling back to default schema: {}",
-                    DEFAULT_TENANT);
+            log.trace(
+                    "No tenant found in context. Using default schema: {}",
+                    DEFAULT_TENANT
+            );
 
             return DEFAULT_TENANT;
         }
@@ -68,9 +74,7 @@ public class CurrentTenantIdentifierResolverImpl
        ====================================================== */
 
     /**
-     * Must return true in web multi-tenant environments.
-     * Ensures Hibernate validates tenant changes
-     * when reusing sessions.
+     * Required for session reuse in multi-tenant environments.
      */
     @Override
     public boolean validateExistingCurrentSessions() {

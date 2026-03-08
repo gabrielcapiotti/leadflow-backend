@@ -1,4 +1,5 @@
 spring:
+
   application:
     name: leadflow-backend-test
 
@@ -20,20 +21,25 @@ spring:
     open-in-view: false
     show-sql: false
     hibernate:
-      ddl-auto: create-drop   # cria schema limpo a cada contexto de teste
+      ddl-auto: none
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        "[format_sql]": true
-        multiTenancy: SCHEMA   # ativa suporte a multi-tenancy nos testes
+        format_sql: true
+        multiTenancy: SCHEMA
         jdbc:
           lob:
-            "[non_contextual_creation]": true
+            non_contextual_creation: true
+        default_schema: public
 
   flyway:
-    enabled: false  # Disable Flyway migrations to avoid conflicts with ddl-auto
+    enabled: true
     validate-on-migrate: true
     baseline-on-migrate: true
+
+  task:
+    scheduling:
+      enabled: false
 
 sendgrid:
   api-key: test-sendgrid-api-key
@@ -50,12 +56,16 @@ sendgrid:
       delay-seconds: 1
       fixed-delay-ms: 1000
 
+stripe:
+  webhook:
+    secret: test_webhook_secret
+
 logging:
   level:
     root: WARN
-    "[org.hibernate.SQL]": DEBUG
-    "[org.hibernate.orm.jdbc.bind]": TRACE
-    "[org.springframework.test]": WARN
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.springframework.test: WARN
 
 security:
   jwt:
@@ -65,7 +75,7 @@ security:
     enabled: false
 
 multitenancy:
-  enabled: true              # habilita filtro e resolver de tenant nos testes
+  enabled: true
 
 openai:
   api:

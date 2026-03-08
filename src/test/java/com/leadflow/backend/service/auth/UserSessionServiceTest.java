@@ -14,6 +14,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -54,9 +55,7 @@ class UserSessionServiceTest {
 
     @Test
     void shouldCreateSession() {
-
-        when(repository.countByUserIdAndTenantIdAndActiveTrue(USER_ID, TENANT_ID))
-                .thenReturn(0L);
+        when(repository.countByUserIdAndTenantIdAndActiveTrue(USER_ID, TENANT_ID)).thenReturn(0L);
 
         service.createSession(
                 USER_ID,
@@ -67,6 +66,7 @@ class UserSessionServiceTest {
         );
 
         verify(repository).save(any(UserSession.class));
+        verify(repository).countByUserIdAndTenantIdAndActiveTrue(USER_ID, TENANT_ID);
     }
 
     /* ====================================================== */
@@ -88,7 +88,7 @@ class UserSessionServiceTest {
         );
 
         when(repository.findByTokenIdAndTenantIdAndActiveTrue("token123", TENANT_ID))
-                .thenReturn(Optional.of(session));
+                .thenReturn(Optional.of(Objects.requireNonNull(session)));
 
         service.revokeSession("token123", TENANT_ID);
 
@@ -259,8 +259,7 @@ class UserSessionServiceTest {
 
         service.validateActiveSession("token123", TENANT_ID);
 
-        verify(repository)
-                .existsByTokenIdAndTenantIdAndActiveTrue("token123", TENANT_ID);
+        verify(repository).existsByTokenIdAndTenantIdAndActiveTrue("token123", TENANT_ID);
     }
 
     /* ====================================================== */

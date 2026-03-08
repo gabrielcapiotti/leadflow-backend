@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
@@ -43,7 +44,6 @@ class UserServiceTest {
         Role role = new Role("ROLE_USER");
         ReflectionTestUtils.setField(role, "id", roleId);
 
-        // ✅ User sem Tenant
         user = new User(
                 "Test User",
                 "test@example.com",
@@ -89,23 +89,23 @@ class UserServiceTest {
     @Test
     void shouldReturnUserById() {
 
-        when(userRepository.findById(userId))
+        when(userRepository.findById(Objects.requireNonNull(userId)))
                 .thenReturn(Optional.of(user));
 
-        User result = userService.getById(userId);
+        User result = userService.getById(Objects.requireNonNull(userId));
 
         assertThat(result).isEqualTo(user);
-        verify(userRepository).findById(userId);
+        verify(userRepository).findById(Objects.requireNonNull(userId));
     }
 
     @Test
     void shouldThrowWhenUserNotFoundById() {
 
-        when(userRepository.findById(userId))
+        when(userRepository.findById(Objects.requireNonNull(userId)))
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() ->
-                userService.getById(userId)
+                userService.getById(Objects.requireNonNull(userId))
         ).isInstanceOf(IllegalArgumentException.class);
     }
 }

@@ -6,6 +6,8 @@ import com.leadflow.backend.repository.tenant.TenantRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
+
 @Component
 public class TenantRepositoryTestHelper {
 
@@ -30,6 +32,6 @@ public class TenantRepositoryTestHelper {
 
     @Transactional(transactionManager = "publicTransactionManager")
     public Tenant saveAndFlush(Tenant tenant) {
-        return tenantRepository.saveAndFlush(tenant);
+        return tenantRepository.saveAndFlush(Objects.requireNonNull(tenant));
     }
 }

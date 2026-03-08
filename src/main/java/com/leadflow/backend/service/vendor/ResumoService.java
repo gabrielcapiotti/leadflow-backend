@@ -20,6 +20,7 @@ import com.leadflow.backend.service.notification.SendGridEmailService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -273,7 +274,9 @@ public class ResumoService {
                         return lead.getOwnerEmail();
                 }
 
-                return vendorRepository.findById(lead.getVendorId())
+                UUID safeVendorId = Objects.requireNonNull(lead.getVendorId());
+
+                return vendorRepository.findById(safeVendorId)
                                 .map(Vendor::getUserEmail)
                                 .orElse(null);
         }

@@ -8,6 +8,7 @@ import com.leadflow.backend.service.ai.AiService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service("chatConversationService")
@@ -38,7 +39,7 @@ public class ConversationService {
             throw new IllegalArgumentException("Mensagem inválida.");
         }
 
-        UUID leadId = request.getLeadId();
+        UUID leadId = Objects.requireNonNull(request.getLeadId());
         String userMessage = request.getMessage().trim();
 
         if (!leadRepository.existsById(leadId)) {
@@ -80,8 +81,9 @@ public class ConversationService {
     }
 
     private void saveConversation(UUID leadId, String role, String content) {
+        UUID safeLeadId = Objects.requireNonNull(leadId);
         VendorLeadConversation conversation = new VendorLeadConversation();
-        conversation.setVendorLeadId(leadId);
+        conversation.setVendorLeadId(safeLeadId);
         conversation.setRole(role);
         conversation.setContent(content.trim());
         conversationRepository.save(conversation);

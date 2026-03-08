@@ -2,7 +2,7 @@ package com.leadflow.backend.integration;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -16,7 +16,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import com.leadflow.backend.exception.GlobalExceptionHandler;
 import com.leadflow.backend.security.RateLimitService;
 
-@WebMvcTest
+@SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test") // Use o profile 'test' para padronizar os testes
 @Import(GlobalExceptionHandler.class)

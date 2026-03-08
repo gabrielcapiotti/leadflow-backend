@@ -15,10 +15,12 @@ public interface RoleRepository extends JpaRepository<Role, UUID> {
        ====================================================== */
 
     Optional<Role> findByNameIgnoreCase(String name);
+    Optional<Role> findByName(String name);
 
     /* ======================================================
        VALIDAÇÃO / BOOTSTRAP
        ====================================================== */
 
     boolean existsByNameIgnoreCase(String name);
+    boolean existsByName(String name);
 }

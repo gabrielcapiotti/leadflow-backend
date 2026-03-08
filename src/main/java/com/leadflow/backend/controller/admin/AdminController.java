@@ -12,11 +12,13 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @RestController
@@ -28,7 +30,7 @@ public class AdminController {
     private final AdminService adminService;
 
     public AdminController(AdminService adminService) {
-        this.adminService = adminService;
+        this.adminService = Objects.requireNonNull(adminService);
     }
 
     /* ======================================================
@@ -37,7 +39,10 @@ public class AdminController {
 
     @GetMapping("/overview")
     public ResponseEntity<AdminOverviewResponse> overview() {
-        return ResponseEntity.ok(adminService.getOverview());
+
+        AdminOverviewResponse response = adminService.getOverview();
+
+        return ResponseEntity.ok(response);
     }
 
     /* ======================================================
@@ -46,11 +51,16 @@ public class AdminController {
 
     @GetMapping("/metrics/growth")
     public ResponseEntity<GrowthResponse> growth(
+
             @RequestParam(defaultValue = "30")
-            @Min(1) @Max(365)
+            @Min(1)
+            @Max(365)
             int days
     ) {
-        return ResponseEntity.ok(adminService.getGrowth(days));
+
+        GrowthResponse response = adminService.getGrowth(days);
+
+        return ResponseEntity.ok(response);
     }
 
     /* ======================================================
@@ -59,7 +69,10 @@ public class AdminController {
 
     @GetMapping("/metrics/cohorts")
     public ResponseEntity<List<CohortResponse>> cohorts() {
-        return ResponseEntity.ok(adminService.calculateCohorts());
+
+        List<CohortResponse> response = adminService.calculateCohorts();
+
+        return ResponseEntity.ok(response);
     }
 
     /* ======================================================
@@ -68,11 +81,16 @@ public class AdminController {
 
     @GetMapping("/metrics/forecast")
     public ResponseEntity<List<ForecastPoint>> forecast(
+
             @RequestParam(defaultValue = "6")
-            @Min(1) @Max(24)
+            @Min(1)
+            @Max(24)
             int months
     ) {
-        return ResponseEntity.ok(adminService.forecastMRR(months));
+
+        List<ForecastPoint> response = adminService.forecastMRR(months);
+
+        return ResponseEntity.ok(response);
     }
 
     /* ======================================================
@@ -81,10 +99,19 @@ public class AdminController {
 
     @GetMapping("/metrics/health/{vendorId}")
     public ResponseEntity<VendorHealthResponse> health(
+
             @PathVariable
             @NotNull
+            @NonNull
             UUID vendorId
     ) {
-        return ResponseEntity.ok(adminService.calculateHealth(vendorId));
+
+        UUID safeVendorId =
+                Objects.requireNonNull(vendorId, "vendorId must not be null");
+
+        VendorHealthResponse response =
+                adminService.calculateHealth(safeVendorId);
+
+        return ResponseEntity.ok(response);
     }
 }

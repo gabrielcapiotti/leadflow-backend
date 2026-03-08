@@ -11,6 +11,7 @@ import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.service.auth.AuthService;
 import com.leadflow.backend.service.auth.RefreshTokenService;
 import com.leadflow.backend.service.auth.UserSessionService;
+import com.leadflow.backend.service.user.UserService;
 import com.leadflow.domain.auth.service.PasswordResetService;
 
 import org.junit.jupiter.api.AfterEach;
@@ -20,12 +21,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.ContextConfiguration;
 
 import java.util.UUID;
 
@@ -34,10 +37,18 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest
+@ContextConfiguration(classes = { AuthController.class })
 @AutoConfigureMockMvc(addFilters = false)
-@Import({AuthController.class, GlobalExceptionHandler.class})
+@Import({
+        GlobalExceptionHandler.class,
+        AuthControllerNegativeTest.TestConfig.class
+})
 @ActiveProfiles("test")
 class AuthControllerNegativeTest {
+
+    @TestConfiguration
+    static class TestConfig {
+    }
 
     @Autowired
     private MockMvc mockMvc;
@@ -45,35 +56,39 @@ class AuthControllerNegativeTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-        @MockitoBean
+    /* MOCKS */
+
+    @MockBean
     private AuthService authService;
 
-        @MockitoBean
+    @MockBean
     private JwtService jwtService;
 
-        @MockitoBean
+    @MockBean
     private TenantService tenantService;
 
-        @MockitoBean
+    @MockBean
     private RefreshTokenService refreshTokenService;
 
-        @MockitoBean
+    @MockBean
     private PasswordResetService passwordResetService;
 
-        @MockitoBean
+    @MockBean
     private UserSessionService userSessionService;
 
-                @MockitoBean
-        private RateLimitService rateLimitService;
+    @MockBean
+    private RateLimitService rateLimitService;
 
-    /* =========================================================
-       SETUP TENANT CONTEXT
-       ========================================================= */
+    @MockBean
+    private UserService userService;
+
+    /* TENANT */
 
     @BeforeEach
     void setup() {
         TenantContext.setTenant("tenant_id_123");
-        when(tenantService.getTenantIdBySchema("tenant_id_123"))
+
+        when(tenantService.getTenantIdBySchema(anyString()))
                 .thenReturn(UUID.randomUUID());
     }
 
@@ -82,9 +97,7 @@ class AuthControllerNegativeTest {
         TenantContext.clear();
     }
 
-    /* =========================================================
-       REGISTER - VALIDATION
-       ========================================================= */
+    /* REGISTER */
 
     @Test
     void shouldReturn400WhenEmailIsInvalidOnRegister() throws Exception {
@@ -142,9 +155,7 @@ class AuthControllerNegativeTest {
                 .andExpect(jsonPath("$.message").value("Invalid data"));
     }
 
-    /* =========================================================
-       LOGIN - VALIDATION
-       ========================================================= */
+    /* LOGIN */
 
     @Test
     void shouldReturn400WhenEmailIsInvalidOnLogin() throws Exception {

@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 @Service
 public class VendorUsageService {
@@ -74,7 +76,8 @@ public class VendorUsageService {
             int used = usage.getUsed();
             int percent = (int) Math.floor((used / (double) limit) * 100);
 
-            Vendor vendor = vendorRepository.findById(usage.getVendorId()).orElse(null);
+            UUID safeVendorId = Objects.requireNonNull(usage.getVendorId());
+            Vendor vendor = vendorRepository.findById(safeVendorId).orElse(null);
             if (vendor == null) {
                 continue;
             }

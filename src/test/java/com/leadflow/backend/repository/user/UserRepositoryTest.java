@@ -38,32 +38,34 @@ class UserRepositoryTest {
     @BeforeEach
     void setUp() {
 
-        // Definir o tenant antes de realizar as operações
         TenantContext.setTenant("public");
 
-        // Limpar dados antes de cada teste
+        /*
+         Limpa apenas usuários.
+         Não remove roles para evitar conflito com seeds ou FKs.
+        */
         userRepository.deleteAll();
-        roleRepository.deleteAll();
 
-        // Criar um novo papel e salvar
-        role = roleRepository.saveAndFlush(new Role("ROLE_USER"));
+        /*
+         Reutiliza ROLE_USER se já existir (seed do Flyway).
+        */
+        role = roleRepository.findByName("ROLE_USER")
+                .orElseGet(() -> roleRepository.saveAndFlush(new Role("ROLE_USER")));
 
-        // Definir um e-mail fixo e determinístico para evitar duplicações inesperadas
         email = UUID.randomUUID() + "@example.com";
 
-        // Criar um novo usuário e salvar
         User user = new User(
                 "Test User",
                 email,
-                "encoded-password",  // A senha deve ser codificada, dependendo da implementação
+                "encoded-password",
                 role
         );
+
         userRepository.saveAndFlush(user);
     }
 
     @AfterEach
     void cleanup() {
-        // Limpar o contexto do tenant após cada teste
         TenantContext.clear();
     }
 
@@ -74,7 +76,10 @@ class UserRepositoryTest {
     @Test
     @DisplayName("Should return user when active email exists")
     void findByEmailIgnoreCaseAndDeletedAtIsNull_ShouldReturnUser() {
-        Optional<User> found = userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull(email);
+
+        Optional<User> found =
+                userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull(email);
+
         assertThat(found).isPresent();
         assertThat(found.get().getName()).isEqualTo("Test User");
     }
@@ -82,7 +87,10 @@ class UserRepositoryTest {
     @Test
     @DisplayName("Should return empty when email does not exist")
     void findByEmailIgnoreCaseAndDeletedAtIsNull_ShouldReturnEmpty() {
-        Optional<User> found = userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("nonexistent@example.com");
+
+        Optional<User> found =
+                userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("nonexistent@example.com");
+
         assertThat(found).isEmpty();
     }
 
@@ -93,20 +101,28 @@ class UserRepositoryTest {
     @Test
     @DisplayName("Should return true for active user")
     void existsByEmailIgnoreCaseAndDeletedAtIsNull_ShouldReturnTrue() {
-        boolean exists = userRepository.existsByEmailIgnoreCaseAndDeletedAtIsNull(email);
+
+        boolean exists =
+                userRepository.existsByEmailIgnoreCaseAndDeletedAtIsNull(email);
+
         assertThat(exists).isTrue();
     }
 
     @Test
     @DisplayName("Should return false when user is soft deleted")
     void shouldNotReturnDeletedUser() {
-        User user = userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull(email)
+
+        User user = userRepository
+                .findByEmailIgnoreCaseAndDeletedAtIsNull(email)
                 .orElseThrow();
-        
-        user.softDelete(); // Certifique-se de que o método softDelete está implementado corretamente.
+
+        user.softDelete();
+
         userRepository.saveAndFlush(user);
 
-        boolean exists = userRepository.existsByEmailIgnoreCaseAndDeletedAtIsNull(email);
+        boolean exists =
+                userRepository.existsByEmailIgnoreCaseAndDeletedAtIsNull(email);
+
         assertThat(exists).isFalse();
     }
 
@@ -117,17 +133,15 @@ class UserRepositoryTest {
     @Test
     @DisplayName("Should not allow duplicate email")
     void shouldNotAllowDuplicateEmail() {
-        // Tentar salvar um usuário com o mesmo email, que já existe no banco de dados
+
         User duplicate = new User(
                 "Another User",
-                email,  // Mesmo e-mail do usuário já existente
+                email,
                 "password",
                 role
         );
 
-        // Esperamos que a exceção DataIntegrityViolationException seja lançada
         assertThatThrownBy(() -> userRepository.saveAndFlush(duplicate))
-                .isInstanceOf(DataIntegrityViolationException.class)
-                .withFailMessage("Duplicate email should cause a DataIntegrityViolationException");
+                .isInstanceOf(DataIntegrityViolationException.class);
     }
 }

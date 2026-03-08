@@ -32,27 +32,25 @@ public class LeadService {
         this.userRepository = userRepository;
     }
 
-    /* ====================================================== */
-    /* RESOLVE USER                                           */
-    /* ====================================================== */
+    /* ======================================================
+       RESOLVE USER
+       ====================================================== */
 
     @Transactional(readOnly = true)
     public User resolveUser(String email) {
 
-        if (email == null || email.isBlank()) {
-            throw new IllegalArgumentException("Email cannot be null or blank");
-        }
+        String normalized = normalizeEmail(email);
 
         return userRepository
-                .findByEmailIgnoreCaseAndDeletedAtIsNull(email.trim())
+                .findByEmailIgnoreCaseAndDeletedAtIsNull(normalized)
                 .orElseThrow(() ->
                         new IllegalArgumentException("User not found")
                 );
     }
 
-    /* ====================================================== */
-    /* CREATE                                                 */
-    /* ====================================================== */
+    /* ======================================================
+       CREATE
+       ====================================================== */
 
     public Lead createLead(
             String name,
@@ -62,9 +60,8 @@ public class LeadService {
     ) {
 
         requireUser(createdBy);
-        requireEmail(email);
 
-        String normalizedEmail = email.trim().toLowerCase();
+        String normalizedEmail = normalizeEmail(email);
 
         boolean exists = leadRepository
                 .existsByUserIdAndEmailIgnoreCaseAndDeletedAtIsNull(
@@ -92,9 +89,9 @@ public class LeadService {
         return lead;
     }
 
-    /* ====================================================== */
-    /* LIST                                                   */
-    /* ====================================================== */
+    /* ======================================================
+       LIST
+       ====================================================== */
 
     @Transactional(readOnly = true)
     public List<Lead> listActiveLeads(User user) {
@@ -105,9 +102,9 @@ public class LeadService {
                 .findByUserIdAndDeletedAtIsNull(user.getId());
     }
 
-    /* ====================================================== */
-    /* UPDATE STATUS                                          */
-    /* ====================================================== */
+    /* ======================================================
+       UPDATE STATUS
+       ====================================================== */
 
     public Lead updateStatus(
             UUID leadId,
@@ -116,10 +113,7 @@ public class LeadService {
     ) {
 
         requireUser(user);
-
-        if (leadId == null) {
-            throw new IllegalArgumentException("LeadId cannot be null");
-        }
+        requireLeadId(leadId);
 
         if (newStatus == null) {
             throw new IllegalArgumentException("Status cannot be null");
@@ -147,17 +141,14 @@ public class LeadService {
         return lead;
     }
 
-    /* ====================================================== */
-    /* SOFT DELETE                                            */
-    /* ====================================================== */
+    /* ======================================================
+       SOFT DELETE
+       ====================================================== */
 
     public void softDelete(UUID leadId, User user) {
 
         requireUser(user);
-
-        if (leadId == null) {
-            throw new IllegalArgumentException("LeadId cannot be null");
-        }
+        requireLeadId(leadId);
 
         Lead lead = leadRepository
                 .findByIdAndUserIdAndDeletedAtIsNull(
@@ -171,16 +162,14 @@ public class LeadService {
         lead.softDelete();
     }
 
-    /* ====================================================== */
-    /* GET BY ID                                              */
-    /* ====================================================== */
+    /* ======================================================
+       GET BY ID
+       ====================================================== */
 
     @Transactional(readOnly = true)
     public Lead getByIdForUser(UUID leadId, UUID userId) {
 
-        if (leadId == null) {
-            throw new IllegalArgumentException("LeadId cannot be null");
-        }
+        requireLeadId(leadId);
 
         if (userId == null) {
             throw new IllegalArgumentException("UserId cannot be null");
@@ -196,19 +185,34 @@ public class LeadService {
                 );
     }
 
-    /* ====================================================== */
-    /* PRIVATE GUARDS                                         */
-    /* ====================================================== */
+    /* ======================================================
+       PRIVATE GUARDS
+       ====================================================== */
 
     private void requireUser(User user) {
+
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null");
         }
+
+        if (user.getId() == null) {
+            throw new IllegalArgumentException("User must have an id");
+        }
     }
 
-    private void requireEmail(String email) {
+    private void requireLeadId(UUID leadId) {
+
+        if (leadId == null) {
+            throw new IllegalArgumentException("LeadId cannot be null");
+        }
+    }
+
+    private String normalizeEmail(String email) {
+
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("Email cannot be null or blank");
         }
+
+        return email.trim().toLowerCase();
     }
 }

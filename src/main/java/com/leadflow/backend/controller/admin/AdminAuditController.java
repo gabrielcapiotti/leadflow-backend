@@ -18,11 +18,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 @RestController
@@ -63,8 +65,11 @@ public class AdminAuditController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime to,
 
-            Pageable pageable
+            @NonNull Pageable pageable
     ) {
+
+        Pageable safePageable =
+                Objects.requireNonNull(pageable, "Pageable must not be null");
 
         validateDateRange(from, to);
 
@@ -80,7 +85,7 @@ public class AdminAuditController {
 
         Page<SecurityAuditResponse> response =
                 securityAuditLogRepository
-                        .findAll(specification, pageable)
+                        .findAll(specification, safePageable)
                         .map(this::mapSecurityAuditResponse);
 
         logger.info(
@@ -110,8 +115,11 @@ public class AdminAuditController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             Instant to,
 
-            Pageable pageable
+            @NonNull Pageable pageable
     ) {
+
+        Pageable safePageable =
+                Objects.requireNonNull(pageable, "Pageable must not be null");
 
         validateDateRange(from, to);
 
@@ -126,7 +134,7 @@ public class AdminAuditController {
 
         Page<VendorAuditResponse> response =
                 vendorAuditLogRepository
-                        .findAll(specification, pageable)
+                        .findAll(specification, safePageable)
                         .map(this::mapVendorAuditResponse);
 
         logger.info(

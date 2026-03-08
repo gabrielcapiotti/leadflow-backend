@@ -1,6 +1,7 @@
 package com.leadflow.backend.controller.admin;
 
 import com.leadflow.backend.entities.vendor.VendorAuditLog;
+import com.leadflow.backend.exception.GlobalExceptionHandler;
 import com.leadflow.backend.multitenancy.filter.TenantFilter;
 import com.leadflow.backend.multitenancy.service.TenantService;
 import com.leadflow.backend.repository.VendorAuditLogRepository;
@@ -13,12 +14,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
+import org.springframework.boot.SpringBootConfiguration;
 
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -28,10 +34,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.test.context.support.WithMockUser;
 
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -43,32 +50,44 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(
         controllers = AdminAuditController.class,
+        excludeAutoConfiguration = {
+                DataSourceAutoConfiguration.class,
+                HibernateJpaAutoConfiguration.class,
+                JpaRepositoriesAutoConfiguration.class
+        },
         excludeFilters = @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE,
                 classes = TenantFilter.class
         )
 )
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestSecurityConfig.class)
+@Import({TestSecurityConfig.class, GlobalExceptionHandler.class})
+@ContextConfiguration(classes = AdminAuditControllerSecurityTest.TestApplication.class)
 class AdminAuditControllerSecurityTest {
+
+        @SpringBootConfiguration
+        @EnableAutoConfiguration
+        @Import(AdminAuditController.class)
+        static class TestApplication {
+        }
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
+        @MockBean
     private SecurityAuditLogRepository securityAuditLogRepository;
 
     @MockBean
     private VendorAuditLogRepository vendorAuditLogRepository;
 
-    @MockitoBean
+        @MockBean
     private JwtService jwtService;
 
-    @MockitoBean
+        @MockBean
     private TenantService tenantService;
 
-    @MockitoBean
+        @MockBean
     private RateLimitService rateLimitService;
 
     @BeforeEach
@@ -78,7 +97,7 @@ class AdminAuditControllerSecurityTest {
                 any(Specification.class),
                 any(Pageable.class)
         )).thenReturn(
-                new PageImpl<>(List.of(), PageRequest.of(0, 20), 1)
+                new PageImpl<>(Objects.requireNonNull(List.<VendorAuditLog>of()), PageRequest.of(0, 20), 1)
         );
     }
 
@@ -126,7 +145,7 @@ class AdminAuditControllerSecurityTest {
                 any(Specification.class),
                 any(Pageable.class)
         )).thenReturn(
-                new PageImpl<>(List.of(log), PageRequest.of(0, 20), 1)
+                new PageImpl<>(Objects.requireNonNull(List.of(Objects.requireNonNull(log))), PageRequest.of(0, 20), 1)
         );
 
         mockMvc.perform(get("/admin/audit/vendor")

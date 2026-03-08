@@ -5,10 +5,12 @@ import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.service.RoleService;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @RestController
@@ -19,7 +21,8 @@ public class RoleController {
     private final RoleService roleService;
 
     public RoleController(RoleService roleService) {
-        this.roleService = roleService;
+        this.roleService =
+                Objects.requireNonNull(roleService, "RoleService must not be null");
     }
 
     /* ======================================================
@@ -43,10 +46,13 @@ public class RoleController {
 
     @GetMapping("/{id}")
     public ResponseEntity<RoleResponse> getById(
-            @PathVariable UUID id
+            @PathVariable @NonNull UUID id
     ) {
 
-        Role role = roleService.getById(id);
+        UUID safeId =
+                Objects.requireNonNull(id, "Role id must not be null");
+
+        Role role = roleService.getById(safeId);
 
         if (role == null) {
             return ResponseEntity.notFound().build();
@@ -61,9 +67,12 @@ public class RoleController {
 
     private RoleResponse toResponse(Role role) {
 
+        Role safeRole =
+                Objects.requireNonNull(role, "Role must not be null");
+
         return new RoleResponse(
-                role.getId(),
-                role.getName()
+                safeRole.getId(),
+                safeRole.getName()
         );
     }
 }

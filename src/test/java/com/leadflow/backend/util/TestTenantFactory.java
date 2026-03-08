@@ -6,10 +6,16 @@ import com.leadflow.backend.repository.tenant.TenantRepository;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+
+import java.util.regex.Pattern;
 
 @Component
 public class TestTenantFactory {
+
+    private static final Pattern VALID_SCHEMA =
+            Pattern.compile("^[a-z][a-z0-9_]*$");
 
     private final TenantRepository tenantRepository;
     private final JdbcTemplate jdbcTemplate;
@@ -26,6 +32,7 @@ public class TestTenantFactory {
        CREATE TENANT
        ====================================================== */
 
+    @Transactional
     public Tenant createTenant(String tenantName) {
 
         if (!StringUtils.hasText(tenantName)) {
@@ -33,27 +40,20 @@ public class TestTenantFactory {
         }
 
         String normalizedName = tenantName.trim().toLowerCase();
+        String schema = normalizeSchema(normalizedName);
 
         /*
-         * Normaliza para schema seguro
+         * Verifica se tenant já existe
          */
-        String schema = normalizedName
-                .replaceAll("[^a-z0-9 ]", "")
-                .replaceAll("\\s+", "_");
+        return tenantRepository
+                .findBySchemaNameIgnoreCase(schema)
+                .orElseGet(() -> createNewTenant(normalizedName, schema));
+    }
 
-        if (!StringUtils.hasText(schema)) {
-            throw new IllegalArgumentException("Invalid tenant name after normalization");
-        }
+    private Tenant createNewTenant(String normalizedName, String schema) {
 
-        /*
-         * Cria schema físico no banco
-         * Uso de aspas evita problemas com nomes reservados
-         */
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS \"" + schema + "\"");
+        createSchemaIfNotExists(schema);
 
-        /*
-         * Persiste tenant no schema public
-         */
         Tenant tenant = new Tenant(
                 normalizedName,
                 schema
@@ -62,10 +62,22 @@ public class TestTenantFactory {
         return tenantRepository.save(tenant);
     }
 
+    private void createSchemaIfNotExists(String schema) {
+
+        if (!VALID_SCHEMA.matcher(schema).matches()) {
+            throw new IllegalArgumentException("Invalid schema name: " + schema);
+        }
+
+        jdbcTemplate.execute(
+                "CREATE SCHEMA IF NOT EXISTS \"" + schema + "\""
+        );
+    }
+
     /* ======================================================
        CREATE + ACTIVATE
        ====================================================== */
 
+    @Transactional
     public Tenant createAndActivate(String tenantName) {
 
         Tenant tenant = createTenant(tenantName);
@@ -85,15 +97,35 @@ public class TestTenantFactory {
             throw new IllegalArgumentException("Schema name cannot be blank");
         }
 
-        String normalized = schemaName
-                .trim()
-                .toLowerCase()
-                .replaceAll("[^a-z0-9_]", "");
+        String normalized = normalizeSchema(schemaName);
 
         TenantContext.setTenant(normalized);
     }
 
     public void clear() {
         TenantContext.clear();
+    }
+
+    /* ======================================================
+       NORMALIZATION
+       ====================================================== */
+
+    private String normalizeSchema(String name) {
+
+        String schema = name
+                .trim()
+                .toLowerCase()
+                .replaceAll("[^a-z0-9 ]", "")
+                .replaceAll("\\s+", "_");
+
+        if (!StringUtils.hasText(schema)) {
+            throw new IllegalArgumentException("Invalid tenant name after normalization");
+        }
+
+        if (Character.isDigit(schema.charAt(0))) {
+            schema = "t_" + schema;
+        }
+
+        return schema;
     }
 }

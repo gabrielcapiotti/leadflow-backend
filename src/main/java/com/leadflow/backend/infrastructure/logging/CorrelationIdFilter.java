@@ -8,10 +8,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.MDC;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -28,19 +30,29 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String correlationId = resolveCorrelationId(request);
+        HttpServletRequest safeRequest =
+                Objects.requireNonNull(request, "HttpServletRequest must not be null");
+
+        HttpServletResponse safeResponse =
+                Objects.requireNonNull(response, "HttpServletResponse must not be null");
+
+        FilterChain safeFilterChain =
+                Objects.requireNonNull(filterChain, "FilterChain must not be null");
+
+        String correlationId = resolveCorrelationId(safeRequest);
 
         try {
-            enrichMdc(request, correlationId);
 
-            response.setHeader(CORRELATION_ID_HEADER, correlationId);
+            enrichMdc(safeRequest, correlationId);
 
-            filterChain.doFilter(request, response);
+            safeResponse.setHeader(CORRELATION_ID_HEADER, correlationId);
+
+            safeFilterChain.doFilter(safeRequest, safeResponse);
 
         } finally {
             MDC.clear(); // evita vazamento entre threads
@@ -61,7 +73,7 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
         MDC.put(MDC_PATH, request.getRequestURI());
         MDC.put(MDC_IP, resolveClientIp(request));
 
-        // Se quiser integrar tenant futuramente:
+        // integração futura com multi-tenant
         // MDC.put(MDC_TENANT, TenantContext.getTenant());
     }
 

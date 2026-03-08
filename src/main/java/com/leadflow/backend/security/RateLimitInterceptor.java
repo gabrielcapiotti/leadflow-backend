@@ -3,10 +3,12 @@ package com.leadflow.backend.security;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.io.IOException;
+import java.util.Objects;
 
 @Component
 public class RateLimitInterceptor implements HandlerInterceptor {
@@ -14,27 +16,36 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     private final RateLimitService rateLimitService;
 
     public RateLimitInterceptor(RateLimitService rateLimitService) {
-        this.rateLimitService = rateLimitService;
+        this.rateLimitService =
+                Objects.requireNonNull(rateLimitService, "RateLimitService must not be null");
     }
 
     @Override
     public boolean preHandle(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Object handler
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull Object handler
     ) throws IOException {
 
-        String scope = resolveScope(request);
-        String key = resolveKey(request);
+        HttpServletRequest safeRequest =
+                Objects.requireNonNull(request, "HttpServletRequest must not be null");
+
+        HttpServletResponse safeResponse =
+                Objects.requireNonNull(response, "HttpServletResponse must not be null");
+
+        Objects.requireNonNull(handler, "Handler must not be null");
+
+        String scope = resolveScope(safeRequest);
+        String key = resolveKey(safeRequest);
 
         boolean allowed = rateLimitService.tryConsume(key, scope);
 
         if (!allowed) {
 
-            response.setStatus(429); // Código de status HTTP para Too Many Requests
-            response.setContentType("application/json");
+            safeResponse.setStatus(429);
+            safeResponse.setContentType("application/json");
 
-            response.getWriter().write("""
+            safeResponse.getWriter().write("""
                 {
                     "error": "rate_limit_exceeded",
                     "message": "Too many requests"

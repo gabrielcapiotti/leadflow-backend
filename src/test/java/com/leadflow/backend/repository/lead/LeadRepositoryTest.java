@@ -19,6 +19,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -90,8 +91,10 @@ class LeadRepositoryTest {
 
         Lead savedLead = leadRepository.saveAndFlush(lead);
 
+        UUID safeLeadId = Objects.requireNonNull(savedLead.getId());
+
         Optional<Lead> retrievedLead =
-                leadRepository.findById(savedLead.getId());
+                leadRepository.findById(safeLeadId);
 
         assertThat(retrievedLead).isPresent();
         assertThat(retrievedLead.get().getName())
@@ -145,7 +148,7 @@ class LeadRepositoryTest {
                 "456"
         );
 
-        leadRepository.saveAllAndFlush(List.of(lead1, lead2));
+        leadRepository.saveAllAndFlush(Objects.requireNonNull(List.of(lead1, lead2)));
 
         List<Lead> leads =
                 leadRepository.findByUserIdAndDeletedAtIsNull(user.getId());
@@ -198,7 +201,7 @@ class LeadRepositoryTest {
         lead3.changeStatus(LeadStatus.CONTACTED);
 
         leadRepository.saveAllAndFlush(
-                List.of(lead1, lead2, lead3)
+                Objects.requireNonNull(List.of(lead1, lead2, lead3))
         );
 
         long count =

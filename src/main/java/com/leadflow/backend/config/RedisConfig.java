@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.RedisPassword;
+
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 
@@ -14,6 +15,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
+import java.util.Objects;
 
 @Configuration
 public class RedisConfig {
@@ -34,7 +36,7 @@ public class RedisConfig {
     private long timeoutMillis;
 
     /* ======================================================
-       CONNECTION FACTORY (PRODUCTION READY)
+       CONNECTION FACTORY
        ====================================================== */
 
     @Bean
@@ -43,7 +45,14 @@ public class RedisConfig {
         RedisStandaloneConfiguration standaloneConfig =
                 new RedisStandaloneConfiguration();
 
-        standaloneConfig.setHostName(host);
+        /*
+         * Garante valor seguro e não-nulo para host
+         */
+        String safeHost = (host == null || host.isBlank())
+                ? "localhost"
+                : host;
+
+        standaloneConfig.setHostName(Objects.requireNonNull(safeHost));
         standaloneConfig.setPort(port);
         standaloneConfig.setDatabase(database);
 
@@ -51,10 +60,22 @@ public class RedisConfig {
             standaloneConfig.setPassword(RedisPassword.of(password));
         }
 
+        /*
+         * Timeout mínimo seguro
+         */
+        Duration commandTimeout = Duration.ofMillis(Math.max(timeoutMillis, 100));
+        Duration shutdownTimeout = Duration.ofMillis(100);
+
+        /*
+         * Garantia explícita de non-null
+         */
+        Duration safeCommandTimeout = Objects.requireNonNull(commandTimeout);
+        Duration safeShutdownTimeout = Objects.requireNonNull(shutdownTimeout);
+
         LettuceClientConfiguration clientConfig =
                 LettuceClientConfiguration.builder()
-                        .commandTimeout(Duration.ofMillis(timeoutMillis))
-                        .shutdownTimeout(Duration.ofMillis(100))
+                        .commandTimeout(safeCommandTimeout)
+                        .shutdownTimeout(safeShutdownTimeout)
                         .build();
 
         return new LettuceConnectionFactory(
@@ -69,15 +90,24 @@ public class RedisConfig {
 
     @Bean
     public StringRedisTemplate stringRedisTemplate(
-            RedisConnectionFactory factory) {
+            RedisConnectionFactory factory
+    ) {
+
+        RedisConnectionFactory safeFactory =
+                Objects.requireNonNull(
+                        factory,
+                        "RedisConnectionFactory must not be null"
+                );
 
         StringRedisTemplate template =
-                new StringRedisTemplate(factory);
+                new StringRedisTemplate(safeFactory);
 
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new StringRedisSerializer());
-        template.setHashKeySerializer(new StringRedisSerializer());
-        template.setHashValueSerializer(new StringRedisSerializer());
+        StringRedisSerializer serializer = new StringRedisSerializer();
+
+        template.setKeySerializer(serializer);
+        template.setValueSerializer(serializer);
+        template.setHashKeySerializer(serializer);
+        template.setHashValueSerializer(serializer);
 
         template.afterPropertiesSet();
 

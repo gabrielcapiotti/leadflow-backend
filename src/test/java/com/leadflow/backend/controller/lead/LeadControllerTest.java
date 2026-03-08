@@ -8,21 +8,24 @@ import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.entities.vendor.SubscriptionAccessLevel;
 import com.leadflow.backend.exception.GlobalExceptionHandler;
+import com.leadflow.backend.security.RateLimitInterceptor;
+import com.leadflow.backend.security.RateLimitService;
 import com.leadflow.backend.security.SubscriptionGuard;
 import com.leadflow.backend.service.lead.LeadService;
 import com.leadflow.backend.service.user.UserService;
+import com.leadflow.backend.service.vendor.VendorService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -35,7 +38,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest
+@SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @Import({LeadController.class, GlobalExceptionHandler.class})
@@ -47,27 +50,35 @@ class LeadControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockitoBean
+    @MockBean
     private LeadService leadService;
 
-    @MockitoBean
+    @MockBean
+    private VendorService vendorService;
+
+    @MockBean
     private UserService userService;
 
-    @MockitoBean
+    @MockBean
     private SubscriptionGuard subscriptionGuard;
+
+    @MockBean
+    private RateLimitInterceptor rateLimitInterceptor;
+
+    @MockBean
+    private RateLimitService rateLimitService;
 
     private Lead lead;
     private User user;
     private UUID leadId;
-
-    /* ====================================================== */
-    /* SETUP                                                  */
-    /* ====================================================== */
+    private UUID userId;
 
     @BeforeEach
     void setUp() {
 
         Role role = new Role("ROLE_USER");
+
+        userId = UUID.randomUUID();
 
         user = new User(
                 "Test User",
@@ -76,7 +87,6 @@ class LeadControllerTest {
                 role
         );
 
-        UUID userId = UUID.randomUUID();
         ReflectionTestUtils.setField(user, "id", userId);
 
         leadId = UUID.randomUUID();
@@ -99,20 +109,19 @@ class LeadControllerTest {
                 .thenReturn(SubscriptionAccessLevel.FULL);
     }
 
-    /* ====================================================== */
-    /* CREATE                                                 */
-    /* ====================================================== */
-
     @Test
     @WithMockUser(username = "test@example.com")
     void createLead_ShouldReturnCreatedLead() throws Exception {
+
+        Lead mockLead = new Lead(userId, "Test Lead", "lead@example.com", "123456789");
+        ReflectionTestUtils.setField(mockLead, "id", leadId);
 
         when(leadService.createLead(
                 anyString(),
                 anyString(),
                 anyString(),
                 eq(user)
-        )).thenReturn(lead);
+        )).thenReturn(mockLead);
 
         CreateLeadRequest request = new CreateLeadRequest(
                 "Test Lead",
@@ -136,10 +145,6 @@ class LeadControllerTest {
         );
     }
 
-    /* ====================================================== */
-    /* LIST                                                   */
-    /* ====================================================== */
-
     @Test
     @WithMockUser(username = "test@example.com")
     void listLeads_ShouldReturnLeadList() throws Exception {
@@ -154,10 +159,6 @@ class LeadControllerTest {
 
         verify(leadService).listActiveLeads(user);
     }
-
-    /* ====================================================== */
-    /* UPDATE STATUS                                          */
-    /* ====================================================== */
 
     @Test
     @WithMockUser(username = "test@example.com")
@@ -179,10 +180,6 @@ class LeadControllerTest {
         verify(leadService)
                 .updateStatus(leadId, LeadStatus.CONTACTED, user);
     }
-
-    /* ====================================================== */
-    /* DELETE                                                 */
-    /* ====================================================== */
 
     @Test
     @WithMockUser(username = "test@example.com")

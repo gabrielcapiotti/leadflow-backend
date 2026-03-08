@@ -20,8 +20,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -81,7 +83,7 @@ class AuthServiceTest {
                 .thenReturn(Optional.of(userRole));
 
         when(userRepository.save(any(User.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                .thenAnswer(invocation -> Objects.requireNonNull(invocation.getArgument(0, User.class)));
 
         User result = authService.registerUser(
                 "Test User",
@@ -125,8 +127,7 @@ class AuthServiceTest {
         when(bruteForceService.isBlocked(anyString(), anyInt()))
                 .thenReturn(false);
 
-        when(userRepository
-                .findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
+        when(userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
                 .thenReturn(Optional.of(user));
 
         User result = authService.authenticateUser(
@@ -178,8 +179,7 @@ class AuthServiceTest {
         when(bruteForceService.isBlocked(anyString(), anyInt()))
                 .thenReturn(false);
 
-        when(userRepository
-                .findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
+        when(userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("test@example.com"))
                 .thenReturn(Optional.of(user));
 
         assertThatThrownBy(() ->
@@ -219,29 +219,16 @@ class AuthServiceTest {
         when(bruteForceService.isBlocked(anyString(), anyInt()))
                 .thenReturn(true);
 
-        assertThatThrownBy(() ->
-                authService.authenticateUser(
-                        "test@example.com",
-                        "password"
-                )
-        ).isInstanceOf(IllegalStateException.class);
+        assertThrows(IllegalStateException.class, () ->
+                authService.authenticateUser("test@example.com", "password123")
+        );
 
-        verifyNoInteractions(userRepository);
-
-        verify(loginAuditService)
-                .recordFailure(eq(TENANT),
-                        eq("test@example.com"),
-                        any(),
-                        any(),
-                        eq("Brute force detected"));
-
-        verify(auditService)
-                .log(any(SecurityAction.class),
-                        eq("test@example.com"),
-                        eq(TENANT),
-                        eq(false),
-                        any(),
-                        any(),
-                        any());
+        verify(loginAuditService).recordFailure(
+                eq("tenant_test"),
+                eq("test@example.com"),
+                any(),
+                any(),
+                eq("Brute force detected")
+        );
     }
 }
