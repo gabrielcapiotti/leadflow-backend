@@ -28,8 +28,7 @@ public class TenantFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        return path.startsWith("/auth")
-                || path.startsWith("/actuator")
+        return path.startsWith("/actuator")
                 || path.startsWith("/health")
                 || path.startsWith("/swagger")
                 || path.startsWith("/v3/api-docs");

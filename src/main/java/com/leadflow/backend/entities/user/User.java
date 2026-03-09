@@ -32,8 +32,11 @@ public class User {
        ====================================================== */
 
     @Id
-    @Column(nullable = false, updatable = false)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @Column(nullable = false, unique = true)
+    private String email;
 
     @PrePersist
     public void prePersist() {
@@ -48,9 +51,6 @@ public class User {
 
     @Column(nullable = false, length = 150)
     private String name;
-
-    @Column(nullable = false, length = 150)
-    private String email;
 
     @Column(nullable = false, length = 255)
     private String password;

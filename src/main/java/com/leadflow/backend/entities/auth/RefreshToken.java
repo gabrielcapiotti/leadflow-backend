@@ -1,24 +1,23 @@
 package com.leadflow.backend.entities.auth;
 
 import com.leadflow.backend.entities.user.User;
-
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.UUID;
 
 @Entity
 @Table(
         name = "refresh_tokens",
         indexes = {
-                @Index(name = "idx_refresh_token_user", columnList = "user_id"),
-                @Index(name = "idx_refresh_token_hash", columnList = "token_hash"),
-                @Index(name = "idx_refresh_token_fingerprint", columnList = "device_fingerprint")
+                @Index(name = "idx_refresh_tokens_user", columnList = "user_id"),
+                @Index(name = "idx_refresh_tokens_hash", columnList = "token_hash"),
+                @Index(name = "idx_refresh_tokens_fingerprint", columnList = "device_fingerprint"),
+                @Index(name = "idx_refresh_tokens_expires", columnList = "expires_at")
         },
         uniqueConstraints = {
-                @UniqueConstraint(name = "uq_refresh_token_hash", columnNames = "token_hash")
+                @UniqueConstraint(name = "uq_refresh_tokens_hash", columnNames = "token_hash")
         }
 )
 public class RefreshToken {
@@ -45,14 +44,14 @@ public class RefreshToken {
     @JoinColumn(
             name = "user_id",
             nullable = false,
-            foreignKey = @ForeignKey(name = "fk_refresh_token_user")
+            foreignKey = @ForeignKey(name = "fk_refresh_tokens_user")
     )
     private User user;
 
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
 
-    @Column(nullable = false)
+    @Column(name = "revoked", nullable = false)
     private boolean revoked = false;
 
     /* ======================================================
@@ -71,10 +70,12 @@ public class RefreshToken {
         // JPA
     }
 
-    public RefreshToken(String tokenHash,
-                        String deviceFingerprint,
-                        User user,
-                        LocalDateTime expiresAt) {
+    public RefreshToken(
+            String tokenHash,
+            String deviceFingerprint,
+            User user,
+            LocalDateTime expiresAt
+    ) {
 
         if (tokenHash == null || tokenHash.isBlank())
             throw new IllegalArgumentException("Token hash cannot be blank");
@@ -144,14 +145,26 @@ public class RefreshToken {
     }
 
     /* ======================================================
+       SETTERS (controlled)
+       ====================================================== */
+
+    public void setDeviceFingerprint(String deviceFingerprint) {
+        if (deviceFingerprint == null || deviceFingerprint.isBlank())
+            throw new IllegalArgumentException("Device fingerprint cannot be blank");
+
+        this.deviceFingerprint = deviceFingerprint;
+    }
+
+    /* ======================================================
        EQUALS & HASHCODE (Hibernate-safe)
        ====================================================== */
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof RefreshToken other)) return false;
-        return id != null && Objects.equals(id, other.id);
+        if (!(o instanceof RefreshToken)) return false;
+        RefreshToken that = (RefreshToken) o;
+        return id != null && id.equals(that.id);
     }
 
     @Override
@@ -170,9 +183,5 @@ public class RefreshToken {
                 ", userId=" + (user != null ? user.getId() : null) +
                 ", revoked=" + revoked +
                 '}';
-    }
-
-    public void setDeviceFingerprint(String deviceFingerprint) {
-        this.deviceFingerprint = deviceFingerprint;
     }
 }

@@ -255,11 +255,9 @@
                     <url>jdbc:postgresql://localhost:2411/leadflow_test</url>
                     <user>postgres</user>
                     <password>venusia</password>
+                    <ignoreMigrationPatterns>*:missing</ignoreMigrationPatterns>
                     <locations>
                         <location>classpath:db/migration</location>
-                        <location>classpath:db/migration/core</location>
-                        <location>classpath:db/migration/global</location>
-                        <location>classpath:db/migration/tenant</location>
                     </locations>
                 </configuration>
             </plugin>

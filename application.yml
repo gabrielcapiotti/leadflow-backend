@@ -2,4 +2,4 @@ spring:
   jpa:
     properties:
       hibernate:
-        multiTenancy: SCHEMA
+        multi_tenancy: SCHEMA

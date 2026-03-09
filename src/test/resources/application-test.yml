@@ -17,6 +17,11 @@ spring:
     init:
       mode: never
 
+  flyway:
+    enabled: true
+    validate-on-migrate: true
+    baseline-on-migrate: true
+
   jpa:
     open-in-view: false
     show-sql: false
@@ -30,12 +35,6 @@ spring:
         jdbc:
           lob:
             non_contextual_creation: true
-        default_schema: public
-
-  flyway:
-    enabled: true
-    validate-on-migrate: true
-    baseline-on-migrate: true
 
   task:
     scheduling:

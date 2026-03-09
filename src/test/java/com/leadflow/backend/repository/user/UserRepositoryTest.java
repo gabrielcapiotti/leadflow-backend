@@ -19,8 +19,10 @@ import static org.assertj.core.api.Assertions.*;
 
 @DataJpaTest
 @TestPropertySource(properties = {
-        "spring.jpa.properties.hibernate.multiTenancy=NONE",
-        "multitenancy.enabled=false"
+        "multitenancy.enabled=false",
+        "spring.jpa.properties.hibernate.multi_tenancy=NONE",
+        "spring.jpa.hibernate.ddl-auto=create-drop",
+        "spring.flyway.enabled=false"
 })
 @ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)

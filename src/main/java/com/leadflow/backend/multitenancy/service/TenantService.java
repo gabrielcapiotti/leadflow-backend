@@ -1,14 +1,17 @@
 package com.leadflow.backend.multitenancy.service;
 
 import com.leadflow.backend.exception.TenantNotFoundException;
+import org.flywaydb.core.Flyway;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import javax.sql.DataSource;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +19,7 @@ import org.slf4j.LoggerFactory;
 public class TenantService {
 
     private static final String DEFAULT_SCHEMA = "public";
+
     private static final Pattern VALID_SCHEMA =
             Pattern.compile("^[a-z0-9_]{3,50}$");
 
@@ -34,10 +38,14 @@ public class TenantService {
             """;
 
     private final JdbcTemplate jdbcTemplate;
-    private static final Logger logger = LoggerFactory.getLogger(TenantService.class);
+    private final DataSource dataSource;
 
-    public TenantService(JdbcTemplate jdbcTemplate) {
+    private static final Logger logger =
+            LoggerFactory.getLogger(TenantService.class);
+
+    public TenantService(JdbcTemplate jdbcTemplate, DataSource dataSource) {
         this.jdbcTemplate = jdbcTemplate;
+        this.dataSource = dataSource;
     }
 
     /* ======================================================
@@ -96,8 +104,35 @@ public class TenantService {
 
         } catch (EmptyResultDataAccessException ex) {
             logger.error("Tenant not found for schema: {}", schema);
-            throw new TenantNotFoundException("Tenant not found for schema: " + schema);
+            throw new TenantNotFoundException(
+                    "Tenant not found for schema: " + schema
+            );
         }
+    }
+
+    /* ======================================================
+       INITIALIZE TENANT SCHEMA
+       ====================================================== */
+
+    public void initializeTenantSchema(String schema) {
+
+        validateSchemaName(schema);
+
+        String normalized = normalize(schema);
+
+        logger.info("Initializing schema for tenant: {}", normalized);
+
+        // cria o schema
+        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS " + normalized);
+
+        // executa migrations no schema do tenant
+        Flyway.configure()
+                .dataSource(dataSource)
+                .schemas(normalized)
+                .load()
+                .migrate();
+
+        logger.info("Tenant schema initialized: {}", normalized);
     }
 
     /* ======================================================

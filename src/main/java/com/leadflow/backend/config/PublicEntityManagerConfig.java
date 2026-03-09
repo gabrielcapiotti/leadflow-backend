@@ -43,11 +43,6 @@ public class PublicEntityManagerConfig {
          */
         properties.put("hibernate.hbm2ddl.auto", "none");
 
-        /*
-         * Garante uso do schema public
-         */
-        properties.put("hibernate.default_schema", "public");
-
         return builder
                 .dataSource(dataSource)
                 .packages(

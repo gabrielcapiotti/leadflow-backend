@@ -1,5 +1,7 @@
 package com.leadflow.backend;
 
+import com.leadflow.backend.multitenancy.identifier.CurrentTenantIdentifierResolverImpl;
+import com.leadflow.backend.multitenancy.provider.MultiTenantConnectionProviderImpl;
 import com.leadflow.backend.multitenancy.service.TenantProvisioningService;
 import com.leadflow.backend.security.RateLimitService;
 import com.leadflow.backend.security.VendorContext;
@@ -51,62 +53,48 @@ public abstract class IntegrationTestBase {
                     .withPassword("postgres");
 
     /* ======================================================
-       Infra mocks (dependências externas / cross-cutting)
+       Infra mocks
        ====================================================== */
 
-    // WebSocket
     @MockBean
     protected SimpMessagingTemplate messagingTemplate;
 
-    // Contexto de segurança
     @MockBean
     protected VendorContext vendorContext;
 
-    // Métricas
     @MockBean
     protected MetricsService metricsService;
 
-    // Email
     @MockBean
     protected SendGridEmailService sendGridEmailService;
 
-    // AI
     @MockBean
     protected AiService aiService;
 
-    // Auditoria
     @MockBean
     protected AuditService auditService;
 
-    // AI Rate Limiter
     @MockBean
     protected AiRateLimiter aiRateLimiter;
 
-    // AI Metrics
     @MockBean
     protected AiMetricsService aiMetricsService;
 
-    // Conversation
     @MockBean
     protected ConversationService conversationService;
 
-    // Vendor features
     @MockBean
     protected VendorFeatureService vendorFeatureService;
 
-    // Vendor leads
     @MockBean
     protected VendorLeadService vendorLeadService;
 
-    // Admin
     @MockBean
     protected AdminService adminService;
 
-    // Tenant provisioning
     @MockBean
     protected TenantProvisioningService tenantProvisioningService;
 
-    // Rate limit
     @MockBean
     protected RateLimitService rateLimitService;
 
@@ -122,20 +110,54 @@ public abstract class IntegrationTestBase {
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.datasource.driver-class-name", postgres::getDriverClassName);
 
-        // JPA
+        /* ==============================
+           HIBERNATE
+           ============================== */
+
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "none");
         registry.add("spring.jpa.open-in-view", () -> "false");
-        registry.add("spring.jpa.properties.hibernate.multiTenancy", () -> "SCHEMA");
 
-        // Flyway ativado para testes
+        registry.add(
+                "spring.jpa.properties.hibernate.multiTenancy",
+                () -> "SCHEMA"
+        );
+
+        registry.add(
+                "spring.jpa.properties.hibernate.multi_tenant_connection_provider",
+                () -> MultiTenantConnectionProviderImpl.class.getName()
+        );
+
+        registry.add(
+                "spring.jpa.properties.hibernate.multi_tenant_identifier_resolver",
+                () -> CurrentTenantIdentifierResolverImpl.class.getName()
+        );
+
+        /* ==============================
+           FLYWAY
+           ============================== */
+
         registry.add("spring.flyway.enabled", () -> "true");
+        registry.add("spring.flyway.clean-disabled", () -> "false");
 
-        // Multitenancy
+        /* ==============================
+           MULTITENANCY
+           ============================== */
+
         registry.add("multitenancy.enabled", () -> "true");
 
-        // JWT
-        registry.add("jwt.secret", () -> "0123456789abcdef0123456789abcdef");
-        registry.add("jwt.expiration", () -> "3600000");
+        /* ==============================
+           JWT
+           ============================== */
+
+        registry.add(
+                "jwt.secret",
+                () -> "0123456789abcdef0123456789abcdef"
+        );
+
+        registry.add(
+                "jwt.expiration",
+                () -> "3600000"
+        );
     }
 
     /* ======================================================

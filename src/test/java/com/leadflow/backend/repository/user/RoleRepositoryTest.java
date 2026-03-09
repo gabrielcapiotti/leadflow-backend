@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 
 import java.util.Optional;
 
@@ -16,13 +17,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @ActiveProfiles("test")
+@TestPropertySource(properties = {
+    "multitenancy.enabled=false",
+    "spring.jpa.properties.hibernate.multi_tenancy=NONE",
+    "spring.jpa.hibernate.ddl-auto=create-drop",
+    "spring.flyway.enabled=false"
+})
 class RoleRepositoryTest {
 
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @BeforeEach
     void setUp() {
+        userRepository.deleteAll(); // Ensure users are deleted first
         roleRepository.deleteAll();
         roleRepository.saveAndFlush(new Role("ADMIN"));
     }

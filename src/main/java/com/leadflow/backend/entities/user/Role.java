@@ -3,41 +3,38 @@ package com.leadflow.backend.entities.user;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.UuidGenerator;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.UUID;
 
 @Entity
 @Table(
-        name = "roles", // Nome da tabela
-        schema = "public", // Define explicitamente o schema
+        name = "roles",
         uniqueConstraints = {
                 @UniqueConstraint(name = "uk_roles_name", columnNames = "name")
         }
 )
-public class Role {
+public class Role implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     /* ======================================================
        ID
        ====================================================== */
 
     @Id
-    @Column(nullable = false, updatable = false)
+    @GeneratedValue
+    @UuidGenerator
+    @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
-
-    @PrePersist
-    public void prePersist() {
-        if (id == null) {
-            id = UUID.randomUUID();
-        }
-    }
 
     /* ======================================================
        FIELDS
        ====================================================== */
 
-    @Column(nullable = false, length = 50, updatable = false)
+    @Column(name = "name", nullable = false, length = 50)
     private String name;
 
     /* ======================================================
@@ -56,12 +53,10 @@ public class Role {
        CONSTRUCTORS
        ====================================================== */
 
-    // Construtor padrão, necessário para o JPA
     protected Role() {
         // Required by JPA
     }
 
-    // Construtor para inicializar a role com validação
     public Role(String name) {
         this.name = normalizeAndValidate(name);
     }
@@ -70,12 +65,6 @@ public class Role {
        NORMALIZATION & VALIDATION
        ====================================================== */
 
-    /**
-     * Normaliza e valida o nome da role.
-     * @param value Nome da role.
-     * @return Nome validado e normalizado.
-     * @throws IllegalArgumentException se o nome for inválido.
-     */
     private String normalizeAndValidate(String value) {
 
         if (value == null || value.isBlank()) {
@@ -89,6 +78,18 @@ public class Role {
         }
 
         return normalized;
+    }
+
+    /* ======================================================
+       LIFECYCLE
+       ====================================================== */
+
+    @PreUpdate
+    @PrePersist
+    private void normalize() {
+        if (name != null) {
+            name = normalizeAndValidate(name);
+        }
     }
 
     /* ======================================================
@@ -118,13 +119,13 @@ public class Role {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Role other)) return false;
-        return id != null && Objects.equals(id, other.id);
+        if (!(o instanceof Role role)) return false;
+        return id != null && id.equals(role.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id); // Melhor prática para gerar hashCode.
+        return getClass().hashCode();
     }
 
     /* ======================================================

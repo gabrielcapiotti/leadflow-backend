@@ -2,34 +2,33 @@ package com.leadflow.backend.multitenancy.identifier;
 
 import com.leadflow.backend.multitenancy.context.TenantContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 @Component
+@ConditionalOnProperty(name = "multitenancy.enabled", havingValue = "true", matchIfMissing = true)
 public class CurrentTenantIdentifierResolverImpl
         implements CurrentTenantIdentifierResolver<String> {
 
     private static final Logger log =
             LoggerFactory.getLogger(CurrentTenantIdentifierResolverImpl.class);
 
+    /**
+     * Schema padrão quando nenhum tenant está definido.
+     */
     private static final String DEFAULT_TENANT = "public";
 
     /**
-     * PostgreSQL identifier limit = 63 characters
-     */
-    private static final int MAX_IDENTIFIER_LENGTH = 63;
-
-    /**
-     * Only lowercase letters, numbers and underscore allowed
+     * Regex para validar nome de schema PostgreSQL.
      */
     private static final Pattern VALID_SCHEMA =
-            Pattern.compile("^[a-z0-9_]{1," + MAX_IDENTIFIER_LENGTH + "}$");
+            Pattern.compile("^[a-z0-9_]{1,63}$");
 
     /* ======================================================
        RESOLVE CURRENT TENANT
@@ -38,13 +37,12 @@ public class CurrentTenantIdentifierResolverImpl
     @Override
     public String resolveCurrentTenantIdentifier() {
 
-        // NÃO usar getTenant() aqui
         String tenant = TenantContext.getIfPresent();
 
-        if (tenant == null || tenant.isBlank()) {
+        if (Objects.isNull(tenant) || tenant.isBlank()) {
 
-            log.trace(
-                    "No tenant found in context. Using default schema: {}",
+            log.debug(
+                    "Tenant context empty. Using default schema: {}",
                     DEFAULT_TENANT
             );
 
@@ -57,14 +55,17 @@ public class CurrentTenantIdentifierResolverImpl
 
         if (!VALID_SCHEMA.matcher(normalized).matches()) {
 
-            log.error("Invalid tenant identifier detected: {}", normalized);
+            log.error(
+                    "Invalid tenant identifier detected: {}",
+                    normalized
+            );
 
             throw new IllegalArgumentException(
                     "Invalid tenant identifier: " + normalized
             );
         }
 
-        log.trace("Resolved tenant identifier: {}", normalized);
+        log.debug("Resolved tenant identifier: {}", normalized);
 
         return normalized;
     }
@@ -74,7 +75,11 @@ public class CurrentTenantIdentifierResolverImpl
        ====================================================== */
 
     /**
-     * Required for session reuse in multi-tenant environments.
+     * Permite que Hibernate valide o tenant atual
+     * quando reutilizar sessões existentes.
+     *
+     * Isso é importante quando o TenantContext
+     * muda entre requisições.
      */
     @Override
     public boolean validateExistingCurrentSessions() {

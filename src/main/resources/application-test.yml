@@ -27,8 +27,8 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
-        # MULTITENANCY ATIVO
-        multiTenancy: SCHEMA
+        # MULTITENANCY
+        multi_tenancy: SCHEMA
 
         jdbc:
           lob:

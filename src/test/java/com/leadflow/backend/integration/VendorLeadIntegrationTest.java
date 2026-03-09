@@ -25,6 +25,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
@@ -78,9 +80,11 @@ class VendorLeadIntegrationTest {
         // Criar vendor
         vendor = new Vendor();
         vendor.setUserEmail("vendor@test.com");
+        vendor.setName("Vendor Teste");
         vendor.setNomeVendedor("Teste");
         vendor.setWhatsappVendedor("99999999");
         vendor.setSlug("teste");
+        vendor.setUpdatedAt(Instant.now());
 
         vendorRepository.save(vendor);
 

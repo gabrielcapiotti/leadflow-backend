@@ -3,6 +3,7 @@ package com.leadflow.backend.multitenancy.provider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -13,6 +14,7 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 @Component
+@ConditionalOnProperty(name = "multitenancy.enabled", havingValue = "true", matchIfMissing = true)
 public class MultiTenantConnectionProviderImpl
         implements MultiTenantConnectionProvider<String> {
 
@@ -22,8 +24,7 @@ public class MultiTenantConnectionProviderImpl
     private static final String DEFAULT_SCHEMA = "public";
 
     /**
-     * Apenas letras minúsculas, números e underscore.
-     * Segurança contra injection.
+     * Validação do nome do schema para evitar SQL injection.
      */
     private static final Pattern VALID_SCHEMA =
             Pattern.compile("^[a-z0-9_]{1,63}$");
@@ -46,7 +47,10 @@ public class MultiTenantConnectionProviderImpl
     @Override
     public void releaseAnyConnection(Connection connection)
             throws SQLException {
-        connection.close();
+
+        if (connection != null && !connection.isClosed()) {
+            connection.close();
+        }
     }
 
     /* ======================================================
@@ -57,18 +61,25 @@ public class MultiTenantConnectionProviderImpl
     public Connection getConnection(String tenantIdentifier)
             throws SQLException {
 
-        Connection connection = getAnyConnection();
-
         String schema = resolveSchema(tenantIdentifier);
 
+        Connection connection = getAnyConnection();
+
         try {
+
             switchSchema(connection, schema);
-            log.trace("Connection switched to schema: {}", schema);
+
         } catch (SQLException ex) {
-            connection.close();
-            throw new SQLException(
-                    "Failed to switch schema to: " + schema, ex
-            );
+
+            log.error("Failed switching schema to {}", schema, ex);
+
+            try {
+                resetSchema(connection);
+            } catch (SQLException resetEx) {
+                log.error("Failed resetting schema after error", resetEx);
+            }
+
+            throw ex;
         }
 
         return connection;
@@ -82,40 +93,38 @@ public class MultiTenantConnectionProviderImpl
         try {
             resetSchema(connection);
         } catch (SQLException ex) {
-            log.error("Failed to reset schema to default", ex);
-        } finally {
-            connection.close();
+            log.warn("Failed resetting schema on connection release", ex);
         }
+
+        releaseAnyConnection(connection);
     }
 
     /* ======================================================
-       SCHEMA SWITCHING
+       SCHEMA MANAGEMENT
        ====================================================== */
 
     private void switchSchema(Connection connection, String schema)
             throws SQLException {
 
-        try {
-            // Preferível (JDBC 4.1+)
-            connection.setSchema(schema);
-        } catch (SQLException ex) {
-            // Fallback para PostgreSQL
-            try (Statement stmt = connection.createStatement()) {
-                stmt.execute("SET search_path TO " + schema);
-            }
+        String sql = "SET search_path TO \"" + schema + "\", public";
+
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute(sql);
         }
+
+        log.debug("Connection switched to schema: {}", schema);
     }
 
     private void resetSchema(Connection connection)
             throws SQLException {
 
-        try {
-            connection.setSchema(DEFAULT_SCHEMA);
-        } catch (SQLException ex) {
-            try (Statement stmt = connection.createStatement()) {
-                stmt.execute("SET search_path TO " + DEFAULT_SCHEMA);
-            }
+        String sql = "SET search_path TO " + DEFAULT_SCHEMA;
+
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute(sql);
         }
+
+        log.debug("Connection schema reset to {}", DEFAULT_SCHEMA);
     }
 
     /* ======================================================
@@ -126,6 +135,7 @@ public class MultiTenantConnectionProviderImpl
 
         if (Objects.isNull(tenantIdentifier)
                 || tenantIdentifier.isBlank()) {
+
             return DEFAULT_SCHEMA;
         }
 
@@ -134,6 +144,7 @@ public class MultiTenantConnectionProviderImpl
                 .toLowerCase();
 
         if (!VALID_SCHEMA.matcher(normalized).matches()) {
+
             throw new IllegalArgumentException(
                     "Invalid tenant identifier: " + normalized
             );
@@ -153,18 +164,19 @@ public class MultiTenantConnectionProviderImpl
 
     @Override
     public boolean isUnwrappableAs(Class<?> unwrapType) {
-        return MultiTenantConnectionProvider.class
-                .isAssignableFrom(unwrapType)
-                || MultiTenantConnectionProviderImpl.class
-                .isAssignableFrom(unwrapType);
+
+        return MultiTenantConnectionProvider.class.isAssignableFrom(unwrapType)
+                || MultiTenantConnectionProviderImpl.class.isAssignableFrom(unwrapType);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <T> T unwrap(Class<T> unwrapType) {
+
         if (isUnwrappableAs(unwrapType)) {
             return (T) this;
         }
+
         throw new IllegalArgumentException(
                 "Cannot unwrap to: " + unwrapType
         );

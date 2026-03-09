@@ -12,17 +12,10 @@ import java.util.regex.Pattern;
 @Entity
 @Table(
         name = "tenants",
-        schema = "public",
         uniqueConstraints = {
                 @UniqueConstraint(
                         name = "uk_tenants_schema_name",
-                        columnNames = "schema_name"
-                )
-        },
-        indexes = {
-                @Index(
-                        name = "idx_tenants_schema_name",
-                        columnList = "schema_name"
+                        columnNames = {"schema_name"}
                 )
         }
 )

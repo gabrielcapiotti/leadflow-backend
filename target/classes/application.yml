@@ -1,35 +1,42 @@
 spring:
+
   application:
     name: leadflow-backend
 
   datasource:
-    url: jdbc:postgresql://localhost:2411/leadflow_test  # Verifique se a porta está correta
+    url: jdbc:postgresql://localhost:2411/leadflow_test
     username: postgres
     password: venusia
     driver-class-name: org.postgresql.Driver
+
     hikari:
       maximum-pool-size: 15
       minimum-idle: 5
       auto-commit: false
 
   jpa:
+
     open-in-view: false
+
     hibernate:
-      ddl-auto: validate  # Altere para 'update' se necessário em ambiente de desenvolvimento
+      ddl-auto: validate
+
     properties:
+
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        "[format_sql]": false
-        multiTenancy: SCHEMA
+
+        format_sql: false
+
         jdbc:
-          "[time_zone]": UTC
-          
+          time_zone: UTC
+
+        multiTenancy: SCHEMA
+
   flyway:
     enabled: true
     baseline-on-migrate: true
     validate-on-migrate: true
-    locations:
-      - classpath:db/migration
+    locations: classpath:db/migration
 
   task:
     scheduling:
@@ -41,105 +48,189 @@ spring:
       max-file-size: 5MB
       max-request-size: 5MB
 
+# -----------------------------------------------------
+# SENDGRID
+# -----------------------------------------------------
+
 sendgrid:
+
   api-key: ${SENDGRID_API_KEY}
+
   from-email: no-reply@seudominio.com
+
   webhook:
     verify-signature: ${SENDGRID_WEBHOOK_VERIFY_SIGNATURE:true}
     public-key: ${SENDGRID_WEBHOOK_PUBLIC_KEY}
+
   retry:
     max-attempts: 3
     initial-backoff-ms: 300
     multiplier: 2.0
+
     worker:
       max-attempts: 8
       delay-seconds: 60
       fixed-delay-ms: 60000
 
+# -----------------------------------------------------
+# SERVER
+# -----------------------------------------------------
+
 server:
+
   port: ${SERVER_PORT:8081}
+
   servlet:
     context-path: /api
 
+# -----------------------------------------------------
+# LOGGING
+# -----------------------------------------------------
+
 logging:
+
   level:
     root: INFO
-    "[com.leadflow]": DEBUG
-    "[org.hibernate.SQL]": DEBUG  # Mude para 'INFO' em produção
+    com.leadflow: DEBUG
+    org.hibernate.SQL: DEBUG
+
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
+# -----------------------------------------------------
+# ACTUATOR / METRICS
+# -----------------------------------------------------
+
 management:
+
   endpoints:
     web:
       exposure:
         include: health,info,metrics,prometheus
+
   endpoint:
     health:
       show-details: always
+
   metrics:
     tags:
       application: leadflow-backend
 
+# -----------------------------------------------------
+# SYSTEM
+# -----------------------------------------------------
+
 system:
+
   admin:
     email: ${SYSTEM_ADMIN_EMAIL:}
 
+# -----------------------------------------------------
+# SECURITY
+# -----------------------------------------------------
+
 security:
+
   jwt:
-    secret: ${JWT_SECRET:01234567890123456789012345678901}  # Preferência por variável de ambiente
+    secret: ${JWT_SECRET:01234567890123456789012345678901}
     expiration: ${JWT_EXPIRATION:3600000}
+
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:https://seusite.com}
+
   rate-limit:
+
     global:
       per-minute: 100
+
     ai:
       per-minute: 30
+
     auth:
       per-minute: 20
+
     admin:
       per-minute: 60
+
     webhook:
       per-minute: 120
+
   session:
     max-devices: 10
     cleanup-days: 30
+
   brute-force:
     max-attempts: 5
     window-minutes: 5
 
+# -----------------------------------------------------
+# OPENAI
+# -----------------------------------------------------
+
 openai:
+
   api:
     key: ${OPENAI_API_KEY}
+
   retry:
     max-attempts: 3
     initial-backoff-ms: 1500
     multiplier: 2.0
 
+# -----------------------------------------------------
+# CAKTO WEBHOOK
+# -----------------------------------------------------
+
 cakto:
+
   webhook:
     secret: ${CAKTO_WEBHOOK_SECRET:}
 
+# -----------------------------------------------------
+# BILLING
+# -----------------------------------------------------
+
 billing:
+
   checkout:
     base-url: ${BILLING_CHECKOUT_BASE_URL:https://seusite.com/checkout}
 
+# -----------------------------------------------------
+# SUBSCRIPTION
+# -----------------------------------------------------
+
 subscription:
+
   trial-days: 7
+
   limits:
     active-leads: 500
     ai-executions: 1000
 
+# -----------------------------------------------------
+# AUDIT
+# -----------------------------------------------------
+
 audit:
+
   cleanup:
     retention-days: 90
 
+# -----------------------------------------------------
+# STRIPE
+# -----------------------------------------------------
+
 stripe:
+
   secret:
     key: sk_test_xxxxx
 
+# -----------------------------------------------------
+# FRONTEND
+# -----------------------------------------------------
+
 app:
+
   frontend:
     success-url: http://localhost:3000/payment-success
     cancel-url: http://localhost:3000/payment-cancel

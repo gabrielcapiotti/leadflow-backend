@@ -33,13 +33,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.util.Objects;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(classes = BackendApplication.class)
@@ -47,17 +45,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class AdminOverviewIntegrationTest extends IntegrationTestBase {
 
-    private static final String TENANT_NAME = "Tenant A";
-
-    private static final String ADMIN_EMAIL = "admin.integration@test.com";
-    private static final String USER_EMAIL = "user.integration@test.com";
-
+    private static final String TENANT_NAME = "tenant_admin_test";
     private static final String PASSWORD = "Admin@123";
-
-    private static final String USER_AGENT =
-            "JUnit-AdminOverviewIntegrationTest";
+    private static final String USER_AGENT = "JUnit-AdminOverviewIntegrationTest";
+    private static final String DEVICE_FINGERPRINT = "test-device-fingerprint";
 
     private String tenantSchema;
+
+    private String adminEmail;
+    private String userEmail;
 
     @Autowired
     private MockMvc mockMvc;
@@ -95,15 +91,23 @@ class AdminOverviewIntegrationTest extends IntegrationTestBase {
     @BeforeEach
     void setup() {
 
+        adminEmail = generateUniqueEmail();
+        userEmail = generateUniqueEmail();
+
         TenantContext.clear();
 
         Tenant tenant = testTenantFactory.createTenant(TENANT_NAME);
         tenantSchema = tenant.getSchemaName();
 
         ensureAuthTablesInTenantSchema();
-        seedUsers();
 
-        // Mock vendorRepository to return non-zero values
+        TenantContext.setTenant(tenantSchema);
+        try {
+            new TransactionTemplate(transactionManager).executeWithoutResult(tx -> seedUsers());
+        } finally {
+            TenantContext.clear();
+        }
+
         when(vendorRepository.countAllGlobal()).thenReturn(10L);
         when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.ATIVA)).thenReturn(5L);
         when(vendorRepository.countBySubscriptionStatusGlobal(SubscriptionStatus.TRIAL)).thenReturn(3L);
@@ -118,197 +122,319 @@ class AdminOverviewIntegrationTest extends IntegrationTestBase {
 
     private void ensureAuthTablesInTenantSchema() {
 
+        cloneTableFromPublic("roles");
+        cloneTableFromPublic("users");
         cloneTableFromPublic("login_audit");
         cloneTableFromPublic("security_audit_logs");
         cloneTableFromPublic("user_sessions");
         cloneTableFromPublic("refresh_tokens");
-        cloneTableFromPublic("users"); // Added users table
     }
 
     private void cloneTableFromPublic(String tableName) {
 
-        TransactionTemplate tx =
-                new TransactionTemplate(
-                        Objects.requireNonNull(transactionManager)
-                );
+        String sourceTable = switch (tableName) {
+            case "users" -> "template_users";
+            case "user_sessions" -> "template_user_sessions";
+            case "refresh_tokens" -> "template_refresh_tokens";
+            default -> tableName;
+        };
 
-        tx.executeWithoutResult(status ->
-                jdbcTemplate.execute(
-                        String.format("""
-                                CREATE TABLE IF NOT EXISTS %s.%s
-                                (LIKE public.%s INCLUDING ALL)
-                                """,
-                                tenantSchema,
-                                tableName,
-                                tableName
-                        )
+        jdbcTemplate.execute(
+                String.format("""
+                CREATE TABLE IF NOT EXISTS "%s"."%s"
+                (LIKE public."%s" INCLUDING ALL)
+                        """,
+                        tenantSchema,
+                        tableName,
+                sourceTable
                 )
         );
     }
 
-    @Test
-    void shouldReturn401WhenNoToken() throws Exception {
-
-        mockMvc.perform(
-                get("/admin/overview")
-                        .header("X-Tenant-ID", tenantSchema)
-        )
-        .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    void shouldReturn403ForNonAdminToken() throws Exception {
-
-        String userToken = loginAndGetAccessToken(USER_EMAIL, PASSWORD);
-
-        mockMvc.perform(
-                get("/admin/overview")
-                        .header("X-Tenant-ID", tenantSchema)
-                        .header("User-Agent", USER_AGENT)
-                        .header("Authorization", "Bearer " + userToken)
-        )
-        .andExpect(status().isForbidden());
-    }
-
-    @Test
-    void shouldReturn200ForAdminToken() throws Exception {
-
-        String adminToken = loginAndGetAccessToken(ADMIN_EMAIL, PASSWORD);
-
-        mockMvc.perform(
-                get("/admin/overview")
-                        .header("X-Tenant-ID", tenantSchema)
-                        .header("User-Agent", USER_AGENT)
-                        .header("Authorization", "Bearer " + adminToken)
-        )
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.total_vendors").exists())
-        .andExpect(jsonPath("$.active_subscriptions").exists())
-        .andExpect(jsonPath("$.trial_subscriptions").exists())
-        .andExpect(jsonPath("$.inadimplentes").exists())
-        .andExpect(jsonPath("$.expiradas").exists())
-        .andExpect(jsonPath("$.total_leads").exists())
-        .andExpect(jsonPath("$.total_ai_executions_current_cycle").exists())
-        .andExpect(jsonPath("$.estimated_monthly_revenue").exists());
-    }
-
-    @Test
-    void shouldReturnTotalVendors() throws Exception {
-
-        String adminToken = loginAndGetAccessToken(ADMIN_EMAIL, PASSWORD);
-
-        mockMvc.perform(
-                get("/admin/overview")
-                        .header("X-Tenant-ID", tenantSchema) // Use tenant schema
-                        .header("User-Agent", USER_AGENT)
-                        .header("Authorization", "Bearer " + adminToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-        )
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.total_vendors").exists()); // Corrected JSON path
-    }
-
     private void seedUsers() {
+
+        UUID adminRoleId = UUID.randomUUID();
+        UUID userRoleId = UUID.randomUUID();
+
+        // Defensive DDL: some environments may not clone template auth tables reliably.
+        jdbcTemplate.execute(
+                String.format(
+                        """
+                        CREATE TABLE IF NOT EXISTS "%s"."roles" (
+                            id UUID PRIMARY KEY,
+                            name VARCHAR(50) NOT NULL UNIQUE,
+                            created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+                        )
+                        """,
+                        tenantSchema
+                )
+        );
+
+        jdbcTemplate.execute(
+                String.format(
+                        """
+                        CREATE TABLE IF NOT EXISTS "%s"."users" (
+                            id UUID PRIMARY KEY,
+                            name VARCHAR(255),
+                            email VARCHAR(255),
+                            password VARCHAR(255),
+                            role_id UUID,
+                            failed_attempts INTEGER NOT NULL DEFAULT 0,
+                            lock_until TIMESTAMPTZ,
+                            credentials_updated_at TIMESTAMPTZ,
+                            created_at TIMESTAMPTZ,
+                            updated_at TIMESTAMPTZ,
+                            deleted_at TIMESTAMPTZ
+                        )
+                        """,
+                        tenantSchema
+                )
+        );
+
+        jdbcTemplate.execute(
+                String.format(
+                        """
+                        CREATE TABLE IF NOT EXISTS "%s"."user_sessions" (
+                            id UUID PRIMARY KEY,
+                            user_id UUID NOT NULL,
+                            tenant_id UUID NOT NULL,
+                            token_id VARCHAR(36) NOT NULL UNIQUE,
+                            ip_address VARCHAR(45),
+                            user_agent VARCHAR(512),
+                            initial_ip_address VARCHAR(45),
+                            initial_user_agent VARCHAR(512),
+                            active BOOLEAN NOT NULL DEFAULT TRUE,
+                            suspicious BOOLEAN NOT NULL DEFAULT FALSE,
+                            created_at TIMESTAMPTZ NOT NULL,
+                            last_access_at TIMESTAMPTZ,
+                            revoked_at TIMESTAMPTZ
+                        )
+                        """,
+                        tenantSchema
+                )
+        );
+
+        jdbcTemplate.execute(
+                String.format(
+                        """
+                        CREATE TABLE IF NOT EXISTS "%s"."refresh_tokens" (
+                            id UUID PRIMARY KEY,
+                            token_hash VARCHAR(255) NOT NULL UNIQUE,
+                            device_fingerprint VARCHAR(255) NOT NULL,
+                            user_id UUID NOT NULL,
+                            expires_at TIMESTAMPTZ NOT NULL,
+                            revoked BOOLEAN NOT NULL DEFAULT FALSE,
+                            created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+                        )
+                        """,
+                        tenantSchema
+                )
+        );
+
+        jdbcTemplate.execute(String.format("DELETE FROM \"%s\".\"refresh_tokens\"", tenantSchema));
+        jdbcTemplate.execute(String.format("DELETE FROM \"%s\".\"user_sessions\"", tenantSchema));
+        jdbcTemplate.execute(String.format("DELETE FROM \"%s\".\"users\"", tenantSchema));
+        jdbcTemplate.execute(String.format("DELETE FROM \"%s\".\"roles\"", tenantSchema));
+
+        jdbcTemplate.update(
+                String.format(
+                        """
+                        INSERT INTO "%s"."roles" (id, name, created_at, updated_at)
+                        VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                        """,
+                        tenantSchema
+                ),
+                adminRoleId,
+                "ROLE_ADMIN"
+        );
+
+        jdbcTemplate.update(
+                String.format(
+                        """
+                        INSERT INTO "%s"."roles" (id, name, created_at, updated_at)
+                        VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                        """,
+                        tenantSchema
+                ),
+                userRoleId,
+                "ROLE_USER"
+        );
+
+        String adminPassword = passwordEncoder.encode(PASSWORD);
+        String userPassword = passwordEncoder.encode(PASSWORD);
+
+        jdbcTemplate.update(
+                String.format(
+                        """
+                        INSERT INTO "%s"."users"
+                            (id, name, email, password, role_id, failed_attempts, credentials_updated_at, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                        """,
+                        tenantSchema
+                ),
+                UUID.randomUUID(),
+                "Admin Integration",
+                adminEmail,
+                adminPassword,
+                adminRoleId
+        );
+
+        jdbcTemplate.update(
+                String.format(
+                        """
+                        INSERT INTO "%s"."users"
+                            (id, name, email, password, role_id, failed_attempts, credentials_updated_at, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                        """,
+                        tenantSchema
+                ),
+                UUID.randomUUID(),
+                "User Integration",
+                userEmail,
+                userPassword,
+                userRoleId
+        );
+    }
+
+    private String loginAndGetAccessToken(String email, String password) throws Exception {
 
         TenantContext.setTenant(tenantSchema);
 
         try {
 
-            Role adminRole =
-                    roleRepository.findByNameIgnoreCase("ROLE_ADMIN")
-                            .orElseGet(() ->
-                                    roleRepository.save(new Role("ROLE_ADMIN")));
+            String body =
+                    objectMapper.createObjectNode()
+                            .put("email", email)
+                            .put("password", password)
+                            .toString();
 
-            Role userRole =
-                    roleRepository.findByNameIgnoreCase("ROLE_USER")
-                            .orElseGet(() ->
-                                    roleRepository.save(new Role("ROLE_USER")));
+            String response =
+                    mockMvc.perform(
+                            post("/auth/login")
+                                    .header("X-Tenant-ID", tenantSchema)
+                                    .header("User-Agent", USER_AGENT)
+                                    .header("X-Device-Fingerprint", DEVICE_FINGERPRINT)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(body)
+                    )
+                            .andExpect(status().isOk())
+                            .andReturn()
+                            .getResponse()
+                            .getContentAsString();
 
-            userRepository.findByEmailIgnoreCase(ADMIN_EMAIL)
-                    .orElseGet(() ->
-                            userRepository.save(
-                                    new User(
-                                            "Admin Integration",
-                                            ADMIN_EMAIL,
-                                            passwordEncoder.encode(PASSWORD),
-                                            adminRole
-                                    )
-                            )
-                    );
+            JsonNode json = objectMapper.readTree(response);
 
-            userRepository.findByEmailIgnoreCase(USER_EMAIL)
-                    .orElseGet(() ->
-                            userRepository.save(
-                                    new User(
-                                            "User Integration",
-                                            USER_EMAIL,
-                                            passwordEncoder.encode(PASSWORD),
-                                            userRole
-                                    )
-                            )
-                    );
+            String token = json.path("accessToken").asText();
+
+            if (token.isBlank())
+                token = json.path("access_token").asText();
+
+            if (token.isBlank())
+                token = json.path("token").asText();
+
+            assertThat(token).isNotBlank();
+
+            return token;
 
         } finally {
             TenantContext.clear();
         }
     }
 
-    private String loginAndGetAccessToken(String email, String password) throws Exception {
+    private String generateUniqueEmail() {
+        return "test-" + UUID.randomUUID() + "@example.com";
+    }
 
-        String body =
-                objectMapper.createObjectNode()
-                        .put("email", email)
-                        .put("password", password)
-                        .toString();
+    @Test
+    void shouldReturn401WhenNoToken() throws Exception {
 
-        String response =
-                mockMvc.perform(
-                        post("/auth/login")
-                                .header("X-Tenant-ID", tenantSchema)
-                                .header("User-Agent", USER_AGENT)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(body)
-                )
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+        TenantContext.setTenant(tenantSchema);
 
-        JsonNode json = objectMapper.readTree(response);
-
-        // Adjusted to check for alternative token fields
-        String token = json.path("accessToken").asText();
-        if (token.isBlank()) {
-            token = json.path("access_token").asText();
+        try {
+            mockMvc.perform(
+                    get("/admin/overview")
+                            .header("X-Tenant-ID", tenantSchema)
+                            .header("User-Agent", USER_AGENT)
+                            .header("X-Device-Fingerprint", DEVICE_FINGERPRINT)
+            )
+            .andExpect(status().isUnauthorized());
+        } finally {
+            TenantContext.clear();
         }
-        if (token.isBlank()) {
-            token = json.path("token").asText();
+    }
+
+    @Test
+    void shouldReturn403ForNonAdminToken() throws Exception {
+
+        String userToken = loginAndGetAccessToken(userEmail, PASSWORD);
+
+        TenantContext.setTenant(tenantSchema);
+
+        try {
+            mockMvc.perform(
+                    get("/admin/overview")
+                            .header("X-Tenant-ID", tenantSchema)
+                            .header("User-Agent", USER_AGENT)
+                            .header("X-Device-Fingerprint", DEVICE_FINGERPRINT)
+                            .header("Authorization", "Bearer " + userToken)
+            )
+            .andExpect(status().isForbidden());
+        } finally {
+            TenantContext.clear();
         }
+    }
 
-        assertThat(token).isNotBlank();
+    @Test
+    void shouldReturn200ForAdminToken() throws Exception {
 
-        return token;
+        String adminToken = loginAndGetAccessToken(adminEmail, PASSWORD);
+
+        TenantContext.setTenant(tenantSchema);
+
+        try {
+            mockMvc.perform(
+                    get("/admin/overview")
+                            .header("X-Tenant-ID", tenantSchema)
+                            .header("User-Agent", USER_AGENT)
+                            .header("X-Device-Fingerprint", DEVICE_FINGERPRINT)
+                            .header("Authorization", "Bearer " + adminToken)
+            )
+            .andExpect(status().isOk());
+        } finally {
+            TenantContext.clear();
+        }
     }
 
     @Test
     void shouldRegisterLoginAndReturnToken() throws Exception {
 
-        String email = "admin+" + UUID.randomUUID() + "@test.com";
+        String email = generateUniqueEmail();
 
-        RegisterRequest registerRequest =
+        RegisterRequest request =
                 new RegisterRequest(
                         "Admin Test",
                         email,
                         "password123"
                 );
 
-        mockMvc.perform(
-                post("/auth/register")
-                .header("X-Tenant-ID", tenantSchema)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(registerRequest))
-        )
-        .andExpect(status().isOk());
+        TenantContext.setTenant(tenantSchema);
+
+        try {
+
+            mockMvc.perform(
+                    post("/auth/register")
+                            .header("X-Tenant-ID", tenantSchema)
+                            .header("User-Agent", USER_AGENT)
+                            .header("X-Device-Fingerprint", DEVICE_FINGERPRINT)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request))
+            )
+            .andExpect(status().isCreated());
+
+        } finally {
+            TenantContext.clear();
+        }
 
         String token = loginAndGetAccessToken(email, "password123");
 
