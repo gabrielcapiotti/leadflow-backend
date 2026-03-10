@@ -1,50 +1,35 @@
 package com.leadflow.backend.security;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.lang.NonNull;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
-import java.util.Objects;
+import java.util.List;
 
 @Configuration
-public class CorsConfig implements WebMvcConfigurer {
+public class CorsConfig {
 
-    private final String[] allowedOrigins;
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
 
-    public CorsConfig(
-            @Value("${security.cors.allowed-origins:https://seusite.com}")
-            String allowedOrigins
-    ) {
+        config.setAllowedOrigins(List.of(
+                "https://app.leadflow.ai",
+                "http://localhost:3000"
+        ));
 
-        String safeOrigins =
-                Objects.requireNonNullElse(allowedOrigins, "https://seusite.com");
+        config.setAllowedMethods(List.of(
+                "GET", "POST", "PUT", "DELETE", "OPTIONS"
+        ));
 
-        String[] parsedOrigins = Arrays.stream(safeOrigins.split(","))
-                .map(String::trim)
-                .filter(origin -> !origin.isBlank())
-                .toArray(String[]::new);
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
 
-        this.allowedOrigins =
-                parsedOrigins.length == 0
-                        ? new String[]{"https://seusite.com"}
-                        : parsedOrigins;
-    }
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
 
-    @Override
-    public void addCorsMappings(@NonNull CorsRegistry registry) {
-
-        CorsRegistry safeRegistry =
-                Objects.requireNonNull(registry, "CorsRegistry must not be null");
-
-        String[] safeOrigins =
-                Objects.requireNonNull(allowedOrigins, "Allowed origins must not be null");
-
-        safeRegistry.addMapping("/**")
-                .allowedOrigins(safeOrigins)
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*");
+        return source;
     }
 }

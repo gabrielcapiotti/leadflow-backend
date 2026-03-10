@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Failed</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .alert-badge {
+            background-color: #ffebee;
+            border-left: 4px solid #d32f2f;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .alert-badge h3 {
+            margin: 0 0 10px 0;
+            color: #c62828;
+        }
+        .alert-badge p {
+            margin: 0;
+            font-size: 14px;
+            color: #555;
+        }
+        .payment-details {
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #555;
+        }
+        .detail-value {
+            color: #333;
+            text-align: right;
+        }
+        .error-section {
+            background-color: #ffebee;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid #d32f2f;
+        }
+        .error-section h4 {
+            margin: 0 0 10px 0;
+            color: #c62828;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .error-details {
+            background-color: #fff;
+            padding: 12px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #d32f2f;
+            word-break: break-word;
+            margin: 10px 0;
+        }
+        .error-resolution {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #555;
+        }
+        .action-steps {
+            background-color: #e3f2fd;
+            border-left: 4px solid #1976d2;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .action-steps h4 {
+            margin: 0 0 15px 0;
+            color: #1565c0;
+            font-size: 16px;
+        }
+        .action-steps ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .action-steps li {
+            margin-bottom: 12px;
+            color: #333;
+            line-height: 1.5;
+        }
+        .action-steps strong {
+            color: #1565c0;
+        }
+        .primary-button {
+            display: inline-block;
+            background-color: #1976d2;
+            color: white;
+            padding: 14px 40px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 20px auto;
+            font-weight: 500;
+            transition: background-color 0.3s;
+            text-align: center;
+        }
+        .primary-button:hover {
+            background-color: #1565c0;
+        }
+        .secondary-button {
+            display: inline-block;
+            background-color: #e0e0e0;
+            color: #333;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 0 10px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        .secondary-button:hover {
+            background-color: #d0d0d0;
+        }
+        .buttons-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .timing-info {
+            background-color: #fff3e0;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid #ff9800;
+            font-size: 14px;
+            color: #555;
+        }
+        .support-section {
+            background-color: #f0f0f0;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .support-section a {
+            color: #1976d2;
+            text-decoration: none;
+        }
+        .footer {
+            background-color: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            border-top: 1px solid #e0e0e0;
+        }
+        .footer a {
+            color: #1976d2;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✗ Payment Failed</h1>
+        </div>
+
+        <div class="content">
+            <div class="greeting">
+                <p>Hi <strong th:text="${customerName}">there</strong>,</p>
+                <p>Your recent payment could not be processed. Please review the details below and take action to ensure your service remains active.</p>
+            </div>
+
+            <div class="alert-badge">
+                <h3>Action Required</h3>
+                <p>Your subscription will be suspended on <strong th:text="${suspensionDate}">April 10, 2026</strong> if this issue is not resolved.</p>
+            </div>
+
+            <div class="payment-details">
+                <div class="detail-row">
+                    <span class="detail-label">Subscription</span>
+                    <span class="detail-value" th:text="${planName}">Professional Plan</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Amount</span>
+                    <span class="detail-value" th:text="${amount}">$99.00</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Due Date</span>
+                    <span class="detail-value" th:text="${dueDate}">April 5, 2026</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Payment Method</span>
+                    <span class="detail-value" th:text="${paymentMethod}">••••4242</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Attempt</span>
+                    <span class="detail-value" th:text="|${attemptNumber} of ${maxAttempts}|">1 of 3</span>
+                </div>
+            </div>
+
+            <div class="error-section">
+                <h4>Why This Happened</h4>
+                <div class="error-details" th:text="${errorMessage}">
+                    Your card was declined by the issuing bank
+                </div>
+                <div class="error-resolution">
+                    <strong>Possible reasons:</strong>
+                    <ul style="margin: 8px 0; padding-left: 20px;">
+                        <li th:each="reason : ${errorReasons}" th:text="${reason}">
+                            Insufficient funds
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="action-steps">
+                <h4>Fix Your Payment</h4>
+                <ol>
+                    <li><strong>Update your card:</strong> Use the button below to enter new payment details</li>
+                    <li><strong>Check your bank:</strong> Contact your bank to verify the card is not blocked or expired</li>
+                    <li><strong>Try again:</strong> We'll automatically retry processing in a few hours</li>
+                    <li><strong>Use alternate payment:</strong> You can add a different card to your account</li>
+                </ol>
+            </div>
+
+            <div class="buttons-container">
+                <a href="https://app.leadflow.com/billing/payment-method" class="primary-button">Update Payment Method</a>
+            </div>
+
+            <div class="timing-info">
+                <strong>⏰ Automatic Retry:</strong> We will attempt to process this payment again in <strong th:text="${retryHours}">24</strong> hours. If successful, you'll receive a confirmation email. If not, we'll retry up to <strong th:text="${maxAttempts}">3</strong> times over the next several days.
+            </div>
+
+            <div class="support-section">
+                <p><strong>Need help?</strong></p>
+                <p>Our support team is available to assist. Contact us at <a href="mailto:billing@leadflow.com">billing@leadflow.com</a></p>
+                <p style="margin: 10px 0 0 0; font-size: 12px;">Response time: Usually within 1 hour</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2026 LeadFlow. All rights reserved.</p>
+            <p>
+                <a href="https://leadflow.com/account/settings">Account Settings</a> |
+                <a href="https://leadflow.com/privacy">Privacy Policy</a> |
+                <a href="https://leadflow.com/terms">Terms of Service</a>
+            </p>
+            <p>If this is an error or unauthorized charge, please <a href="mailto:support@leadflow.com">contact support</a></p>
+        </div>
+    </div>
+</body>
+</html>

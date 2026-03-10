@@ -33,7 +33,13 @@
       - classpath:db/migration/tenant
 
 server:
-  port: ${SERVER_PORT:8081}
+  port: ${SERVER_PORT:8443}
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.p12
+    key-store-password: ${SSL_KEYSTORE_PASSWORD}
+    key-store-type: PKCS12
+    key-alias: leadflow
   servlet:
     context-path: /api
 

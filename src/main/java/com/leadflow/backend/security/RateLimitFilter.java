@@ -121,7 +121,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return ADMIN_SCOPE;
         }
 
-        if (requestPath.startsWith("/billing/webhook")) {
+        if (requestPath.startsWith("/billing/webhook") ||
+            requestPath.startsWith("/stripe/webhook")) {
             return WEBHOOK_SCOPE;
         }
 

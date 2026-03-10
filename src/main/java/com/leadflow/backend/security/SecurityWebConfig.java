@@ -23,7 +23,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.header.writers.StaticHeadersWriter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @EnableMethodSecurity
@@ -79,7 +81,8 @@ public class SecurityWebConfig {
     public SecurityFilterChain filterChain(
             HttpSecurity http,
             ObjectProvider<JwtAuthenticationFilter> jwtFilterProvider,
-            RateLimitFilter rateLimitFilter
+            RateLimitFilter rateLimitFilter,
+            CorsConfigurationSource corsConfigurationSource
     ) throws Exception {
 
         http
@@ -94,7 +97,7 @@ public class SecurityWebConfig {
             .httpBasic(httpBasic -> httpBasic.disable())
             .formLogin(form -> form.disable())
 
-            .cors(cors -> {})
+            .cors(cors -> cors.configurationSource(corsConfigurationSource))
 
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((request, response, authException) ->
@@ -109,6 +112,10 @@ public class SecurityWebConfig {
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/billing/checkout").permitAll()
+                .requestMatchers("/billing/checkout-session").permitAll()
+                .requestMatchers("/billing/webhook").permitAll()
+                .requestMatchers("/stripe/webhook").permitAll()
+                .requestMatchers("/payments/webhook").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/actuator/prometheus").permitAll()
                 .requestMatchers("/webhooks/**").permitAll()
@@ -116,17 +123,21 @@ public class SecurityWebConfig {
             )
 
             .headers(headers -> headers
-                .frameOptions(frame -> frame.deny())
                 .contentSecurityPolicy(csp ->
                     csp.policyDirectives("default-src 'self'")
                 )
+                .frameOptions(frame -> frame.deny())
+                .xssProtection(xss ->
+                    xss.headerValue(XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK)
+                )
                 .contentTypeOptions(contentType -> {})
-                .addHeaderWriter(new StaticHeadersWriter("X-XSS-Protection", "1; mode=block"))
+                .httpStrictTransportSecurity(hsts -> hsts
+                    .includeSubDomains(true)
+                    .maxAgeInSeconds(31536000)
+                )
                 .referrerPolicy(referrer ->
                     referrer.policy(
-                        org.springframework.security.web.header.writers
-                                .ReferrerPolicyHeaderWriter
-                                .ReferrerPolicy.NO_REFERRER
+                        ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER
                     )
                 )
             );

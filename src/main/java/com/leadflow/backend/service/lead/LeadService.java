@@ -7,6 +7,9 @@ import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.repository.lead.LeadRepository;
 import com.leadflow.backend.repository.lead.LeadStatusHistoryRepository;
 import com.leadflow.backend.repository.user.UserRepository;
+import com.leadflow.backend.security.VendorContext;
+import com.leadflow.backend.service.vendor.SubscriptionService;
+import com.leadflow.backend.service.vendor.UsageService;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,15 +24,24 @@ public class LeadService {
     private final LeadRepository leadRepository;
     private final LeadStatusHistoryRepository historyRepository;
     private final UserRepository userRepository;
+    private final VendorContext vendorContext;
+    private final UsageService usageService;
+    private final SubscriptionService subscriptionService;
 
     public LeadService(
             LeadRepository leadRepository,
             LeadStatusHistoryRepository historyRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            VendorContext vendorContext,
+            UsageService usageService,
+            SubscriptionService subscriptionService
     ) {
         this.leadRepository = leadRepository;
         this.historyRepository = historyRepository;
         this.userRepository = userRepository;
+        this.vendorContext = vendorContext;
+        this.usageService = usageService;
+        this.subscriptionService = subscriptionService;
     }
 
     /* ======================================================
@@ -72,6 +84,13 @@ public class LeadService {
         if (exists) {
             throw new IllegalArgumentException("Email already in use");
         }
+
+        UUID tenantId = vendorContext.getCurrentVendorId();
+        
+        // Validate subscriber has active subscription before creating lead
+        subscriptionService.validateActiveSubscription(tenantId);
+        
+        usageService.consumeLead(tenantId);
 
         Lead lead = new Lead(
                 createdBy.getId(),

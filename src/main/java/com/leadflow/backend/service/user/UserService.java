@@ -5,9 +5,11 @@ import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.entities.vendor.Vendor;
 import com.leadflow.backend.repository.user.RoleRepository;
 import com.leadflow.backend.repository.user.UserRepository;
+import com.leadflow.backend.service.vendor.UsageService;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,13 +20,19 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final UsageService usageService;
 
     public UserService(
             UserRepository userRepository,
-            RoleRepository roleRepository
+            RoleRepository roleRepository,
+            PasswordEncoder passwordEncoder,
+            UsageService usageService
     ) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.usageService = usageService;
     }
 
     /* ======================================================
@@ -131,7 +139,35 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Transactional
     public void createAdminUser(Vendor vendor, String email) {
-        // Implementation for creating an admin user for the given vendor
+
+        if (vendor == null || email == null || email.isBlank()) {
+            return;
+        }
+
+        String normalizedEmail = email.trim().toLowerCase();
+
+        if (userRepository.existsByEmailIgnoreCaseAndDeletedAtIsNull(normalizedEmail)) {
+            return;
+        }
+
+        Role role = roleRepository
+                .findByNameIgnoreCase("ROLE_ADMIN")
+                .or(() -> roleRepository.findByNameIgnoreCase("ROLE_USER"))
+                .orElseThrow(() -> new IllegalStateException("No default role found"));
+
+        String temporaryPassword = "tmp-" + UUID.randomUUID();
+
+        usageService.consumeUser(vendor.getId());
+
+        User admin = new User(
+                vendor.getNomeVendedor() != null ? vendor.getNomeVendedor() : normalizedEmail,
+                normalizedEmail,
+                passwordEncoder.encode(temporaryPassword),
+                role
+        );
+
+        userRepository.save(admin);
     }
 }

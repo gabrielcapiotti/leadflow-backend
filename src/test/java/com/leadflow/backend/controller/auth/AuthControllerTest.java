@@ -1,6 +1,7 @@
 package com.leadflow.backend.controller.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.leadflow.backend.config.TestBillingConfig;
 import com.leadflow.backend.dto.auth.LoginRequest;
 import com.leadflow.backend.dto.auth.RegisterRequest;
 import com.leadflow.backend.entities.user.Role;
@@ -55,7 +56,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(AuthController.class)
 @AutoConfigureMockMvc
-@Import({GlobalExceptionHandler.class, AuthControllerTest.AuthTestSecurityConfig.class})
+@Import({GlobalExceptionHandler.class, TestBillingConfig.class, AuthControllerTest.AuthTestSecurityConfig.class})
 @ActiveProfiles("test")
 @TestExecutionListeners(
     listeners = TenantContextTestCleaner.class,

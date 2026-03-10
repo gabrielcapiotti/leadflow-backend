@@ -1,0 +1,439 @@
+{
+  "info": {
+    "_postman_id": "leadflow-billing-api",
+    "name": "LeadFlow Billing API",
+    "description": "Collection com exemplos completos para integração de Billing do LeadFlow com Stripe",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. Checkout",
+      "item": [
+        {
+          "name": "Create Checkout Session",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Verificar se JWT token está definido",
+                  "if (!pm.environment.get('jwt_token')) {",
+                  "  pm.console.error('JWT token não está definido. Configure em Environment > jwt_token');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Testes de validação da resposta",
+                  "pm.test('Status code is 200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has checkoutUrl', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('checkoutUrl');",
+                  "  pm.expect(jsonData.checkoutUrl).to.include('https://checkout.stripe.com');",
+                  "});",
+                  "",
+                  "pm.test('Response has sessionId', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('sessionId');",
+                  "});",
+                  "",
+                  "pm.test('Response has provider=stripe', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.provider).to.equal('stripe');",
+                  "});",
+                  "",
+                  "// Salvar sessionId para testes posteriores",
+                  "if (pm.response.code === 200) {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.environment.set('checkout_session_id', jsonData.sessionId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"email\\\": \\\"{{customer_email}}\\\",\\n  \\\"tenantId\\\": \\\"{{tenant_id}}\\\",\\n  \\\"planId\\\": \\\"plan_standard\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/billing/checkout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "billing",
+                "checkout"
+              ]
+            },
+            "description": "Cria uma nova sessão de checkout Stripe para pagamento de assinatura.\\n\\nRequer autenticação JWT válida."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Webhooks",
+      "item": [
+        {
+          "name": "Webhook - Subscription Created",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Gerar timestamp e assinatura válida para teste",
+                  "const crypto = require('crypto');",
+                  "",
+                  "const secret = pm.environment.get('stripe_webhook_secret');",
+                  "const timestamp = Math.floor(Date.now() / 1000).toString();",
+                  "",
+                  "// Payload do webhook",
+                  "const payload = JSON.stringify({",
+                  "  \\\"id\\\": \\\"evt_subscription_created\\\",",
+                  "  \\\"type\\\": \\\"customer.subscription.created\\\",",
+                  "  \\\"created\\\": \" + timestamp + \",",
+                  "  \\\"data\\\": {",
+                  "    \\\"object\\\": {",
+                  "      \\\"id\\\": \\\"sub_test_123456\\\",",
+                  "      \\\"customer\\\": \\\"cus_test_123456\\\",",
+                  "      \\\"status\\\": \\\"active\\\",",
+                  "      \\\"metadata\\\": {",
+                  "        \\\"tenant_id\\\": \\\"550e8400-e29b-41d4-a716-446655440000\\\"",
+                  "      }",
+                  "    }",
+                  "  }",
+                  "});",
+                  "",
+                  "pm.environment.set('webhook_payload', payload);",
+                  "pm.environment.set('webhook_timestamp', timestamp);",
+                  "",
+                  "// Gerar assinatura HMAC-SHA256",
+                  "const signedContent = timestamp + '.' + payload;",
+                  "const signature = crypto",
+                  "  .createHmac('sha256', secret)",
+                  "  .update(signedContent)",
+                  "  .digest('hex');",
+                  "",
+                  "pm.environment.set('stripe_signature', 't=' + timestamp + ',v1=' + signature);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is Webhook processed', function() {",
+                  "  pm.expect(pm.response.text()).to.equal('Webhook processed');",
+                  "});",
+                  "",
+                  "pm.test('Content-Type is text/plain', function() {",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('text/plain');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Stripe-Signature",
+                "value": "{{stripe_signature}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{webhook_payload}}"
+            },
+            "url": {
+              "raw": "{{base_url}}/billing/webhook",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "billing",
+                "webhook"
+              ]
+            },
+            "description": "Simula um webhook de subscription criada do Stripe.\\n\\nValidação automática de signature HMAC-SHA256 e timestamp.\\n\\n⚠️ NOTA: O script pré-requisição gera uma assinatura válida. Certifique-se de que STRIPE_WEBHOOK_SECRET está correto."
+          }
+        },
+        {
+          "name": "Webhook - Payment Failed",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const crypto = require('crypto');",
+                  "",
+                  "const secret = pm.environment.get('stripe_webhook_secret');",
+                  "const timestamp = Math.floor(Date.now() / 1000).toString();",
+                  "",
+                  "const payload = JSON.stringify({",
+                  "  \\\"id\\\": \\\"evt_payment_failed\\\",",
+                  "  \\\"type\\\": \\\"invoice.payment_failed\\\",",
+                  "  \\\"created\\\": \" + timestamp + \",",
+                  "  \\\"data\\\": {",
+                  "    \\\"object\\\": {",
+                  "      \\\"id\\\": \\\"in_test_payment_failed\\\",",
+                  "      \\\"invoice\\\":  \\\"in_12345\\\",",
+                  "      \\\"status\\\": \\\"open\\\",",
+                  "      \\\"attempt_count\\\": 1",
+                  "    }",
+                  "  }",
+                  "});",
+                  "",
+                  "pm.environment.set('webhook_payload', payload);",
+                  "pm.environment.set('webhook_timestamp', timestamp);",
+                  "",
+                  "const signedContent = timestamp + '.' + payload;",
+                  "const signature = crypto",
+                  "  .createHmac('sha256', secret)",
+                  "  .update(signedContent)",
+                  "  .digest('hex');",
+                  "",
+                  "pm.environment.set('stripe_signature', 't=' + timestamp + ',v1=' + signature);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Webhook successfully processed', function() {",
+                  "  pm.expect(pm.response.text()).to.equal('Webhook processed');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Stripe-Signature",
+                "value": "{{stripe_signature}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{webhook_payload}}"
+            },
+            "url": {
+              "raw": "{{base_url}}/billing/webhook",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "billing",
+                "webhook"
+              ]
+            },
+            "description": "Simula um webhook de pagamento falhado do Stripe.\\n\\nEmail de notificação será enviado para o cliente."
+          }
+        },
+        {
+          "name": "Webhook - Invalid Signature (Teste)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 (Bad Request)', function() {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Response contains error message', function() {",
+                  "  pm.expect(pm.response.text()).to.include('Invalid webhook signature');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Stripe-Signature",
+                "value": "t=1234567890,v1=invalid_signature_not_matching"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": \"{\\n  \\\"id\\\": \\\"evt_test\\\",\\n  \\\"type\\\": \\\"customer.subscription.created\\\",\\n  \\\"data\\\": { }\\n}\"
+            },
+            "url": {
+              "raw": "{{base_url}}/billing/webhook",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "billing",
+                "webhook"
+              ]
+            },
+            "description": "Teste: Valida que webhooks com assinatura inválida são rejeitados.\\n\\nEsperado: HTTP 400 - Invalid webhook signature"
+          }
+        },
+        {
+          "name": "Webhook - Missing Signature Header (Teste)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 (Bad Request)', function() {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Response contains error message', function() {",
+                  "  pm.expect(pm.response.text()).to.include('Missing Stripe-Signature header');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": \"{\\n  \\\"id\\\": \\\"evt_test\\\",\\n  \\\"type\\\": \\\"customer.subscription.created\\\",\\n  \\\"data\\\": { }\\n}\"
+            },
+            "url": {
+              "raw": "{{base_url}}/billing/webhook",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "billing",
+                "webhook"
+              ]
+            },
+            "description": "Teste: Valida que webhooks sem Stripe-Signature header são rejeitados.\\n\\nEsperado: HTTP 400 - Missing Stripe-Signature header"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Monitoring",
+      "item": [
+        {
+          "name": "Prometheus Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/actuator/prometheus",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "actuator",
+                "prometheus"
+              ]
+            },
+            "description": "Endpoint Prometheus com métricas de webhook.\\n\\nMétricas incluem:\\n- webhook_processing_duration_seconds\\n- webhook_processing_success_total\\n- webhook_processing_failure_total\\n- webhook_signature_validation_total\\n- webhook_timestamp_validation_total"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "customer_email",
+      "value": "usuario@example.com",
+      "type": "string"
+    },
+    {
+      "key": "tenant_id",
+      "value": "550e8400-e29b-41d4-a716-446655440000",
+      "type": "string"
+    },
+    {
+      "key": "stripe_webhook_secret",
+      "value": "whsec_test_secret",
+      "type": "string"
+    },
+    {
+      "key": "webhook_payload",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "webhook_timestamp",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "stripe_signature",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "checkout_session_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

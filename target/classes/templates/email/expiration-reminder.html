@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .alert-box {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .button:hover {
+            background-color: #764ba2;
+        }
+        .footer {
+            background-color: #f0f0f0;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #ddd;
+        }
+        .highlight {
+            color: #c0392b;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⏰ Aviso de Expiração</h1>
+        </div>
+        
+        <div class="content">
+            <p>Olá <strong th:text="${tenantName}">Tenant</strong>,</p>
+            
+            <p>Sua assinatura <strong>expirará em <span class="highlight" th:text="${expirationDate}">DATA</span></strong>.</p>
+            
+            <div class="alert-box">
+                <p><strong>Ação Necessária:</strong> Renove sua assinatura agora para continuar aproveitando os recursos do LeadFlow sem interrupção.</p>
+            </div>
+            
+            <p>Sua assinatura atual oferece:</p>
+            <ul>
+                <li th:text="'Leads disponíveis: ' + ${availableLeads}">Leads</li>
+                <li th:text="'Usuários inclusos: ' + ${availableUsers}">Usuários</li>
+                <li th:text="'Execuções de IA: ' + ${availableAiExecutions}">Execuções de IA</li>
+            </ul>
+            
+            <p>Não perca o acesso aos seus leads e dados. Clique no botão abaixo para renovar sua assinatura:</p>
+            
+            <a th:href="${renewalUrl}" class="button">Renovar Assinatura</a>
+            
+            <p style="margin-top: 30px; color: #666; font-size: 14px;">
+                Se tiver dúvidas, entre em contato com nosso suporte em 
+                <a href="mailto:support@leadflow.com">support@leadflow.com</a>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; 2026 LeadFlow. Todos os direitos reservados.</p>
+            <p>Este é um email automático, por favor não responda.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,197 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ master, main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: 
+      name: ${{ github.event.inputs.environment || 'staging' }}
+    
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build application
+        run: mvn clean package -DskipTests
+        env:
+          MAVEN_OPTS: -Xmx1024m
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.DOCKER_REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_REGISTRY }}/leadflow-backend:${{ github.sha }}
+            ${{ secrets.DOCKER_REGISTRY }}/leadflow-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Set up Kubernetes
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Update deployment manifests
+        run: |
+          VERSION=${{ github.sha }}
+          REGISTRY=${{ secrets.DOCKER_REGISTRY }}
+          ENV=${{ github.event.inputs.environment || 'staging' }}
+          
+          # Update image in deployment
+          kubectl set image deployment/leadflow-backend \
+            --all \
+            -n $ENV \
+            leadflow=${REGISTRY}/leadflow-backend:${VERSION} \
+            || echo "Deployment not found, creating new one"
+
+      - name: Wait for rollout
+        run: |
+          ENV=${{ github.event.inputs.environment || 'staging' }}
+          kubectl rollout status deployment/leadflow-backend \
+            -n $ENV \
+            --timeout=5m
+
+      - name: Run smoke tests
+        run: |
+          ENV=${{ github.event.inputs.environment || 'staging' }}
+          HEALTH_URL="https://api-${ENV}.leadflow.io/api/actuator/health"
+          
+          for i in {1..30}; do
+            if curl -f $HEALTH_URL > /dev/null 2>&1; then
+              echo "Health check passed"
+              exit 0
+            fi
+            echo "Health check failed, retrying... ($i/30)"
+            sleep 10
+          done
+          
+          echo "Health check failed after 5 minutes"
+          exit 1
+
+      - name: Notify Slack on success
+        if: success()
+        uses: slackapi/slack-github-action@v1
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        with:
+          payload: |
+            {
+              "text": "✅ Deployment Successful",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Deployment Status: ✅ SUCCESS*\n*Environment:* ${{ github.event.inputs.environment || 'staging' }}\n*Commit:* ${{ github.sha }}\n*Author:* ${{ github.actor }}"
+                  }
+                }
+              ]
+            }
+
+      - name: Notify Slack on failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        with:
+          payload: |
+            {
+              "text": "❌ Deployment Failed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Deployment Status: ❌ FAILED*\n*Environment:* ${{ github.event.inputs.environment || 'staging' }}\n*Commit:* ${{ github.sha }}\n*Author:* ${{ github.actor }}\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Logs>"
+                  }
+                }
+              ]
+            }
+
+      - name: Create deployment record
+        if: always()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const deployment = {
+              timestamp: new Date().toISOString(),
+              environment: '${{ github.event.inputs.environment || 'staging' }}',
+              commit: '${{ github.sha }}',
+              author: '${{ github.actor }}',
+              status: '${{ job.status }}',
+              runId: '${{ github.run_id }}'
+            };
+            fs.writeFileSync('deployment.json', JSON.stringify(deployment, null, 2));
+
+      - name: Upload deployment summary
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: deployment-summary
+          path: deployment.json
+          retention-days: 30
+
+      - name: Automatic rollback on failure
+        if: failure() && github.event.inputs.environment == 'production'
+        run: |
+          echo "⚠️ Automatic rollback triggered for production"
+          kubectl rollout undo deployment/leadflow-backend \
+            -n production \
+            --timeout=5m
+          
+          # Notify about rollback
+          curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "text": "🔄 Production Rollback Executed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Status: 🔄 ROLLED BACK*\n*Commit:* ${{ github.sha }}\n*Author:* ${{ github.actor }}"
+                  }
+                }
+              ]
+            }'

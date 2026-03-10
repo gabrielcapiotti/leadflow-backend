@@ -77,7 +77,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
             return "admin";
         }
 
-        if (path.startsWith("/billing/webhook")) {
+        if (path.startsWith("/billing/webhook") || path.startsWith("/stripe/webhook")) {
             return "webhook";
         }
 

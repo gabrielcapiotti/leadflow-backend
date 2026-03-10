@@ -20,7 +20,13 @@ public interface VendorRepository extends JpaRepository<Vendor, UUID> {
 
     List<Vendor> findByUserEmail(String email);
 
+    Optional<Vendor> findFirstByUserEmailIgnoreCase(String email);
+
     Optional<Vendor> findBySlug(String slug);
+
+    Optional<Vendor> findByExternalCustomerId(String externalCustomerId);
+
+    Optional<Vendor> findByExternalSubscriptionId(String externalSubscriptionId);
 
     List<Vendor> findBySubscriptionStatus(SubscriptionStatus status);
 

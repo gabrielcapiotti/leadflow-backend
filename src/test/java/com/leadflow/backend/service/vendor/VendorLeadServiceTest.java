@@ -27,6 +27,7 @@ class VendorLeadServiceTest {
     private VendorLeadStageHistoryRepository historyRepository;
     private VendorContext vendorContext;
     private MetricsService metricsService;
+    private UsageService usageService;
 
     private VendorLeadService service;
 
@@ -40,6 +41,7 @@ class VendorLeadServiceTest {
         historyRepository = mock(VendorLeadStageHistoryRepository.class);
         vendorContext = mock(VendorContext.class);
         metricsService = mock(MetricsService.class);
+        usageService = mock(UsageService.class);
 
         service = new VendorLeadService(
                 repository,
@@ -47,6 +49,7 @@ class VendorLeadServiceTest {
                 historyRepository,
                 vendorContext,
                 metricsService,
+                usageService,
                 new ObjectMapper()
         );
 

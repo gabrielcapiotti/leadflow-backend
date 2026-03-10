@@ -4,6 +4,7 @@ import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.multitenancy.service.TenantService;
 import com.leadflow.backend.security.CustomUserDetails;
 import com.leadflow.backend.service.auth.UserSessionService;
+import com.leadflow.backend.util.LogSanitizer;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -143,7 +144,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         } catch (Exception ex) {
 
-            logger.debug("JWT authentication failed: {}", ex.getMessage());
+                        logger.debug("JWT authentication failed: {}", LogSanitizer.sanitize(ex.getMessage()));
 
             safeResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }

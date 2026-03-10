@@ -45,6 +45,7 @@ public class VendorLeadService {
     private final VendorLeadStageHistoryRepository historyRepository;
     private final VendorContext vendorContext;
     private final MetricsService metricsService;
+    private final UsageService usageService;
     private final ObjectMapper objectMapper;
 
     public VendorLeadService(
@@ -53,6 +54,7 @@ public class VendorLeadService {
             VendorLeadStageHistoryRepository historyRepository,
             VendorContext vendorContext,
             MetricsService metricsService,
+            UsageService usageService,
             ObjectMapper objectMapper) {
 
         this.repository = repository;
@@ -60,6 +62,7 @@ public class VendorLeadService {
         this.historyRepository = historyRepository;
         this.vendorContext = vendorContext;
         this.metricsService = metricsService;
+        this.usageService = usageService;
         this.objectMapper = objectMapper;
     }
 
@@ -108,6 +111,10 @@ public class VendorLeadService {
                 lead.setUrgencia(node.path("urgencia").asText(null));
 
                 lead.setScore(calculateScore(lead));
+
+                if (isNewLead) {
+                    usageService.consumeLead(vendorId);
+                }
 
                 VendorLead savedLead = repository.save(lead);
 
@@ -163,6 +170,8 @@ public class VendorLeadService {
         lead.setUrgencia(request.getUrgencia());
 
         lead.setScore(calculateScore(lead));
+
+        usageService.consumeLead(vendorId);
 
         VendorLead savedLead = repository.save(lead);
 

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Payment Received</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .invoice-title {
+            display: flex;
+            flex-direction: column;
+        }
+        .invoice-title h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #333;
+        }
+        .invoice-title .invoice-number {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+        .invoice-status {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .company-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .company-info-block {
+            flex: 1;
+        }
+        .company-info-block h4 {
+            margin: 0 0 10px 0;
+            color: #667eea;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .company-info-block p {
+            margin: 4px 0;
+            color: #555;
+        }
+        .invoice-details {
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .invoice-line-items {
+            margin-bottom: 20px;
+        }
+        .line-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        .line-item:last-of-type {
+            border-bottom: none;
+        }
+        .line-item-description {
+            flex: 1;
+            color: #555;
+        }
+        .line-item-quantity {
+            color: #999;
+            margin: 0 15px;
+            min-width: 40px;
+            text-align: right;
+        }
+        .line-item-amount {
+            font-weight: 600;
+            color: #333;
+            min-width: 80px;
+            text-align: right;
+        }
+        .invoice-summary {
+            border-top: 2px solid #ddd;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 14px;
+        }
+        .summary-row.subtotal {
+            color: #555;
+        }
+        .summary-row.tax {
+            color: #555;
+        }
+        .summary-row.total {
+            background-color: #f5f5f5;
+            padding: 12px;
+            margin: 0 -20px;
+            padding-left: 20px;
+            padding-right: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+            border-top: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+        }
+        .payment-info {
+            background-color: #e8f5e9;
+            border: 1px solid #4caf50;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .payment-info h4 {
+            margin: 0 0 10px 0;
+            color: #2e7d32;
+            font-size: 14px;
+        }
+        .payment-info p {
+            margin: 0;
+            font-size: 14px;
+            color: #555;
+        }
+        .payment-method {
+            background-color: #f5f5f5;
+            padding: 12px;
+            border-radius: 3px;
+            margin: 8px 0;
+            font-size: 13px;
+        }
+        .action-links {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .action-button {
+            display: inline-block;
+            background-color: #667eea;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 0 10px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+            font-size: 14px;
+        }
+        .action-button:hover {
+            background-color: #764ba2;
+        }
+        .action-button.secondary {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+        .action-button.secondary:hover {
+            background-color: #d0d0d0;
+        }
+        .notes-section {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .notes-section h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 14px;
+        }
+        .support-section {
+            background-color: #f0f0f0;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .support-section a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .footer {
+            background-color: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            border-top: 1px solid #e0e0e0;
+        }
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✓ Invoice Paid</h1>
+        </div>
+
+        <div class="content">
+            <div class="greeting">
+                <p>Hi <strong th:text="${customerName}">there</strong>,</p>
+                <p>Thank you for your payment. Your invoice has been recorded and processed. See details below.</p>
+            </div>
+
+            <div class="invoice-header">
+                <div class="invoice-title">
+                    <h2>Invoice</h2>
+                    <div class="invoice-number" th:text="|# ${invoiceNumber}|">#INV-2026-001234</div>
+                </div>
+                <div class="invoice-status">✓ Paid</div>
+            </div>
+
+            <div class="company-info">
+                <div class="company-info-block">
+                    <h4>Bill To</h4>
+                    <p th:text="${customerName}">John Doe</p>
+                    <p th:text="${customerEmail}">john@example.com</p>
+                    <p th:text="${customerCompany}">Acme Inc.</p>
+                </div>
+                <div class="company-info-block">
+                    <h4>Invoice Details</h4>
+                    <p><strong>Invoice Date:</strong> <span th:text="${invoiceDate}">April 5, 2026</span></p>
+                    <p><strong>Due Date:</strong> <span th:text="${dueDate}">April 30, 2026</span></p>
+                    <p><strong>Status:</strong> Paid on <span th:text="${paidDate}">April 5, 2026</span></p>
+                </div>
+            </div>
+
+            <div class="invoice-details">
+                <div class="invoice-line-items">
+                    <div class="line-item" th:each="item : ${lineItems}">
+                        <div class="line-item-description">
+                            <div style="font-weight: 600;" th:text="${item.description}">Professional Plan</div>
+                            <div style="font-size: 12px; color: #999; margin-top: 2px;" th:text="${item.period}">
+                                March 5 - April 5, 2026
+                            </div>
+                        </div>
+                        <div class="line-item-quantity" th:text="${item.quantity}">1</div>
+                        <div class="line-item-amount" th:text="${item.amount}">$99.00</div>
+                    </div>
+                </div>
+
+                <div class="invoice-summary">
+                    <div class="summary-row subtotal">
+                        <span>Subtotal</span>
+                        <span th:text="${subtotal}">$99.00</span>
+                    </div>
+                    <div class="summary-row tax" th:if="${taxAmount}">
+                        <span>Tax (VAT)</span>
+                        <span th:text="${taxAmount}">$9.90</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total</span>
+                        <span th:text="${total}">$99.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="payment-info">
+                <h4>✓ Payment Received</h4>
+                <p>Payment was successfully processed on <strong th:text="${paidDate}">April 5, 2026</strong></p>
+                <div class="payment-method">
+                    <strong>Payment Method:</strong> <span th:text="${paymentMethod}">Visa ending in 4242</span>
+                </div>
+                <div class="payment-method">
+                    <strong>Transaction ID:</strong> <span th:text="${transactionId}">ch_1234567890abcdef</span>
+                </div>
+            </div>
+
+            <div class="notes-section" th:if="${notes}">
+                <h4>Notes</h4>
+                <p th:text="${notes}" style="margin: 0;">Thank you for doing business with us!</p>
+            </div>
+
+            <div class="action-links">
+                <a href="https://app.leadflow.com/invoices" class="action-button">View All Invoices</a>
+                <a href="https://app.leadflow.com/receipts" class="action-button secondary">Download Receipt</a>
+            </div>
+
+            <div class="support-section">
+                <p><strong>Have questions about this invoice?</strong></p>
+                <p>Contact our billing team at <a href="mailto:billing@leadflow.com">billing@leadflow.com</a></p>
+                <p style="margin: 10px 0 0 0; font-size: 12px;">We're here to help!</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2026 LeadFlow. All rights reserved.</p>
+            <p>
+                <a href="https://leadflow.com/account/settings">Account Settings</a> |
+                <a href="https://leadflow.com/privacy">Privacy Policy</a> |
+                <a href="https://leadflow.com/terms">Terms of Service</a>
+            </p>
+            <p>This is an automated message. Please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -2,13 +2,16 @@ package com.leadflow.backend.service.conversation;
 
 import com.leadflow.backend.dto.ai.ChatRequest;
 import com.leadflow.backend.entities.vendor.VendorLeadConversation;
+import com.leadflow.backend.entities.vendor.VendorLead;
 import com.leadflow.backend.repository.VendorLeadRepository;
 import com.leadflow.backend.repository.vendor.VendorLeadConversationRepository;
 import com.leadflow.backend.service.ai.AiService;
+import com.leadflow.backend.service.vendor.UsageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,6 +29,7 @@ class ConversationServiceTest {
     private VendorLeadRepository leadRepository;
     private VendorLeadConversationRepository conversationRepository;
     private AiService aiService;
+    private UsageService usageService;
     private ConversationService service;
 
     @BeforeEach
@@ -33,7 +37,8 @@ class ConversationServiceTest {
         leadRepository = mock(VendorLeadRepository.class);
         conversationRepository = mock(VendorLeadConversationRepository.class);
         aiService = mock(AiService.class);
-        service = new ConversationService(leadRepository, conversationRepository, aiService);
+        usageService = mock(UsageService.class);
+        service = new ConversationService(leadRepository, conversationRepository, aiService, usageService);
     }
 
     @Test
@@ -45,6 +50,9 @@ class ConversationServiceTest {
         request.setMessage("Olá, quero saber sobre consórcio");
 
         when(leadRepository.existsById(any(UUID.class))).thenReturn(true);
+        VendorLead lead = new VendorLead();
+        lead.setVendorId(UUID.randomUUID());
+        when(leadRepository.findById(leadId)).thenReturn(Optional.of(lead));
         when(conversationRepository.findByVendorLeadIdOrderByCreatedAtAsc(leadId))
                 .thenReturn(List.of());
         when(aiService.generate(anyString())).thenReturn("Resposta da IA");
@@ -87,6 +95,9 @@ class ConversationServiceTest {
         request.setMessage("mensagem do usuário");
 
         when(leadRepository.existsById(leadId)).thenReturn(true);
+        VendorLead lead = new VendorLead();
+        lead.setVendorId(UUID.randomUUID());
+        when(leadRepository.findById(leadId)).thenReturn(Optional.of(lead));
         when(conversationRepository.findByVendorLeadIdOrderByCreatedAtAsc(leadId))
                 .thenReturn(List.of());
         when(aiService.generate(anyString())).thenReturn("mensagem da ia");

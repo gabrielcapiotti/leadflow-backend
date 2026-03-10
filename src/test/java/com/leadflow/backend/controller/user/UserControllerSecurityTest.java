@@ -5,6 +5,7 @@ import com.leadflow.backend.security.RateLimitInterceptor;
 import com.leadflow.backend.security.RateLimitService;
 import com.leadflow.backend.security.TestSecurityConfig;
 import com.leadflow.backend.service.user.UserService;
+import com.leadflow.backend.config.TestBillingConfig;
 import com.leadflow.backend.multitenancy.filter.TenantFilter;
 import com.leadflow.backend.multitenancy.service.TenantService;
 import com.leadflow.backend.repository.user.UserRepository;
@@ -45,7 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     )
 )
 @AutoConfigureMockMvc
-@Import(TestSecurityConfig.class)
+@Import({TestBillingConfig.class, TestSecurityConfig.class})
 @ActiveProfiles("test")
 class UserControllerSecurityTest {
 

@@ -1,6 +1,7 @@
 package com.leadflow.backend.security.jwt;
 
 import com.leadflow.backend.entities.user.User;
+import com.leadflow.backend.util.LogSanitizer;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 
@@ -80,7 +81,7 @@ public class JwtService implements InitializingBean {
         this.signingKey =
                 Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
 
-        logger.debug("JWT Secret successfully loaded: {}", secret);
+        logger.debug("JWT secret successfully loaded");
         logger.debug("JWT Expiration time: {} ms", expirationMillis);
         logger.debug("JWT Issuer: {}", issuer);
     }
@@ -122,10 +123,10 @@ public class JwtService implements InitializingBean {
 
         try {
             extractAllClaims(token);
-            logger.debug("Token is valid: {}", token);
+            logger.debug("Token is valid: {}", LogSanitizer.sanitize(token));
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            logger.warn("Invalid JWT detected: {}", e.getMessage());
+            logger.warn("Invalid JWT detected: {}", LogSanitizer.sanitize(e.getMessage()));
             return false;
         }
     }

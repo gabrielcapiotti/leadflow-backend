@@ -61,6 +61,7 @@ public class DefaultEntityManagerConfig {
                 .dataSource(dataSource)
                 .packages(
                         "com.leadflow.backend.entities",
+                        "com.leadflow.backend.webhook.entity",
                         "com.leadflow.domain.auth"
                 )
                 .persistenceUnit("tenant")

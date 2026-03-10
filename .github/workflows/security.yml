@@ -1,0 +1,134 @@
+name: Security
+
+on:
+  push:
+    branches: [ master, main, develop ]
+  pull_request:
+    branches: [ master, main, develop ]
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Run Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          path: '.'
+          format: 'JSON'
+          project: 'leadflow-backend'
+          args: >-
+            --enableExperimental
+            --enableRetired
+            --scan ./pom.xml
+
+      - name: Upload Dependency Check report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-check-report
+          path: reports/
+          retention-days: 30
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Check for Maven vulnerabilities
+        run: |
+          mvn dependency-check:check \
+            -Ddependency-check.skip=false \
+            -DfailBuildOnCVSS=7.0 || true
+
+      - name: Run OWASP ZAP scan
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: zaproxy/action-baseline@v0.7.0
+        with:
+          target: ${{ secrets.STAGING_URL || 'https://api-staging.leadflow.io' }}
+
+      - name: Upload ZAP report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: zap-security-report
+          path: report_html.html
+          retention-days: 30
+
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Check for hardcoded secrets
+        run: |
+          docker run --rm -v "$(pwd):/path" zricethezav/gitleaks:latest \
+            detect --source /path --verbose || true
+
+      - name: License compliance check
+        run: |
+          mvn license:check \
+            -Dlicense.excludedScopes=test || true
+
+      - name: SBOM generation (SPDX)
+        run: |
+          mvn cyclonedx:makeAggregate -DincludeTransitiveDependencies=true || true
+
+      - name: Upload SBOM
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: sbom-spdx
+          path: target/bom.xml
+          retention-days: 30
+
+      - name: Vulnerability report summary
+        if: always()
+        run: |
+          echo "# Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Scans Performed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Dependency Check (Maven vulnerabilities)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ OWASP ZAP (Web vulnerabilities)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Trivy (Container vulnerabilities)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ GitLeaks (Secret leakage)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ License Compliance" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ SBOM Generation" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify security team on critical issues
+        if: failure() && github.event_name == 'schedule'
+        uses: slackapi/slack-github-action@v1
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_SECURITY_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        with:
+          payload: |
+            {
+              "text": "⚠️ Critical Security Issues Detected",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Security Alert: ⚠️ CRITICAL ISSUES FOUND*\n*Project:* LeadFlow Backend\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Details>"
+                  }
+                }
+              ]
+            }

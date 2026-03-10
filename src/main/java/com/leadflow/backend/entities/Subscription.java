@@ -1,39 +1,56 @@
 package com.leadflow.backend.entities;
 
 import jakarta.persistence.*;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "subscriptions")
+@Table(name = "subscriptions", schema = "public")
 public class Subscription {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(name = "tenant_id", nullable = false)
+    private UUID tenantId;
 
     @Column(name = "stripe_customer_id", nullable = false)
     private String stripeCustomerId;
 
-    @Column(name = "stripe_subscription_id", nullable = false, unique = true)
+    @Column(name = "stripe_subscription_id", unique = true)
     private String stripeSubscriptionId;
 
-    @Column(nullable = false)
-    private String plan;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "plan_id", nullable = false)
+    private Plan plan;
 
-    @Column(nullable = false)
+    @Column
     private String email;
 
-    @Column(nullable = false)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    private SubscriptionStatus status;
+    
+    @Column(name = "started_at", nullable = false)
+    private LocalDateTime startedAt;
+    
+    @Column(name = "expires_at", nullable = false)
+    private LocalDateTime expiresAt;
+
+    @Column(name = "last_payment_date")
+    private LocalDateTime lastPaymentDate;
+
+    @Column(name = "cancelled_at")
+    private LocalDateTime cancelledAt;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
-    private Instant updatedAt;
+    private LocalDateTime updatedAt;
 
-    protected Subscription() {
+    public Subscription() {
         // Required by JPA
     }
 
@@ -43,21 +60,29 @@ public class Subscription {
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = Instant.now();
+        this.createdAt = LocalDateTime.now();
         this.updatedAt = this.createdAt;
     }
 
     @PreUpdate
     protected void onUpdate() {
-        this.updatedAt = Instant.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
     /* ======================================================
        Getters and setters
        ====================================================== */
 
-    public UUID getId() {
+    public Long getId() {
         return id;
+    }
+    
+    public UUID getTenantId() {
+        return tenantId;
+    }
+    
+    public void setTenantId(UUID tenantId) {
+        this.tenantId = tenantId;
     }
 
     public String getStripeCustomerId() {
@@ -76,11 +101,11 @@ public class Subscription {
         this.stripeSubscriptionId = stripeSubscriptionId;
     }
 
-    public String getPlan() {
+    public Plan getPlan() {
         return plan;
     }
 
-    public void setPlan(String plan) {
+    public void setPlan(Plan plan) {
         this.plan = plan;
     }
 
@@ -92,19 +117,58 @@ public class Subscription {
         this.email = email;
     }
 
-    public String getStatus() {
+    public SubscriptionStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(SubscriptionStatus status) {
         this.status = status;
     }
+    
+    public LocalDateTime getStartedAt() {
+        return startedAt;
+    }
+    
+    public void setStartedAt(LocalDateTime startedAt) {
+        this.startedAt = startedAt;
+    }
+    
+    public LocalDateTime getExpiresAt() {
+        return expiresAt;
+    }
+    
+    public void setExpiresAt(LocalDateTime expiresAt) {
+        this.expiresAt = expiresAt;
+    }
 
-    public Instant getCreatedAt() {
+    public LocalDateTime getLastPaymentDate() {
+        return lastPaymentDate;
+    }
+
+    public void setLastPaymentDate(LocalDateTime lastPaymentDate) {
+        this.lastPaymentDate = lastPaymentDate;
+    }
+
+    public LocalDateTime getCancelledAt() {
+        return cancelledAt;
+    }
+
+    public void setCancelledAt(LocalDateTime cancelledAt) {
+        this.cancelledAt = cancelledAt;
+    }
+
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public Instant getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public enum SubscriptionStatus {
+        ACTIVE,
+        PAST_DUE,
+        CANCELLED,
+        INCOMPLETE
     }
 }

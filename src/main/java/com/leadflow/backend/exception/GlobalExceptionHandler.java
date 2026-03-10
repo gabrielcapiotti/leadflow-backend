@@ -73,6 +73,23 @@ public class GlobalExceptionHandler {
        BUSINESS
        ========================================================= */
 
+    @ExceptionHandler(PlanLimitExceededException.class)
+    public ResponseEntity<ApiErrorResponse> handlePlanLimitExceeded(
+            PlanLimitExceededException ex
+    ) {
+        log.warn("Plan limit exceeded: {}", ex.getMessage());
+        
+        ApiErrorResponse response = new ApiErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "PLAN_LIMIT_REACHED",
+                ex.getMessage()
+        );
+        
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(response);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiErrorResponse> handleIllegalArgument(
             IllegalArgumentException ex

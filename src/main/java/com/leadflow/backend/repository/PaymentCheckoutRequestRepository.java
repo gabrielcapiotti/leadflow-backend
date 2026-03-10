@@ -9,4 +9,6 @@ import java.util.UUID;
 public interface PaymentCheckoutRequestRepository extends JpaRepository<PaymentCheckoutRequest, UUID> {
 
     Optional<PaymentCheckoutRequest> findTopByEmailIgnoreCaseAndStatusOrderByCreatedAtDesc(String email, String status);
+
+    Optional<PaymentCheckoutRequest> findTopByReferenceIdOrderByCreatedAtDesc(String referenceId);
 }

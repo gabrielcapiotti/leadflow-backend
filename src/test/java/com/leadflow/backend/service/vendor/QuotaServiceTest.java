@@ -1,10 +1,12 @@
 package com.leadflow.backend.service.vendor;
 
+import com.leadflow.backend.entities.Plan;
 import com.leadflow.backend.entities.vendor.QuotaType;
 import com.leadflow.backend.entities.vendor.Vendor;
 import com.leadflow.backend.entities.vendor.VendorUsage;
 import com.leadflow.backend.repository.VendorRepository;
 import com.leadflow.backend.repository.VendorUsageRepository;
+import com.leadflow.backend.service.PlanService;
 import com.leadflow.backend.service.notification.SendGridEmailService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,14 +42,22 @@ class QuotaServiceTest {
     @Mock
     private SendGridEmailService emailService;
 
+    @Mock
+    private PlanService planService;
+
     private QuotaService quotaService;
 
     @BeforeEach
     void setUp() {
-        quotaService = new QuotaService(repository, vendorRepository, emailService);
+        quotaService = new QuotaService(repository, vendorRepository, emailService, planService);
 
         lenient().when(repository.save(any(VendorUsage.class)))
             .thenAnswer(invocation -> invocation.getArgument(0));
+        
+        Plan mockPlan = new Plan();
+        mockPlan.setMaxLeads(500);
+        mockPlan.setMaxAiExecutions(1000);
+        lenient().when(planService.getActivePlan()).thenReturn(mockPlan);
     }
 
     @Test

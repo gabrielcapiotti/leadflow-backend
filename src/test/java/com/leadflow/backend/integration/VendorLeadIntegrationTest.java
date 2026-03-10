@@ -1,6 +1,7 @@
 package com.leadflow.backend.integration;
 
 import com.leadflow.backend.entities.vendor.*;
+import com.leadflow.backend.config.TestBillingConfig;
 import com.leadflow.backend.repository.*;
 import com.leadflow.backend.security.VendorContext;
 import com.leadflow.backend.service.admin.AdminService;
@@ -20,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
@@ -31,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(TestBillingConfig.class)
 @ActiveProfiles("test")
 @Transactional
 class VendorLeadIntegrationTest {

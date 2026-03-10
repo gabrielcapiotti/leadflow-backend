@@ -9,6 +9,7 @@ public record CheckoutRequest(
         @NotBlank @Size(min = 3, max = 120) String nomeVendedor,
         @NotBlank @Size(min = 8, max = 20) String whatsappVendedor,
         @Size(max = 120) String nomeEmpresa,
-        @Size(max = 80) String slug
+        @Size(max = 80) String slug,
+        Long tenantId
 ) {
 }

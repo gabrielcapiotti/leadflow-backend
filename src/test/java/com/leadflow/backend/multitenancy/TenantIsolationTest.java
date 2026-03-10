@@ -1,6 +1,7 @@
 package com.leadflow.backend.multitenancy;
 
 import com.leadflow.backend.IntegrationTestBase;
+import com.leadflow.backend.config.TestBillingConfig;
 import com.leadflow.backend.entities.Tenant;
 import com.leadflow.backend.entities.lead.Lead;
 import com.leadflow.backend.entities.user.Role;
@@ -29,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ActiveProfiles("test")
 @Tag("integration")
-@Import(TestTenantFactory.class)
+@Import({TestTenantFactory.class, TestBillingConfig.class})
 class TenantIsolationTest extends IntegrationTestBase {
 
     @Autowired

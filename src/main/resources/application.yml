@@ -72,8 +72,37 @@ sendgrid:
       delay-seconds: 60
       fixed-delay-ms: 60000
 
-# -----------------------------------------------------
-# SERVER
+# -----------------------------------------------------# EMAIL (Spring Mail)
+# -----------------------------------------------
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    protocol: smtp
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+email:
+  from: ${MAIL_FROM:no-reply@leadflow.com}
+  from-name: LeadFlow
+  reply-to: ${MAIL_REPLY_TO:support@leadflow.com}
+  notification:
+    enabled: true
+    async: true
+    max-retries: 3
+
+# -----------------------------------------------# SERVER
 # -----------------------------------------------------
 
 server:
@@ -112,9 +141,23 @@ management:
     health:
       show-details: always
 
+  health:
+    circuitbreakers:
+      enabled: true
+    ratelimiters:
+      enabled: true
+    retries:
+      enabled: true
+    timelimiters:
+      enabled: true
+
   metrics:
     tags:
       application: leadflow-backend
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        resilience4j.circuitbreaker.calls: true
 
 # -----------------------------------------------------
 # SYSTEM
@@ -204,8 +247,9 @@ subscription:
   trial-days: 7
 
   limits:
-    active-leads: 500
-    ai-executions: 1000
+    max-leads: 500
+    max-users: 10
+    max-ai-executions: 1000
 
 # -----------------------------------------------------
 # AUDIT
@@ -216,21 +260,195 @@ audit:
   cleanup:
     retention-days: 90
 
-# -----------------------------------------------------
-# STRIPE
-# -----------------------------------------------------
+# =====================================================
+# STRIPE - CENTRALIZED CONFIGURATION
+# =====================================================
+# All Stripe settings moved to StripeProperties.java
+# Configure via environment variables (recommended):
+#   - STRIPE_SECRET_KEY       (required, sk_test_* or sk_live_*)
+#   - STRIPE_PUBLISHABLE_KEY  (optional for backend)
+#   - STRIPE_WEBHOOK_SECRET   (required, whsec_*)
+#
+# Default values below for local development only.
+# NEVER commit sensitive keys to git!
+# =====================================================
 
 stripe:
+  
+  # API Configuration
+  api:
+    secret-key: ${STRIPE_SECRET_KEY:}
+    publishable-key: ${STRIPE_PUBLISHABLE_KEY:}
+  
+  # Webhook Configuration
+  webhook:
+    secret: ${STRIPE_WEBHOOK_SECRET:}
+    path: /stripe/webhook
+    enabled: true
+    timestamp-tolerance-seconds: 300  # 5 minutes - prevent replay attacks
+    
+    # Alert Configuration
+    alert-threshold: ${STRIPE_WEBHOOK_ALERT_THRESHOLD:5}  # Number of failures to trigger alert
+    alert-email: ${STRIPE_WEBHOOK_ALERT_EMAIL:}  # Email to send alerts (if configured)
+  
+  # Retry Configuration - Exponential backoff for failed operations
+  retry:
+    max-attempts: 3
+    initial-delay-ms: 1000     # 1 second initial delay
+    multiplier: 2.0             # exponential: 1s, 2s, 4s, 8s
+  
+  # HTTP Timeout Configuration
+  timeout:
+    connection-ms: 10000        # 10 seconds to connect
+    read-ms: 30000              # 30 seconds to read response
+  
+  # Event Persistence Configuration
+  events:
+    enabled: true
+    max-age-days: 90            # Keep webhook events for 90 days
+  
+  # Legacy configuration (deprecated, kept for backward compatibility)
+  secret-key: ${STRIPE_SECRET_KEY:}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+  price-id: ${STRIPE_PRICE_ID:}
+  success-url: https://app.leadflow.ai/success
+  cancel-url: https://app.leadflow.ai/cancel
 
   secret:
-    key: sk_test_xxxxx
+    key: ${STRIPE_SECRET_KEY:sk_test_xxxxx}
 
-# -----------------------------------------------------
+  price:
+    default: ${STRIPE_PRICE_DEFAULT:price_xxxxx}
+    pro: ${STRIPE_PRICE_PRO:price_xxxxx}
+
+# =====================================================
+# RESILIENCE4J - CIRCUIT BREAKER & RETRY
+# =====================================================
+# Provides fault tolerance for external API calls
+# Automatically opens circuit after consecutive failures
+# Falls back to cached data or alternative strategy
+# =====================================================
+
+resilience4j:
+
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 30000          # 30 seconds
+        failureRateThreshold: 50.0              # 50% = open
+        slowCallRateThreshold: 50.0
+        slowCallDurationThreshold: 2000         # 2 seconds = slow
+        recordExceptions:
+          - java.lang.Exception
+
+    instances:
+      stripe:
+        baseConfig: default
+        failureRateThreshold: 50                # Open after 50% failures
+        waitDurationInOpenState: 30000          # Wait 30s before attempting
+        permittedNumberOfCallsInHalfOpenState: 3
+        minimumNumberOfCalls: 5
+        slowCallDurationThreshold: 2000         # > 2s is slow
+
+      email:
+        baseConfig: default
+        failureRateThreshold: 60                # More lenient (60%)
+        waitDurationInOpenState: 60000          # Wait 60s before attempting
+        slowCallDurationThreshold: 3000         # > 3s is slow
+
+      database:
+        baseConfig: default
+        failureRateThreshold: 70
+        waitDurationInOpenState: 15000          # Quick recovery for DB
+        permittedNumberOfCallsInHalfOpenState: 5
+        minimumNumberOfCalls: 10
+        slowCallDurationThreshold: 5000
+
+  retry:
+    configs:
+      default:
+        registerHealthIndicator: false
+        maxAttempts: 3
+        waitDuration: 1000                      # 1 second
+
+    instances:
+      stripe-retry:
+        baseConfig: default
+        maxAttempts: 3
+        waitDuration: 500
+        intervalFunction: exponential-random
+        intervalFunctionExponentialMultiplier: 2.0
+        intervalFunctionRandomizationFactor: 0.5
+        retryExceptions:
+          - java.net.SocketTimeoutException
+          - java.net.ConnectException
+          - java.io.IOException
+
+      email-retry:
+        baseConfig: default
+        maxAttempts: 2
+        waitDuration: 1000
+        intervalFunction: fixed
+
+  timelimiter:
+    configs:
+      default:
+        cancelRunningFuture: true
+        timeoutDuration: 5000
+
+    instances:
+      stripe:
+        timeoutDuration: 5000
+
+      email:
+        timeoutDuration: 10000
+
+  # Health indicators and metrics exposure
+  core:
+    registry:
+      included-backends:
+        - CircuitBreaker
+        - Retry
+        - Bulkhead
+        - TimeLimiter
+
+# Enable Resilience4j metrics in actuator----------------------------------------------
 # FRONTEND
 # -----------------------------------------------------
 
 app:
 
+  frontend-url: ${FRONTEND_URL:http://localhost:3000}
+
   frontend:
     success-url: http://localhost:3000/payment-success
     cancel-url: http://localhost:3000/payment-cancel
+
+# =====================================================
+# WEBHOOK REPLAY - FAILED EVENT RETRY MECHANISM
+# =====================================================
+# Automatic retry system for failed webhook events
+# Uses exponential backoff to avoid overloading
+# Stores failed events in database for recovery
+# =====================================================
+
+webhook:
+  replay:
+    max-retries: 5              # Max retry attempts (1 initial + 4 retries)
+    batch-size: 10              # Webhooks processed per check cycle
+    check-interval: 30000       # Check interval in milliseconds (30 seconds)
+
+# Exponential backoff schedule:
+# - Retry #1: 1 minute after failure
+# - Retry #2: 5 minutes after last attempt
+# - Retry #3: 30 minutes after last attempt
+# - Retry #4: 2 hours after last attempt
+# - Retry #5+: 12 hours after last attempt
+#
+# After max retries exceeded, webhook marked as FAILED_PERMANENT
+# Requires manual investigation and replay via admin endpoints

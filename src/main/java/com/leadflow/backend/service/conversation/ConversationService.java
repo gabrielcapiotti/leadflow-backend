@@ -5,6 +5,7 @@ import com.leadflow.backend.entities.vendor.VendorLeadConversation;
 import com.leadflow.backend.repository.VendorLeadRepository;
 import com.leadflow.backend.repository.vendor.VendorLeadConversationRepository;
 import com.leadflow.backend.service.ai.AiService;
+import com.leadflow.backend.service.vendor.UsageService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,13 +22,16 @@ public class ConversationService {
     private final VendorLeadRepository leadRepository;
     private final VendorLeadConversationRepository conversationRepository;
     private final AiService aiService;
+    private final UsageService usageService;
 
     public ConversationService(VendorLeadRepository leadRepository,
                                VendorLeadConversationRepository conversationRepository,
-                               AiService aiService) {
+                               AiService aiService,
+                               UsageService usageService) {
         this.leadRepository = leadRepository;
         this.conversationRepository = conversationRepository;
         this.aiService = aiService;
+        this.usageService = usageService;
     }
 
     public String chat(ChatRequest request) {
@@ -50,6 +54,12 @@ public class ConversationService {
 
         List<VendorLeadConversation> history =
             conversationRepository.findByVendorLeadIdOrderByCreatedAtAsc(leadId);
+
+        UUID tenantId = leadRepository.findById(leadId)
+            .orElseThrow(() -> new IllegalArgumentException("Lead não encontrado."))
+            .getVendorId();
+
+        usageService.consumeAiExecution(tenantId);
 
         String prompt = buildPromptWithContext(history);
         String aiResponse = aiService.generate(prompt);

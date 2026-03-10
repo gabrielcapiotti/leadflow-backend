@@ -13,15 +13,34 @@ import java.util.Objects;
 public class WebConfig implements WebMvcConfigurer {
 
     private final RateLimitInterceptor rateLimitInterceptor;
+    private final BillingValidationInterceptor billingValidationInterceptor;
 
-    public WebConfig(RateLimitInterceptor rateLimitInterceptor) {
+    public WebConfig(RateLimitInterceptor rateLimitInterceptor,
+                    BillingValidationInterceptor billingValidationInterceptor) {
         this.rateLimitInterceptor =
                 Objects.requireNonNull(rateLimitInterceptor, "RateLimitInterceptor must not be null");
+        this.billingValidationInterceptor =
+                Objects.requireNonNull(billingValidationInterceptor, "BillingValidationInterceptor must not be null");
     }
 
     @Override
     public void addInterceptors(@NonNull InterceptorRegistry registry) {
 
+        // Register billing validation interceptor for all API routes
+        registry.addInterceptor(
+                        Objects.requireNonNull(
+                                billingValidationInterceptor,
+                                "BillingValidationInterceptor must not be null"
+                        )
+                )
+                .addPathPatterns("/api/**")
+                .excludePathPatterns(
+                        "/api/v1/auth/**",
+                        "/api/v1/health/**",
+                        "/api/v1/public/**"
+                );
+
+        // Register rate limit interceptor for AI routes
         registry.addInterceptor(
                         Objects.requireNonNull(
                                 rateLimitInterceptor,

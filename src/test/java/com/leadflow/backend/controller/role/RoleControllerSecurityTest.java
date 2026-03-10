@@ -1,5 +1,6 @@
 package com.leadflow.backend.controller.role;
 
+import com.leadflow.backend.config.TestBillingConfig;
 import com.leadflow.backend.exception.GlobalExceptionHandler;
 import com.leadflow.backend.security.RateLimitInterceptor;
 import com.leadflow.backend.security.RateLimitService;
@@ -38,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     )
 )
 @ActiveProfiles("test")
-@Import({ GlobalExceptionHandler.class, TestSecurityConfig.class })
+@Import({GlobalExceptionHandler.class, TestBillingConfig.class, TestSecurityConfig.class})
 class RoleControllerSecurityTest {
 
     @Autowired

@@ -6,10 +6,10 @@ import com.leadflow.backend.entities.vendor.Vendor;
 import com.leadflow.backend.entities.vendor.VendorUsage;
 import com.leadflow.backend.repository.VendorRepository;
 import com.leadflow.backend.repository.VendorUsageRepository;
+import com.leadflow.backend.service.PlanService;
 import com.leadflow.backend.service.notification.SendGridEmailService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -24,29 +24,16 @@ public class QuotaService {
     private final VendorUsageRepository repository;
     private final VendorRepository vendorRepository;
     private final SendGridEmailService emailService;
-    private int maxActiveLeads = 500;
-    private int maxAiExecutions = 1000;
+    private final PlanService planService;
 
     public QuotaService(VendorUsageRepository repository,
                         VendorRepository vendorRepository,
-                        SendGridEmailService emailService) {
+                        SendGridEmailService emailService,
+                        PlanService planService) {
         this.repository = repository;
         this.vendorRepository = vendorRepository;
         this.emailService = emailService;
-    }
-
-    @Value("${subscription.limits.active-leads:500}")
-    void setMaxActiveLeads(int maxActiveLeads) {
-        if (maxActiveLeads > 0) {
-            this.maxActiveLeads = maxActiveLeads;
-        }
-    }
-
-    @Value("${subscription.limits.ai-executions:1000}")
-    void setMaxAiExecutions(int maxAiExecutions) {
-        if (maxAiExecutions > 0) {
-            this.maxAiExecutions = maxAiExecutions;
-        }
+        this.planService = planService;
     }
 
     public void checkQuota(UUID vendorId, QuotaType type) {
@@ -94,12 +81,12 @@ public class QuotaService {
 
         UsageResponse.ResourceUsage leads =
             new UsageResponse.ResourceUsage(
-                leadsUsage.getUsed(), maxActiveLeads
+                leadsUsage.getUsed(), planService.getActivePlan().getMaxLeads()
             );
 
         UsageResponse.ResourceUsage ai =
             new UsageResponse.ResourceUsage(
-                aiUsage.getUsed(), maxAiExecutions
+                aiUsage.getUsed(), planService.getActivePlan().getMaxAiExecutions()
             );
 
         return new UsageResponse(
@@ -109,11 +96,16 @@ public class QuotaService {
         );
         }
 
+    public void initializePlanLimits(UUID vendorId) {
+        getOrCreateUsage(vendorId, QuotaType.ACTIVE_LEADS);
+        getOrCreateUsage(vendorId, QuotaType.AI_EXECUTIONS);
+    }
+
     private int getLimit(QuotaType type) {
 
         return switch (type) {
-            case ACTIVE_LEADS -> maxActiveLeads;
-            case AI_EXECUTIONS -> maxAiExecutions;
+            case ACTIVE_LEADS -> planService.getActivePlan().getMaxLeads();
+            case AI_EXECUTIONS -> planService.getActivePlan().getMaxAiExecutions();
         };
     }
 

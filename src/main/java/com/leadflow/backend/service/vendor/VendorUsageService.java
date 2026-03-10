@@ -5,10 +5,10 @@ import com.leadflow.backend.entities.vendor.Vendor;
 import com.leadflow.backend.entities.vendor.VendorUsage;
 import com.leadflow.backend.repository.VendorRepository;
 import com.leadflow.backend.repository.VendorUsageRepository;
+import com.leadflow.backend.service.PlanService;
 import com.leadflow.backend.service.notification.SendGridEmailService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,19 +26,16 @@ public class VendorUsageService {
     private final VendorUsageRepository repository;
     private final VendorRepository vendorRepository;
     private final SendGridEmailService emailService;
-
-    @Value("${subscription.limits.active-leads:500}")
-    private int maxActiveLeads;
-
-    @Value("${subscription.limits.ai-executions:1000}")
-    private int maxAiExecutions;
+    private final PlanService planService;
 
     public VendorUsageService(VendorUsageRepository repository,
                               VendorRepository vendorRepository,
-                              SendGridEmailService emailService) {
+                              SendGridEmailService emailService,
+                              PlanService planService) {
         this.repository = repository;
         this.vendorRepository = vendorRepository;
         this.emailService = emailService;
+        this.planService = planService;
     }
 
     @Transactional
@@ -108,8 +105,8 @@ public class VendorUsageService {
 
     private int getLimit(QuotaType type) {
         return switch (type) {
-            case ACTIVE_LEADS -> maxActiveLeads;
-            case AI_EXECUTIONS -> maxAiExecutions;
+            case ACTIVE_LEADS -> planService.getActivePlan().getMaxLeads();
+            case AI_EXECUTIONS -> planService.getActivePlan().getMaxAiExecutions();
         };
     }
 }

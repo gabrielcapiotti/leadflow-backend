@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .alert-box {
+            background-color: #fef5e7;
+            border-left: 4px solid #f39c12;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .payment-details {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+        }
+        .payment-details p {
+            margin: 8px 0;
+        }
+        .label {
+            font-weight: bold;
+            color: #666;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 20px;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .button:hover {
+            background-color: #764ba2;
+        }
+        .button-danger {
+            background-color: #e74c3c;
+        }
+        .button-danger:hover {
+            background-color: #c0392b;
+        }
+        .footer {
+            background-color: #f0f0f0;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #ddd;
+        }
+        .highlight {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        ul {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚠️ Falha no Pagamento</h1>
+        </div>
+        
+        <div class="content">
+            <p>Olá <strong th:text="${tenantName}">Tenant</strong>,</p>
+            
+            <p>Tentamos processar seu pagamento em <span th:text="${failureDate}">DATA</span>, mas infelizmente <span class="highlight">a transação foi recusada</span>.</p>
+            
+            <div class="alert-box">
+                <p><strong>Sua assinatura foi marcada como "Vencida".</strong></p>
+                <p>Você mantém acesso limitado por 7 dias para resolver o pagamento.</p>
+            </div>
+            
+            <h3>Detalhes do Pagamento</h3>
+            <div class="payment-details">
+                <p><span class="label">Data da Falha:</span> <span th:text="${failureDate}">DATA</span></p>
+                <p><span class="label">Motivo:</span> <span th:text="${failureReason}">Razão da recusa</span></p>
+                <p><span class="label">Valor:</span> <strong th:text="${amount}">$99.99</strong></p>
+            </div>
+            
+            <h3>O que você pode fazer?</h3>
+            <ul>
+                <li><strong>Atualize seu método de pagamento</strong> na conta</li>
+                <li><strong>Verifique com seu banco</strong> se há restrições</li>
+                <li><strong>Contate-nos</strong> se precisar de ajuda</li>
+            </ul>
+            
+            <p><strong>Ação recomendada:</strong> Clique no botão abaixo para resolver o pagamento em até 7 dias:</p>
+            
+            <a th:href="${updatePaymentUrl}" class="button">Atualizar Método de Pagamento</a>
+            
+            <p>Ou se preferir:</p>
+            
+            <a th:href="${retryPaymentUrl}" class="button">Tentar Novo Pagamento</a>
+            
+            <h3>Precisa de ajuda?</h3>
+            <p>Se você acredita que este é um erro ou precisa de assistência, entre em contato com nosso suporte em 
+                <a href="mailto:support@leadflow.com">support@leadflow.com</a>
+            </p>
+            <p>Você tem <span class="highlight">7 dias</span> para resolver isso antes que sua assinatura seja automaticamente cancelada.</p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; 2026 LeadFlow. Todos os direitos reservados.</p>
+            <p>Este é um email automático, por favor não responda.</p>
+        </div>
+    </div>
+</body>
+</html>

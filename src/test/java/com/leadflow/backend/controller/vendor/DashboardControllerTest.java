@@ -1,5 +1,6 @@
 package com.leadflow.backend.controller.vendor;
 
+import com.leadflow.backend.config.TestBillingConfig;
 import com.leadflow.backend.controller.DashboardController;
 import com.leadflow.backend.dto.vendor.DashboardResponse;
 import com.leadflow.backend.entities.vendor.LeadStage;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -32,6 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = DashboardController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
+@Import(TestBillingConfig.class)
 class DashboardControllerTest {
 
     @Autowired

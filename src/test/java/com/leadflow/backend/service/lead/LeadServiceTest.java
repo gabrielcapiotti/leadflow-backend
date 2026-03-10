@@ -7,6 +7,10 @@ import com.leadflow.backend.entities.user.Role;
 import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.repository.lead.LeadRepository;
 import com.leadflow.backend.repository.lead.LeadStatusHistoryRepository;
+import com.leadflow.backend.repository.user.UserRepository;
+import com.leadflow.backend.security.VendorContext;
+import com.leadflow.backend.service.vendor.SubscriptionService;
+import com.leadflow.backend.service.vendor.UsageService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,6 +37,18 @@ class LeadServiceTest {
 
     @Mock
     private LeadStatusHistoryRepository historyRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private VendorContext vendorContext;
+
+    @Mock
+    private UsageService usageService;
+
+    @Mock
+    private SubscriptionService subscriptionService;
 
     @InjectMocks
     private LeadService leadService;
@@ -66,6 +82,12 @@ class LeadServiceTest {
     @DisplayName("Should create lead and register history")
     void shouldCreateLead() {
 
+        UUID tenantId = UUID.randomUUID();
+
+        when(vendorContext.getCurrentVendorId()).thenReturn(tenantId);
+
+        doNothing().when(subscriptionService).validateActiveSubscription(tenantId);
+
         when(leadRepository.existsByUserIdAndEmailIgnoreCaseAndDeletedAtIsNull(
                 user.getId(),
                 "lead@example.com"
@@ -94,6 +116,7 @@ class LeadServiceTest {
 
         verify(leadRepository).save(any(Lead.class));
         verify(historyRepository).save(any(LeadStatusHistory.class));
+        verify(usageService).consumeLead(any(UUID.class));
     }
 
     @Test

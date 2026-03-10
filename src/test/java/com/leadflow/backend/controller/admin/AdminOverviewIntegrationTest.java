@@ -4,10 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leadflow.backend.BackendApplication;
 import com.leadflow.backend.IntegrationTestBase;
+import com.leadflow.backend.config.TestBillingConfig;
 import com.leadflow.backend.dto.auth.RegisterRequest;
 import com.leadflow.backend.entities.Tenant;
-import com.leadflow.backend.entities.user.Role;
-import com.leadflow.backend.entities.user.User;
 import com.leadflow.backend.entities.vendor.SubscriptionStatus;
 import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.repository.VendorAuditLogRepository;
@@ -24,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -43,6 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = BackendApplication.class)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Import(TestBillingConfig.class)
 class AdminOverviewIntegrationTest extends IntegrationTestBase {
 
     private static final String TENANT_NAME = "tenant_admin_test";
@@ -349,19 +350,13 @@ class AdminOverviewIntegrationTest extends IntegrationTestBase {
     @Test
     void shouldReturn401WhenNoToken() throws Exception {
 
-        TenantContext.setTenant(tenantSchema);
-
-        try {
-            mockMvc.perform(
-                    get("/admin/overview")
-                            .header("X-Tenant-ID", tenantSchema)
-                            .header("User-Agent", USER_AGENT)
-                            .header("X-Device-Fingerprint", DEVICE_FINGERPRINT)
-            )
-            .andExpect(status().isUnauthorized());
-        } finally {
-            TenantContext.clear();
-        }
+        mockMvc.perform(
+                get("/admin/overview")
+                        .header("X-Tenant-ID", tenantSchema)
+                        .header("User-Agent", USER_AGENT)
+                        .header("X-Device-Fingerprint", DEVICE_FINGERPRINT)
+        )
+        .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -369,20 +364,14 @@ class AdminOverviewIntegrationTest extends IntegrationTestBase {
 
         String userToken = loginAndGetAccessToken(userEmail, PASSWORD);
 
-        TenantContext.setTenant(tenantSchema);
-
-        try {
-            mockMvc.perform(
-                    get("/admin/overview")
-                            .header("X-Tenant-ID", tenantSchema)
-                            .header("User-Agent", USER_AGENT)
-                            .header("X-Device-Fingerprint", DEVICE_FINGERPRINT)
-                            .header("Authorization", "Bearer " + userToken)
-            )
-            .andExpect(status().isForbidden());
-        } finally {
-            TenantContext.clear();
-        }
+        mockMvc.perform(
+                get("/admin/overview")
+                        .header("X-Tenant-ID", tenantSchema)
+                        .header("User-Agent", USER_AGENT)
+                        .header("X-Device-Fingerprint", DEVICE_FINGERPRINT)
+                        .header("Authorization", "Bearer " + userToken)
+        )
+        .andExpect(status().isForbidden());
     }
 
     @Test
@@ -390,20 +379,14 @@ class AdminOverviewIntegrationTest extends IntegrationTestBase {
 
         String adminToken = loginAndGetAccessToken(adminEmail, PASSWORD);
 
-        TenantContext.setTenant(tenantSchema);
-
-        try {
-            mockMvc.perform(
-                    get("/admin/overview")
-                            .header("X-Tenant-ID", tenantSchema)
-                            .header("User-Agent", USER_AGENT)
-                            .header("X-Device-Fingerprint", DEVICE_FINGERPRINT)
-                            .header("Authorization", "Bearer " + adminToken)
-            )
-            .andExpect(status().isOk());
-        } finally {
-            TenantContext.clear();
-        }
+        mockMvc.perform(
+                get("/admin/overview")
+                        .header("X-Tenant-ID", tenantSchema)
+                        .header("User-Agent", USER_AGENT)
+                        .header("X-Device-Fingerprint", DEVICE_FINGERPRINT)
+                        .header("Authorization", "Bearer " + adminToken)
+        )
+        .andExpect(status().isOk());
     }
 
     @Test

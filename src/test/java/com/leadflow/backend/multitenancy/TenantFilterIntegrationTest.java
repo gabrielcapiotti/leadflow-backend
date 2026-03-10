@@ -1,6 +1,7 @@
 package com.leadflow.backend.multitenancy;
 
 import com.leadflow.backend.IntegrationTestBase;
+import com.leadflow.backend.config.TestBillingConfig;
 import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.util.TestTenantFactory;
 
@@ -22,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import(TestTenantFactory.class)
+@Import({TestTenantFactory.class, TestBillingConfig.class})
 @ActiveProfiles("test")
 @TestPropertySource(properties = {
         "multitenancy.enabled=true",
