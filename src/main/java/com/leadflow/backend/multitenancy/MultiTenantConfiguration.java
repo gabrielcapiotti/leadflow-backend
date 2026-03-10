@@ -32,7 +32,7 @@ public class MultiTenantConfiguration {
         FilterRegistrationBean<TenantFilter> registrationBean = new FilterRegistrationBean<>();
         registrationBean.setFilter(tenantFilter);
         registrationBean.setOrder(-1);  // Run before Spring Security filters
-        registrationBean.addUrlPatterns("/api/*", "/stripe/*", "/webhook/*");
+        registrationBean.addUrlPatterns("/api/*", "/auth/*", "/admin/*", "/stripe/*", "/webhook/*");
         log.info("TenantFilter registered in filter chain with order -1");
         return registrationBean;
     }

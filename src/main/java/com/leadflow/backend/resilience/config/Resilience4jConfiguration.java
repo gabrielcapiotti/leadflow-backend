@@ -131,9 +131,8 @@ public class Resilience4jConfiguration {
     public Retry stripeRetry(RetryRegistry retryRegistry) {
         RetryConfig config = RetryConfig.custom()
                 .maxAttempts(3)                                   // Retry up to 3 times
-                .waitDuration(Duration.ofMillis(500))            // Initial wait: 500ms
                 .intervalFunction(io.github.resilience4j.core.IntervalFunction
-                        .ofExponentialRandomBackoff(500, 2))    // Exponential backoff: 2x
+                        .ofExponentialRandomBackoff(500, 2))    // Exponential backoff: 500ms initial, 2x multiplier
                 .retryOnException(throwable ->
                     shouldRetry(throwable)                       // Retry only on certain exceptions
                 )

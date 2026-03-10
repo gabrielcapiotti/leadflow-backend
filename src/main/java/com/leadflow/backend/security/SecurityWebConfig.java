@@ -1,5 +1,6 @@
 package com.leadflow.backend.security;
 
+import com.leadflow.backend.multitenancy.filter.TenantFilter;
 import com.leadflow.backend.security.jwt.JwtAuthenticationFilter;
 import com.leadflow.backend.security.jwt.JwtService;
 import com.leadflow.backend.multitenancy.service.TenantService;
@@ -82,7 +83,8 @@ public class SecurityWebConfig {
             HttpSecurity http,
             ObjectProvider<JwtAuthenticationFilter> jwtFilterProvider,
             RateLimitFilter rateLimitFilter,
-            CorsConfigurationSource corsConfigurationSource
+            CorsConfigurationSource corsConfigurationSource,
+            TenantFilter tenantFilter
     ) throws Exception {
 
         http
@@ -143,6 +145,12 @@ public class SecurityWebConfig {
             );
 
         JwtAuthenticationFilter jwtFilter = jwtFilterProvider.getIfAvailable();
+
+        // TenantFilter must run FIRST to set TenantContext before any authentication
+        http.addFilterBefore(
+                tenantFilter,
+                UsernamePasswordAuthenticationFilter.class
+        );
 
         if (jwtFilter != null) {
             http.addFilterBefore(
