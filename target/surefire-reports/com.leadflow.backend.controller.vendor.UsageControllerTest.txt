@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.leadflow.backend.controller.vendor.UsageControllerTest
 -------------------------------------------------------------------------------
-Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.628 s - in com.leadflow.backend.controller.vendor.UsageControllerTest
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.642 s - in com.leadflow.backend.controller.vendor.UsageControllerTest
