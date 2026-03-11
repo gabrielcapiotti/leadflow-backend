@@ -24,7 +24,7 @@ public class TenantFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
 
         String path = request.getRequestURI();
 
@@ -60,9 +60,13 @@ public class TenantFilter extends OncePerRequestFilter {
         FilterChain safeFilterChain =
                 Objects.requireNonNull(filterChain, "FilterChain must not be null");
 
+        // Always clear before processing to avoid stale context
+        TenantContext.clear();
+        
+        String tenant = null;
         try {
 
-            String tenant = tenantResolver.resolveTenant(safeRequest);
+            tenant = tenantResolver.resolveTenant(safeRequest);
 
             if (tenant == null || tenant.isBlank()) {
 
@@ -93,7 +97,7 @@ public class TenantFilter extends OncePerRequestFilter {
 
         } finally {
 
-            // Evita vazamento de tenant entre threads
+            // Clean up ThreadLocal to prevent leaks between requests
             TenantContext.clear();
         }
     }

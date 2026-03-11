@@ -10,7 +10,6 @@ C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\leadflow-backend\src\m
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\leadflow-backend\src\main\java\com\leadflow\backend\service\vendor\VendorUsageService.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\leadflow-backend\src\main\java\com\leadflow\backend\service\billing\StripeService.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\leadflow-backend\src\main\java\com\leadflow\backend\controller\StripeWebhookController.java
-C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\leadflow-backend\src\main\java\com\leadflow\backend\multitenancy\TenantContext.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\leadflow-backend\src\main\java\com\leadflow\backend\audit\Audit.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\leadflow-backend\src\main\java\com\leadflow\backend\webhook\repository\FailedWebhookRepository.java
 C:\Users\Gabri\OneDrive\햞ea de Trabalho\leadflow-backend\leadflow-backend\src\main\java\com\leadflow\backend\webhook\validator\WebhookTenantValidator.java

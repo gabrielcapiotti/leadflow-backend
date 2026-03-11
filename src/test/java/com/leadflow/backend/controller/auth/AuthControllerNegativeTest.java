@@ -100,6 +100,7 @@ class AuthControllerNegativeTest {
     /* REGISTER */
 
     @Test
+    @SuppressWarnings("null")
     void shouldReturn400WhenEmailIsInvalidOnRegister() throws Exception {
 
         RegisterRequest request =
@@ -117,6 +118,7 @@ class AuthControllerNegativeTest {
     }
 
     @Test
+    @SuppressWarnings("null")
     void shouldReturn400WhenPasswordIsTooShortOnRegister() throws Exception {
 
         RegisterRequest request =
@@ -134,6 +136,7 @@ class AuthControllerNegativeTest {
     }
 
     @Test
+    @SuppressWarnings("null")
     void shouldReturnBusinessErrorWhenAuthServiceThrowsIllegalArgument() throws Exception {
 
         RegisterRequest request =
@@ -158,6 +161,7 @@ class AuthControllerNegativeTest {
     /* LOGIN */
 
     @Test
+    @SuppressWarnings("null")
     void shouldReturn400WhenEmailIsInvalidOnLogin() throws Exception {
 
         LoginRequest request =
@@ -174,6 +178,7 @@ class AuthControllerNegativeTest {
     }
 
     @Test
+    @SuppressWarnings("null")
     void shouldReturn401WhenBadCredentialsExceptionIsThrownOnLogin() throws Exception {
 
         LoginRequest request =

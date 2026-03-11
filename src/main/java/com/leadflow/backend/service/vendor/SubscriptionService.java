@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -31,7 +32,6 @@ public class SubscriptionService {
 
     private final VendorRepository vendorRepository;
     private final SubscriptionAuditService auditService;
-    private final VendorService vendorService;
     private final PlanService planService;
     private final UsageService usageService;
     private final SubscriptionRepository subscriptionRepository;
@@ -40,7 +40,6 @@ public class SubscriptionService {
 
     public SubscriptionService(VendorRepository vendorRepository,
                                SubscriptionAuditService auditService,
-                               VendorService vendorService,
                                PlanService planService,
                                UsageService usageService,
                                SubscriptionRepository subscriptionRepository,
@@ -48,7 +47,6 @@ public class SubscriptionService {
                                SubscriptionNotificationService notificationService) {
         this.vendorRepository = vendorRepository;
         this.auditService = auditService;
-        this.vendorService = vendorService;
         this.planService = planService;
         this.usageService = usageService;
         this.subscriptionRepository = subscriptionRepository;
@@ -336,7 +334,7 @@ public class SubscriptionService {
             subscription.setExpiresAt(newExpiresAt);
         }
 
-        subscriptionRepository.save(subscription);
+        subscriptionRepository.save(Objects.requireNonNull(subscription));
 
         log.info("Subscription updated for tenant: {} - Status: {}", 
             subscription.getTenantId(), subscription.getStatus());
@@ -350,15 +348,17 @@ public class SubscriptionService {
                                   String stripeEventId) {
         try {
             subscriptionAuditRepository.save(
-                SubscriptionAudit.builder()
-                    .subscriptionId(subscription.getId())
-                    .tenantId(subscription.getTenantId())
-                    .stripeSubscriptionId(subscription.getStripeSubscriptionId())
-                    .statusFrom(statusFrom)
-                    .statusTo(statusTo)
-                    .reason(reason)
-                    .stripeEventId(stripeEventId)
-                    .build()
+                Objects.requireNonNull(
+                    SubscriptionAudit.builder()
+                        .subscriptionId(subscription.getId())
+                        .tenantId(subscription.getTenantId())
+                        .stripeSubscriptionId(subscription.getStripeSubscriptionId())
+                        .statusFrom(statusFrom)
+                        .statusTo(statusTo)
+                        .reason(reason)
+                        .stripeEventId(stripeEventId)
+                        .build()
+                )
             );
             
             log.info("Audit trail recorded: {} -> {} for tenant {}", 
@@ -386,40 +386,6 @@ public class SubscriptionService {
                     subscription.getTenantId(), e);
             }
         }
-    }
-
-    private Optional<Vendor> findVendorByStripeIds(String subscriptionId, String customerId) {
-        if (subscriptionId != null && !subscriptionId.isBlank()) {
-            Optional<Vendor> bySubscription = vendorRepository.findByExternalSubscriptionId(subscriptionId);
-            if (bySubscription.isPresent()) {
-                return bySubscription;
-            }
-        }
-
-        if (customerId != null && !customerId.isBlank()) {
-            return vendorRepository.findByExternalCustomerId(customerId);
-        }
-
-        return Optional.empty();
-    }
-
-    private void safeTransition(Vendor vendor,
-                                SubscriptionStatus target,
-                                String reason,
-                                String externalEventId) {
-        SubscriptionStatus current = vendor.getSubscriptionStatus();
-
-        if (current == target) {
-            return;
-        }
-
-        if (current.canTransitionTo(target)) {
-            transition(vendor, target, reason, externalEventId);
-            return;
-        }
-
-        log.warn("Invalid subscription transition ignored. vendorId={}, from={}, to={}",
-                vendor.getId(), current, target);
     }
 
     /**

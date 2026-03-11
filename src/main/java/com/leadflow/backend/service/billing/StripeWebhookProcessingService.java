@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -57,7 +58,7 @@ public class StripeWebhookProcessingService {
             .maxRetries(3)
             .build();
 
-        eventLogRepository.save(eventLog);
+        eventLogRepository.save(Objects.requireNonNull(eventLog));
 
         log.info("Event registered: {} (type: {})", eventId, event.getType());
 

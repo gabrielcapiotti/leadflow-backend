@@ -216,17 +216,6 @@ public class StripeService {
         return resolved;
     }
 
-    private String normalizePlan(String rawPlan) {
-        if (rawPlan == null || rawPlan.isBlank()) {
-            return "default";
-        }
-        String normalized = rawPlan.trim().toLowerCase(Locale.ROOT);
-        if ("pro".equals(normalized)) {
-            return "pro";
-        }
-        return "default";
-    }
-
     private String localPart(String email) {
         if (!email.contains("@")) {
             return "vendor";

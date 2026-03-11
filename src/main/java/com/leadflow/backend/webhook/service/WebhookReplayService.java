@@ -1,13 +1,11 @@
 package com.leadflow.backend.webhook.service;
 
-import com.leadflow.backend.service.billing.StripeService;
 import com.leadflow.backend.service.billing.StripeWebhookProcessor;
 import com.leadflow.backend.webhook.entity.FailedWebhookEvent;
 import com.leadflow.backend.webhook.repository.FailedWebhookRepository;
 import com.stripe.model.Event;
 import com.google.gson.JsonSyntaxException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Objects;
 
 /**
  * Service for replaying failed webhook events.
@@ -46,7 +45,6 @@ public class WebhookReplayService {
     @Value("${webhook.replay.batch-size:10}")
     private int batchSize;
 
-    @Autowired
     public WebhookReplayService(
             FailedWebhookRepository failedWebhookRepository,
             StripeWebhookProcessor webhookProcessor) {
@@ -201,10 +199,10 @@ public class WebhookReplayService {
      */
     @Transactional
     public FailedWebhookEvent manualReplay(String webhookId) {
-        FailedWebhookEvent event = failedWebhookRepository.findById(webhookId)
+        FailedWebhookEvent event = failedWebhookRepository.findById(Objects.requireNonNull(webhookId))
                 .orElseThrow(() -> new IllegalArgumentException("Webhook not found: " + webhookId));
 
-        log.info("Manual replay requested for webhook: {}", webhookId);
+        log.info("Manual replay requested for webhook: {}", Objects.requireNonNull(webhookId));
         
         if (event.getRetryCount() < event.getMaxRetries()) {
             // Reset for replay
@@ -293,8 +291,8 @@ public class WebhookReplayService {
      */
     @Transactional
     public void deleteWebhook(String webhookId) {
-        failedWebhookRepository.deleteById(webhookId);
-        log.info("Deleted webhook event: {}", webhookId);
+        failedWebhookRepository.deleteById(Objects.requireNonNull(webhookId));
+        log.info("Deleted webhook event: {}", Objects.requireNonNull(webhookId));
     }
 
     /**

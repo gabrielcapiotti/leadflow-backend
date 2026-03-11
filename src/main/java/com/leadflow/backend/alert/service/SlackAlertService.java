@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.Objects;
 
 /**
  * Slack notification service for webhook and billing alerts
@@ -273,7 +274,7 @@ public class SlackAlertService {
         String payload = objectMapper.writeValueAsString(slackMessage);
         
         try {
-            restTemplate.postForObject(slackWebhookUrl, payload, String.class);
+            restTemplate.postForObject(Objects.requireNonNull(slackWebhookUrl), payload, String.class);
             log.debug("Slack alert sent successfully");
         } catch (RestClientException e) {
             log.error("Failed to send Slack alert", e);

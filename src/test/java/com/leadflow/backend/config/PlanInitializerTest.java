@@ -9,6 +9,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Objects;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -28,6 +30,7 @@ class PlanInitializerTest {
     }
 
     @Test
+    @SuppressWarnings("null")
     void shouldCreatePlanWhenNoPlanExists() {
         // Arrange
         when(planRepository.count()).thenReturn(0L);
@@ -40,8 +43,8 @@ class PlanInitializerTest {
         ArgumentCaptor<Plan> planCaptor = ArgumentCaptor.forClass(Plan.class);
         verify(planRepository).save(planCaptor.capture());
 
-        Plan savedPlan = planCaptor.getValue();
-        assertEquals("Leadflow Standard", savedPlan.getName());
+        Plan savedPlan = Objects.requireNonNull((Plan) planCaptor.getValue());
+        assertEquals("Leadflow Standard", Objects.requireNonNull(savedPlan).getName());
         assertEquals(500, savedPlan.getMaxLeads());
         assertEquals(10, savedPlan.getMaxUsers());
         assertEquals(1000, savedPlan.getMaxAiExecutions());
@@ -49,6 +52,7 @@ class PlanInitializerTest {
     }
 
     @Test
+    @SuppressWarnings("null")
     void shouldNotCreatePlanWhenPlanAlreadyExists() {
         // Arrange
         when(planRepository.count()).thenReturn(1L);
@@ -61,6 +65,7 @@ class PlanInitializerTest {
     }
 
     @Test
+    @SuppressWarnings("null")
     void shouldCreatePlanWithCorrectLimits() {
         // Arrange
         when(planRepository.count()).thenReturn(0L);
@@ -72,8 +77,8 @@ class PlanInitializerTest {
         ArgumentCaptor<Plan> planCaptor = ArgumentCaptor.forClass(Plan.class);
         verify(planRepository).save(planCaptor.capture());
 
-        Plan plan = planCaptor.getValue();
-        assertEquals(500, plan.getMaxLeads(), "Max leads should be 500");
+        Plan plan = Objects.requireNonNull((Plan) planCaptor.getValue());
+        assertEquals(500, Objects.requireNonNull(plan).getMaxLeads(), "Max leads should be 500");
         assertEquals(10, plan.getMaxUsers(), "Max users should be 10");
         assertEquals(1000, plan.getMaxAiExecutions(), "Max AI executions should be 1000");
     }

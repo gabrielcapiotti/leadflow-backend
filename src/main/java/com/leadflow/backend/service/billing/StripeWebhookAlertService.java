@@ -12,6 +12,7 @@ import jakarta.mail.internet.MimeMessage;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -28,7 +29,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public class StripeWebhookAlertService {
 
-    private static final int DEFAULT_FAILURE_THRESHOLD = 5;
     private static final long ALERT_COOLDOWN_MS = 3600000; // 1 hora
     private static final int WINDOW_SIZE_MS = 300000; // 5 minutos
 
@@ -159,10 +159,10 @@ public class StripeWebhookAlertService {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-        helper.setFrom(emailFrom, emailFromName);
-        helper.setTo(alertEmail);
-        helper.setSubject(subject);
-        helper.setText(htmlContent, true);
+        helper.setFrom(Objects.requireNonNull(emailFrom), Objects.requireNonNull(emailFromName));
+        helper.setTo(Objects.requireNonNull(alertEmail));
+        helper.setSubject(Objects.requireNonNull(subject));
+        helper.setText(Objects.requireNonNull(htmlContent), true);
 
         mailSender.send(message);
         log.info("Alert email sent to {} about webhook failures for event type: {}", alertEmail, eventType);

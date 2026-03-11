@@ -96,7 +96,6 @@ com\leadflow\backend\dto\billing\BillingDashboardDTO.class
 com\leadflow\backend\scheduler\SaaSAutomationScheduler.class
 com\leadflow\backend\service\billing\PaymentEventService.class
 com\leadflow\backend\service\vendor\ConversationService.class
-com\leadflow\backend\multitenancy\TenantContext.class
 com\leadflow\backend\dto\admin\ForecastPoint.class
 com\leadflow\backend\service\billing\StripeWebhookAlertService$FailureWindow.class
 com\leadflow\backend\service\admin\AdminService.class
@@ -168,6 +167,7 @@ com\leadflow\backend\entities\system\SystemAuditLog.class
 com\leadflow\backend\repository\VendorFeatureRepository.class
 com\leadflow\backend\entities\vendor\SubscriptionStatus$1.class
 com\leadflow\backend\dto\lead\LeadStatusHistoryResponse.class
+com\leadflow\backend\multitenancy\context\TenantContext$TenantContextScope.class
 com\leadflow\backend\repository\AuditLogRepository.class
 com\leadflow\backend\service\vendor\SubscriptionScheduler.class
 com\leadflow\domain\auth\dto\ForgotPasswordRequest.class
@@ -215,7 +215,6 @@ com\leadflow\backend\multitenancy\provider\MultiTenantConnectionProviderImpl.cla
 com\leadflow\backend\security\SubscriptionGuard.class
 com\leadflow\backend\service\billing\StripeWebhookAlertService.class
 com\leadflow\backend\webhook\repository\FailedWebhookRepository.class
-com\leadflow\backend\service\notification\EmailRetryWorker$EmailRetryCallback.class
 com\leadflow\backend\service\billing\StripeEventRetryScheduler.class
 com\leadflow\backend\entities\vendor\VendorRiskAlert.class
 com\leadflow\backend\dto\vendor\AlertDTO.class
@@ -316,7 +315,6 @@ com\leadflow\backend\dto\settings\SettingResponse.class
 com\leadflow\backend\dto\role\RoleResponse.class
 com\leadflow\backend\service\vendor\VendorLeadService.class
 com\leadflow\backend\entities\vendor\VendorFeature.class
-com\leadflow\backend\multitenancy\TenantContext$TenantContextScope.class
 com\leadflow\backend\alert\service\EmailAlertService.class
 com\leadflow\backend\entities\vendor\EmailEvent.class
 com\leadflow\backend\quota\CheckQuota.class

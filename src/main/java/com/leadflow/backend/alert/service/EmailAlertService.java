@@ -2,7 +2,6 @@ package com.leadflow.backend.alert.service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -15,6 +14,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.Objects;
 
 /**
  * Email alert service for critical system events
@@ -261,9 +261,9 @@ public class EmailAlertService {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-        helper.setTo(alertEmailAddress);
-        helper.setSubject(subject);
-        helper.setText(htmlContent, true);
+        helper.setTo(Objects.requireNonNull(alertEmailAddress));
+        helper.setSubject(Objects.requireNonNull(subject));
+        helper.setText(Objects.requireNonNull(htmlContent), true);
         helper.setFrom("alerts@leadflow.com");
 
         mailSender.send(message);

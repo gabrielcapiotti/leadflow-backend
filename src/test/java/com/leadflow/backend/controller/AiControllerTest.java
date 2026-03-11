@@ -131,6 +131,7 @@ class AiControllerTest {
 
     @Test
     @WithMockUser(username = "test@example.com")
+    @SuppressWarnings("null")
     void chatShouldReturnForbiddenWhenFeatureDisabled() throws Exception {
 
         ChatRequest request = new ChatRequest();
@@ -155,6 +156,7 @@ class AiControllerTest {
 
     @Test
     @WithMockUser(username = "test@example.com")
+    @SuppressWarnings("null")
     void chatShouldSucceedWhenFeatureEnabled() throws Exception {
 
         ChatRequest request = new ChatRequest();

@@ -1,6 +1,6 @@
 package com.leadflow.backend.webhook.controller;
 
-import com.leadflow.backend.multitenancy.TenantContext;
+import com.leadflow.backend.multitenancy.context.TenantContext;
 import com.leadflow.backend.webhook.entity.FailedWebhookEvent;
 import com.leadflow.backend.webhook.service.WebhookReplayService;
 import com.leadflow.backend.webhook.validator.WebhookTenantValidator;
@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,7 +39,6 @@ public class WebhookReplayController {
     private final WebhookReplayService webhookReplayService;
     private final WebhookTenantValidator tenantValidator;
 
-    @Autowired
     public WebhookReplayController(
             WebhookReplayService webhookReplayService,
             WebhookTenantValidator tenantValidator) {
@@ -160,7 +158,7 @@ public class WebhookReplayController {
 
         log.info("Manual replay requested for webhook: {}", webhookId);
         try {
-            String tenantId = TenantContext.getCurrentTenant();
+            String tenantId = TenantContext.getTenant();
             
             // Validate webhook belongs to current tenant
             tenantValidator.validateFailedWebhookTenant(webhookId, tenantId);
@@ -228,7 +226,7 @@ public class WebhookReplayController {
 
         log.info("Delete requested for webhook: {}", webhookId);
         try {
-            String tenantId = TenantContext.getCurrentTenant();
+            String tenantId = TenantContext.getTenant();
             
             // Validate webhook belongs to current tenant
             tenantValidator.validateFailedWebhookTenant(webhookId, tenantId);

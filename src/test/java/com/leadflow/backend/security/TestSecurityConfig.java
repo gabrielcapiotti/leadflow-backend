@@ -1,5 +1,8 @@
 package com.leadflow.backend.security;
 
+import com.leadflow.backend.multitenancy.filter.TenantFilter;
+import com.leadflow.backend.security.jwt.JwtAuthenticationFilter;
+
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.context.annotation.Bean;
@@ -7,6 +10,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Configuration;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -16,6 +20,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -25,7 +30,11 @@ public class TestSecurityConfig {
 
     @Bean
     @Primary
-    public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain testSecurityFilterChain(
+            HttpSecurity http,
+            ObjectProvider<JwtAuthenticationFilter> jwtFilterProvider,
+            TenantFilter tenantFilter
+    ) throws Exception {
 
         http
             .csrf(csrf -> csrf.disable())
@@ -34,7 +43,16 @@ public class TestSecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
 
-            .authorizeHttpRequests(auth -> auth
+            // Add TenantFilter FIRST - must run before JWT validation
+            .addFilterBefore(tenantFilter, UsernamePasswordAuthenticationFilter.class);
+
+        JwtAuthenticationFilter jwtFilter = jwtFilterProvider.getIfAvailable();
+        if (jwtFilter != null) {
+            // Add JwtAuthenticationFilter AFTER TenantFilter
+            http.addFilterAfter(jwtFilter, TenantFilter.class);
+        }
+
+        http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                         "/auth/**",
                         "/error",
@@ -56,9 +74,7 @@ public class TestSecurityConfig {
                 .accessDeniedHandler((req, res, e) ->
                         res.sendError(HttpServletResponse.SC_FORBIDDEN)
                 )
-            )
-
-            .httpBasic(); // útil para testes MockMvc
+            );
 
         return http.build();
     }

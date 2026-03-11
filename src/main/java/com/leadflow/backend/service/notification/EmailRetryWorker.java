@@ -9,8 +9,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.retry.RetryCallback;
-import org.springframework.retry.RetryContext;
 import java.time.Instant;
 import java.util.List;
 
@@ -122,12 +120,5 @@ public class EmailRetryWorker {
         return message.length() <= 1000
                 ? message
                 : message.substring(0, 1000);
-    }
-
-    private class EmailRetryCallback implements RetryCallback<Void, RuntimeException> {
-        @Override
-        public Void doWithRetry(RetryContext context) {
-            return null;
-        }
     }
 }

@@ -2,18 +2,20 @@ package com.leadflow.backend.alert.config;
 
 import com.leadflow.backend.alert.service.SlackAlertService;
 import com.leadflow.backend.alert.service.EmailAlertService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.TemplateEngine;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Configuration for alerting services
- * 
+ *
  * Automatically detects and configures:
  * - Slack alerting (if slack.webhook.url is set)
  * - Email alerting (if alert.email.to is set)
@@ -27,22 +29,23 @@ public class AlertingConfiguration {
      */
     @Bean
     public SlackAlertService slackAlertService(
-        RestTemplate restTemplate,
-        ObjectMapper objectMapper) {
+            RestTemplate restTemplate,
+            ObjectMapper objectMapper) {
+
         SlackAlertService service = new SlackAlertService(
-            null, // Will be injected from properties
-            null, // Will be injected from properties
-            null, // Will be injected from properties
-            restTemplate,
-            objectMapper
+                null, // injected later from properties
+                null,
+                null,
+                restTemplate,
+                objectMapper
         );
-        
+
         if (service.isConfigured()) {
             log.info("Slack alerting service initialized");
         } else {
             log.debug("Slack alerting service not configured (slack.webhook.url not set)");
         }
-        
+
         return service;
     }
 
@@ -52,30 +55,24 @@ public class AlertingConfiguration {
     @Bean
     @ConditionalOnBean(JavaMailSender.class)
     public EmailAlertService emailAlertService(
-        JavaMailSender mailSender,
-        TemplateEngine templateEngine) {
+            JavaMailSender mailSender,
+            TemplateEngine templateEngine) {
+
         EmailAlertService service = new EmailAlertService(
-            mailSender,
-            templateEngine,
-            null, // Will be injected from properties
-            null, // Will be injected from properties
-            null  // Will be injected from properties
+                mailSender,
+                templateEngine,
+                null, // injected later from properties
+                null,
+                null
         );
-        
+
         if (service.isConfigured()) {
             log.info("Email alerting service initialized");
         } else {
             log.debug("Email alerting service not configured (alert.email.to not set)");
         }
-        
+
         return service;
     }
 
-    /**
-     * ObjectMapper bean for JSON processing
-     */
-    @Bean
-    public ObjectMapper objectMapper() {
-        return new ObjectMapper();
-    }
 }

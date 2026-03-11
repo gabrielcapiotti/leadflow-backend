@@ -1,5 +1,6 @@
 package com.leadflow.backend;
 
+import com.leadflow.backend.alert.monitor.AlertMonitor;
 import com.leadflow.backend.multitenancy.identifier.CurrentTenantIdentifierResolverImpl;
 import com.leadflow.backend.multitenancy.provider.MultiTenantConnectionProviderImpl;
 import com.leadflow.backend.multitenancy.service.TenantProvisioningService;
@@ -9,12 +10,15 @@ import com.leadflow.backend.service.admin.AdminService;
 import com.leadflow.backend.service.ai.AiRateLimiter;
 import com.leadflow.backend.service.ai.AiService;
 import com.leadflow.backend.service.audit.AuditService;
+import com.leadflow.backend.service.billing.StripeWebhookProcessingService;
 import com.leadflow.backend.service.conversation.ConversationService;
 import com.leadflow.backend.service.monitoring.AiMetricsService;
 import com.leadflow.backend.service.monitoring.MetricsService;
 import com.leadflow.backend.service.notification.SendGridEmailService;
+import com.leadflow.backend.service.notification.EmailRetryWorker;
 import com.leadflow.backend.service.vendor.VendorFeatureService;
 import com.leadflow.backend.service.vendor.VendorLeadService;
+import com.leadflow.backend.webhook.service.WebhookReplayService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -97,6 +101,22 @@ public abstract class IntegrationTestBase {
 
     @MockBean
     protected RateLimitService rateLimitService;
+
+    /* ======================================================
+       Scheduled tasks mocks (prevent scheduler execution)
+       ====================================================== */
+
+    @MockBean
+    protected StripeWebhookProcessingService stripeWebhookProcessingService;
+
+    @MockBean
+    protected WebhookReplayService webhookReplayService;
+
+    @MockBean
+    protected AlertMonitor alertMonitor;
+
+    @MockBean
+    protected EmailRetryWorker emailRetryWorker;
 
     /* ======================================================
        Configuração dinâmica do banco

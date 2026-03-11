@@ -1,6 +1,5 @@
 package com.leadflow.backend.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leadflow.backend.config.TestBillingConfig;
 import com.leadflow.backend.config.metrics.WebhookMetrics;
 import com.leadflow.backend.service.billing.StripeService;
@@ -46,9 +45,6 @@ class StripeWebhookEndpointTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @MockBean
     private StripeService stripeService;
 
@@ -63,7 +59,6 @@ class StripeWebhookEndpointTest {
 
     private static final String WEBHOOK_ENDPOINT = "/billing/webhook";
     private static final String WEBHOOK_SECRET = "whsec_test_secret";
-    private static final long TIMESTAMP_TOLERANCE = 300; // 5 minutes
 
     private String validTimestamp;
     private String validSignature;
@@ -105,6 +100,7 @@ class StripeWebhookEndpointTest {
      */
     @Test
     @DisplayName("Should process valid subscription.created webhook")
+    @SuppressWarnings("null")
     void shouldProcessValidSubscriptionCreatedWebhook() throws Exception {
         log.info("Testing valid subscription.created webhook");
 
@@ -155,6 +151,7 @@ class StripeWebhookEndpointTest {
      */
     @Test
     @DisplayName("Should process valid invoice.payment_failed webhook")
+    @SuppressWarnings("null")
     void shouldProcessValidPaymentFailedWebhook() throws Exception {
         log.info("Testing valid payment_failed webhook");
 
@@ -198,6 +195,7 @@ class StripeWebhookEndpointTest {
      */
     @Test
     @DisplayName("Should reject webhook with missing Stripe-Signature header")
+    @SuppressWarnings("null")
     void shouldRejectWebhookWithoutSignatureHeader() throws Exception {
         log.info("Testing webhook without Stripe-Signature header");
 
@@ -226,6 +224,7 @@ class StripeWebhookEndpointTest {
      */
     @Test
     @DisplayName("Should reject webhook with malformed Stripe-Signature")
+    @SuppressWarnings("null")
     void shouldRejectWebhookWithMalformedSignature() throws Exception {
         log.info("Testing webhook with malformed Stripe-Signature");
 
@@ -256,6 +255,7 @@ class StripeWebhookEndpointTest {
      */
     @Test
     @DisplayName("Should reject webhook with invalid signature")
+    @SuppressWarnings("null")
     void shouldRejectWebhookWithInvalidSignature() throws Exception {
         log.info("Testing webhook with invalid signature");
 
@@ -292,6 +292,7 @@ class StripeWebhookEndpointTest {
      */
     @Test
     @DisplayName("Should reject webhook with expired timestamp")
+    @SuppressWarnings("null")
     void shouldRejectWebhookWithExpiredTimestamp() throws Exception {
         log.info("Testing webhook with expired timestamp");
 
@@ -327,6 +328,7 @@ class StripeWebhookEndpointTest {
      */
     @Test
     @DisplayName("Should handle processing errors gracefully")
+    @SuppressWarnings("null")
     void shouldHandleProcessingErrors() throws Exception {
         log.info("Testing webhook processing error handling");
 
@@ -363,6 +365,7 @@ class StripeWebhookEndpointTest {
      */
     @Test
     @DisplayName("Should process multiple webhooks independently")
+    @SuppressWarnings("null")
     void shouldProcessMultipleWebhooksIndependently() throws Exception {
         log.info("Testing multiple webhook requests");
 

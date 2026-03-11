@@ -78,6 +78,7 @@ class LeadControllerTest {
     private UUID userId;
 
     @BeforeEach
+    @SuppressWarnings("null")
     void setUp() {
 
         Role role = new Role("ROLE_USER");
@@ -114,12 +115,14 @@ class LeadControllerTest {
     }
 
     @BeforeEach
+    @SuppressWarnings("null")
     void setupMocks() throws Exception {
         when(billingValidationInterceptor.preHandle(any(), any(), any())).thenReturn(true);
     }
 
     @Test
     @WithMockUser(username = "test@example.com")
+
     void createLead_ShouldReturnCreatedLead() throws Exception {
 
         Lead mockLead = new Lead(userId, "Test Lead", "lead@example.com", "123456789");
@@ -189,6 +192,7 @@ class LeadControllerTest {
 
     @Test
     @WithMockUser(username = "test@example.com")
+    @SuppressWarnings("null")
     void deleteLead_ShouldReturnNoContent() throws Exception {
 
         mockMvc.perform(delete("/api/leads/{id}", leadId))

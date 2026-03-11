@@ -372,7 +372,10 @@ public class AdminService {
 
     public void evaluateAllVendorsRiskDaily() {
         vendorRepository.findAll()
-            .forEach(vendor -> evaluateRisk(vendor.getId()));
+            .stream()
+            .map(Vendor::getId)
+            .filter(Objects::nonNull)
+            .forEach(this::evaluateRisk);
     }
 
     private void notifyVendorAtRisk(UUID vendorId,

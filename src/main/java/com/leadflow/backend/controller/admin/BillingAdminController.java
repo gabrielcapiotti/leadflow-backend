@@ -2,7 +2,6 @@ package com.leadflow.backend.controller.admin;
 
 import com.leadflow.backend.entities.StripeEventLog;
 import com.leadflow.backend.repository.StripeEventLogRepository;
-import com.leadflow.backend.service.billing.StripeWebhookProcessor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -32,7 +31,6 @@ import java.util.Map;
 public class BillingAdminController {
 
     private final StripeEventLogRepository eventLogRepository;
-    private final StripeWebhookProcessor webhookProcessor;
 
     /**
      * Lista todos os eventos webhook de forma paginada.
@@ -59,8 +57,7 @@ public class BillingAdminController {
             
             if (status != null && !status.trim().isEmpty()) {
                 try {
-                    StripeEventLog.EventProcessingStatus filterStatus = 
-                        StripeEventLog.EventProcessingStatus.valueOf(status.toUpperCase());
+                    StripeEventLog.EventProcessingStatus.valueOf(status.toUpperCase());
                     
                     // Usar findAll com predicado na memória para filtro por status
                     Page<StripeEventLog> allEvents = eventLogRepository.findAll(pageable);

@@ -15,6 +15,7 @@ import org.thymeleaf.context.Context;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -32,7 +33,6 @@ import java.util.Optional;
 @Slf4j
 public class SubscriptionNotificationService {
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final DateTimeFormatter DISPLAY_DATE_FORMATTER = DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy");
 
     @Autowired(required = false)
@@ -74,7 +74,7 @@ public class SubscriptionNotificationService {
             }
 
             // Get tenant name for personalization
-            Optional<Tenant> tenant = tenantRepository.findById(subscription.getTenantId());
+            Optional<Tenant> tenant = tenantRepository.findById(Objects.requireNonNull(subscription.getTenantId()));
             String tenantName = tenant.map(Tenant::getName).orElse("Valued Customer");
 
             Context context = new Context();
@@ -115,12 +115,12 @@ public class SubscriptionNotificationService {
             }
 
             // Get tenant name for personalization
-            Optional<Tenant> tenant = tenantRepository.findById(subscription.getTenantId());
+            Optional<Tenant> tenant = tenantRepository.findById(Objects.requireNonNull(subscription.getTenantId()));
             String tenantName = tenant.map(Tenant::getName).orElse("Valued Customer");
 
             Context context = new Context();
             context.setVariable("tenantName", tenantName);
-            context.setVariable("cancellationDate", subscription.getCancelledAt().format(DISPLAY_DATE_FORMATTER));
+            context.setVariable("cancellationDate", Objects.requireNonNull(subscription.getCancelledAt()).format(DISPLAY_DATE_FORMATTER));
             context.setVariable("reactivationUrl", frontendUrl + "/billing/reactivate");
 
             String htmlContent = templateEngine.process("email/cancellation-notification", context);
@@ -155,7 +155,7 @@ public class SubscriptionNotificationService {
             }
 
             // Get tenant name for personalization
-            Optional<Tenant> tenant = tenantRepository.findById(subscription.getTenantId());
+            Optional<Tenant> tenant = tenantRepository.findById(Objects.requireNonNull(subscription.getTenantId()));
             String tenantName = tenant.map(Tenant::getName).orElse("Valued Customer");
 
             Context context = new Context();
@@ -199,10 +199,10 @@ public class SubscriptionNotificationService {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-        helper.setFrom(emailFrom, emailFromName);
-        helper.setTo(to);
-        helper.setSubject(subject);
-        helper.setText(htmlContent, true); // true = é HTML
+        helper.setFrom(Objects.requireNonNull(emailFrom), Objects.requireNonNull(emailFromName));
+        helper.setTo(Objects.requireNonNull(to));
+        helper.setSubject(Objects.requireNonNull(subject));
+        helper.setText(Objects.requireNonNull(htmlContent), true); // true = é HTML
 
         mailSender.send(message);
     }

@@ -8,7 +8,6 @@ import com.leadflow.backend.service.billing.StripeService;
 import com.leadflow.backend.service.billing.StripeWebhookProcessor;
 import com.leadflow.backend.service.billing.StripeWebhookValidator;
 import com.leadflow.backend.service.billing.StripeWebhookProcessingService;
-import com.leadflow.backend.service.vendor.SubscriptionService;
 import com.stripe.model.Event;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 public class StripeWebhookController {
 
     private final StripeService stripeService;
-    private final SubscriptionService subscriptionService;
     private final StripeWebhookProcessingService webhookProcessingService;
     
     // New secure webhook handling
@@ -176,7 +175,7 @@ public class StripeWebhookController {
                     .processedAt(LocalDateTime.now())
                     .build();
             
-            eventLogRepository.save(eventLog);
+            eventLogRepository.save(Objects.requireNonNull(eventLog));
             log.debug("Recorded webhook event: id={}, status={}", eventLog.getEventId(), eventLog.getStatus());
         } catch (Exception e) {
             log.error("Failed to record webhook event in database", e);

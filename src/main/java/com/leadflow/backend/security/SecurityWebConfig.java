@@ -146,16 +146,17 @@ public class SecurityWebConfig {
 
         JwtAuthenticationFilter jwtFilter = jwtFilterProvider.getIfAvailable();
 
-        // TenantFilter must run FIRST to set TenantContext before any authentication
+        // TenantFilter MUST run FIRST to set TenantContext before JWT validation
         http.addFilterBefore(
                 tenantFilter,
                 UsernamePasswordAuthenticationFilter.class
         );
 
         if (jwtFilter != null) {
-            http.addFilterBefore(
+            // JwtAuthenticationFilter runs AFTER TenantFilter but BEFORE other auth filters
+            http.addFilterAfter(
                     jwtFilter,
-                    UsernamePasswordAuthenticationFilter.class
+                    TenantFilter.class
             );
         }
 

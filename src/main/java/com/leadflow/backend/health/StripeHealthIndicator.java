@@ -3,7 +3,6 @@ package com.leadflow.backend.health;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
@@ -22,11 +21,6 @@ import java.util.Collections;
 @Slf4j
 @Component
 public class StripeHealthIndicator implements HealthIndicator {
-
-    @Autowired(required = false)
-    private com.stripe.Stripe stripeStatic;
-
-    private static final long HEALTH_CHECK_TIMEOUT_MS = 5000;
 
     @Override
     public Health health() {

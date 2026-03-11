@@ -109,6 +109,7 @@ class AuthControllerTest {
     private static final String TENANT = "tenant_test";
 
     @BeforeEach
+    @SuppressWarnings("null")
     void setup() {
 
         TenantContext.setTenant(TENANT);
@@ -159,6 +160,7 @@ class AuthControllerTest {
 
     @Test
     @DisplayName("Should register user and return JWT token")
+    @SuppressWarnings("null")
     void shouldRegisterUserAndReturnToken() throws Exception {
 
         RegisterRequest request = new RegisterRequest(
@@ -181,6 +183,7 @@ class AuthControllerTest {
 
     @Test
     @DisplayName("Should login and return JWT")
+    @SuppressWarnings("null")
     void shouldLoginAndReturnToken() throws Exception {
 
         LoginRequest request = new LoginRequest(
@@ -201,6 +204,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @SuppressWarnings("null")
     @DisplayName("Should return authenticated user")
     void shouldReturnAuthenticatedUser() throws Exception {
 

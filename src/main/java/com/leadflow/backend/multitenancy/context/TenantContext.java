@@ -94,6 +94,15 @@ public final class TenantContext {
         return CURRENT_TENANT.get();
     }
 
+    /**
+     * Retorna tenant atual ou valor default se não estiver setado.
+     * Útil para fallbacks seguros.
+     */
+    public static String getTenantOrDefault(String defaultTenant) {
+        String tenant = CURRENT_TENANT.get();
+        return tenant != null ? tenant : defaultTenant;
+    }
+
     /* ======================================================
        STATE
        ====================================================== */
@@ -117,5 +126,44 @@ public final class TenantContext {
         }
 
         CURRENT_TENANT.remove();
+    }
+
+    /* ======================================================
+       SCOPED CONTEXT (try-with-resources)
+       ====================================================== */
+
+    /**
+     * Cria um escopo de tenant que automatically limpa ao sair.
+     * Útil para testes ou operações que precisam de tenant temporário.
+     *
+     * Exemplo:
+     * try (TenantContextScope scope = TenantContext.withTenant("tenant-id")) {
+     *     // ... operações com tenant setado ...
+     * } // TenantContext é automatically limpo aqui
+     */
+    public static TenantContextScope withTenant(String tenantId) {
+        return new TenantContextScope(tenantId);
+    }
+
+    /**
+     * Auto-closeable scope para gerenciamento de tenant context.
+     * Automatically seta e limpa o tenant context.
+     */
+    public static class TenantContextScope implements AutoCloseable {
+        private final String previousTenant;
+
+        public TenantContextScope(String tenantId) {
+            this.previousTenant = CURRENT_TENANT.get();
+            setTenant(tenantId);
+        }
+
+        @Override
+        public void close() {
+            if (previousTenant != null) {
+                setTenant(previousTenant);
+            } else {
+                clear();
+            }
+        }
     }
 }

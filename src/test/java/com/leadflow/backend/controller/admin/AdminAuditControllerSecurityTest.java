@@ -91,11 +91,12 @@ class AdminAuditControllerSecurityTest {
     private RateLimitService rateLimitService;
 
     @BeforeEach
+    @SuppressWarnings({"unchecked", "null"})
     void setUp() {
 
         when(vendorAuditLogRepository.findAll(
-                any(Specification.class),
-                any(Pageable.class)
+                (Specification<VendorAuditLog>) any(Specification.class),
+                (Pageable) any(Pageable.class)
         )).thenReturn(
                 new PageImpl<>(Objects.requireNonNull(List.<VendorAuditLog>of()), PageRequest.of(0, 20), 1)
         );
@@ -128,6 +129,7 @@ class AdminAuditControllerSecurityTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
+    @SuppressWarnings({"unchecked", "null"})
     void shouldReturn200ForAdminRoleAndListVendorAuditLogs() throws Exception {
 
         UUID vendorId = UUID.randomUUID();
@@ -142,8 +144,8 @@ class AdminAuditControllerSecurityTest {
         log.setDetalhes("owner changed");
 
         when(vendorAuditLogRepository.findAll(
-                any(Specification.class),
-                any(Pageable.class)
+                (Specification<VendorAuditLog>) any(Specification.class),
+                (Pageable) any(Pageable.class)
         )).thenReturn(
                 new PageImpl<>(Objects.requireNonNull(List.of(Objects.requireNonNull(log))), PageRequest.of(0, 20), 1)
         );

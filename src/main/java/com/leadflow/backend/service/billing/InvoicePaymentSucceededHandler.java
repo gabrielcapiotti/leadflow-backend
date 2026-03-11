@@ -38,7 +38,6 @@ public class InvoicePaymentSucceededHandler implements StripeEventHandler {
             
             // Extract subscription ID from invoice metadata if available
             String stripeSubscriptionId = invoice.getSubscription();
-            String stripeCustomerId = invoice.getCustomer();
             
             if (stripeSubscriptionId != null && !stripeSubscriptionId.isBlank()) {
                 // Mark payment as successful in the database

@@ -192,6 +192,15 @@
         </dependency>
 
         <!-- ========================= -->
+        <!-- JACKSON -->
+        <!-- ========================= -->
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+
+        <!-- ========================= -->
         <!-- BILLING -->
         <!-- ========================= -->
 
@@ -318,6 +327,10 @@
                 <version>3.11.0</version>
                 <configuration>
                     <release>17</release>
+                    <compilerArgs>
+                        <arg>-Xmaxwarns</arg>
+                        <arg>1000</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
 

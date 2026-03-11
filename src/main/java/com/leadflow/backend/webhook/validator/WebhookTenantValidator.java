@@ -4,7 +4,9 @@ import com.leadflow.backend.webhook.entity.FailedWebhookEvent;
 import com.leadflow.backend.webhook.repository.FailedWebhookRepository;
 import com.stripe.model.Event;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Objects;
+
 import org.springframework.stereotype.Service;
 
 /**
@@ -22,7 +24,6 @@ public class WebhookTenantValidator {
 
     private final FailedWebhookRepository failedWebhookRepository;
 
-    @Autowired
     public WebhookTenantValidator(FailedWebhookRepository failedWebhookRepository) {
         this.failedWebhookRepository = failedWebhookRepository;
     }
@@ -60,11 +61,11 @@ public class WebhookTenantValidator {
      * @throws WebhookTenantViolationException If webhook doesn't belong to tenant
      */
     public boolean validateFailedWebhookTenant(String webhookId, String tenantId) {
-        var webhook = failedWebhookRepository.findById(webhookId)
+        var webhook = failedWebhookRepository.findById(Objects.requireNonNull(webhookId))
                 .orElseThrow(() -> new IllegalArgumentException("Webhook not found: " + webhookId));
 
         if (webhook.getTenantId() == null) {
-            log.warn("Webhook {} has no tenant association, access denied", webhookId);
+            log.warn("Webhook {} has no tenant association, access denied", Objects.requireNonNull(webhookId));
             throw new WebhookTenantViolationException(
                 "Webhook not associated with any tenant");
         }
