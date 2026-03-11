@@ -139,6 +139,7 @@ public class JwtService implements InitializingBean {
     ) {
 
         if (!isValid(token)) {
+            logger.debug("Token is invalid (failed signature/expiration check)");
             return false;
         }
 
@@ -148,12 +149,30 @@ public class JwtService implements InitializingBean {
             UUID tokenUserId = extractUserId(token);
             String tokenTenant = extractTenant(token);
 
-            return Objects.equals(email, userDetails.getUsername())
-                    && Objects.equals(tokenUserId, expectedUserId)
-                    && tokenTenant.equalsIgnoreCase(expectedTenant);
+            boolean emailMatches = Objects.equals(email, userDetails.getUsername());
+            boolean userIdMatches = Objects.equals(tokenUserId, expectedUserId);
+            boolean tenantMatches = tokenTenant.equalsIgnoreCase(expectedTenant);
+            
+            if (!emailMatches) {
+                logger.debug("Email mismatch: token={}, expected={}", 
+                    LogSanitizer.sanitize(email),
+                    LogSanitizer.sanitize(userDetails.getUsername()));
+            }
+            if (!userIdMatches) {
+                logger.debug("UserId mismatch: token={}, expected={}", 
+                    LogSanitizer.sanitize(tokenUserId.toString()),
+                   LogSanitizer.sanitize(expectedUserId.toString()));
+            }
+            if (!tenantMatches) {
+                logger.debug("Tenant mismatch: token={}, expected={}", 
+                    LogSanitizer.sanitize(tokenTenant),
+                    LogSanitizer.sanitize(expectedTenant));
+            }
+
+            return emailMatches && userIdMatches && tenantMatches;
 
         } catch (Exception e) {
-            logger.warn("Token context validation failed");
+            logger.warn("Token context validation failed: {}", LogSanitizer.sanitize(e.getMessage()));
             return false;
         }
     }

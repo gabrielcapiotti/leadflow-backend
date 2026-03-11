@@ -1,5 +1,6 @@
 package com.leadflow.backend.controller.billing;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leadflow.backend.config.TestBillingConfig;
 import com.leadflow.backend.controller.admin.BillingAdminController;
 import com.leadflow.backend.exception.GlobalExceptionHandler;
@@ -48,6 +49,9 @@ class BillingAdminControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @MockBean
     private StripeEventLogRepository eventLogRepository;
 
@@ -56,17 +60,25 @@ class BillingAdminControllerTest {
 
     @TestConfiguration
     public static class AdminTestSecurityConfig {
+
         @Bean
         public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
+
             http
                 .csrf(csrf -> csrf.disable())
                 .exceptionHandling(ex -> ex
-                    .authenticationEntryPoint((request, response, authException) ->
-                        response.sendError(401, "Unauthorized")))
+                        .authenticationEntryPoint((request, response, authException) ->
+                                response.sendError(401, "Unauthorized")
+                        )
+                )
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                    .anyRequest().authenticated())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .anyRequest().authenticated()
+                )
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                );
+
             return http.build();
         }
     }
@@ -76,7 +88,6 @@ class BillingAdminControllerTest {
      */
     @Test
     @DisplayName("Should require authentication for webhook events listing")
-    @SuppressWarnings("null")
     void shouldRequireAuthenticationForListingWebhookEvents() throws Exception {
         log.info("Testing: Authentication required for webhook events listing");
 
@@ -96,7 +107,6 @@ class BillingAdminControllerTest {
      */
     @Test
     @DisplayName("Should handle filtering webhook events by status")
-    @SuppressWarnings("null")
     void shouldHandleFilteringByStatus() throws Exception {
         log.info("Testing: Filter webhook events by status");
 
@@ -117,7 +127,6 @@ class BillingAdminControllerTest {
      */
     @Test
     @DisplayName("Should handle invalid pagination parameters")
-    @SuppressWarnings("null")
     void shouldHandleInvalidPaginationParameters() throws Exception {
         log.info("Testing: Invalid pagination parameters");
 
@@ -137,7 +146,6 @@ class BillingAdminControllerTest {
      */
     @Test
     @DisplayName("Should return 404 when event not found")
-    @SuppressWarnings("null")
     void shouldReturn404WhenEventNotFound() throws Exception {
         log.info("Testing: Get non-existent webhook event");
 
@@ -155,7 +163,6 @@ class BillingAdminControllerTest {
      */
     @Test
     @DisplayName("Should handle manual retry request")
-    @SuppressWarnings("null")
     void shouldHandleManualRetryRequest() throws Exception {
         log.info("Testing: Manual retry of webhook event");
 
@@ -173,7 +180,6 @@ class BillingAdminControllerTest {
      */
     @Test
     @DisplayName("Should return webhook statistics")
-    @SuppressWarnings("null")
     void shouldReturnWebhookStatistics() throws Exception {
         log.info("Testing: Get webhook statistics");
 
@@ -209,7 +215,6 @@ class BillingAdminControllerTest {
      */
     @Test
     @DisplayName("Should handle complex search parameters")
-    @SuppressWarnings("null")
     void shouldHandleComplexSearchParameters() throws Exception {
         log.info("Testing: Complex search parameters");
 
@@ -233,11 +238,9 @@ class BillingAdminControllerTest {
      */
     @Test
     @DisplayName("Should handle different pagination sizes")
-    @SuppressWarnings("null")
     void shouldHandleDifferentPaginationSizes() throws Exception {
         log.info("Testing: Different pagination sizes");
 
-        // Test with size 5
         mockMvc.perform(
                 get(ADMIN_WEBHOOK_EVENTS_PATH)
                         .param("page", "0")
@@ -245,7 +248,6 @@ class BillingAdminControllerTest {
         )
         .andExpect(status().isUnauthorized());
 
-        // Test with size 100
         mockMvc.perform(
                 get(ADMIN_WEBHOOK_EVENTS_PATH)
                         .param("page", "0")
@@ -261,7 +263,6 @@ class BillingAdminControllerTest {
      */
     @Test
     @DisplayName("Should reject POST requests to GET-only endpoints")
-    @SuppressWarnings("null")
     void shouldRejectPostRequests() throws Exception {
         log.info("Testing: POST request rejection");
 

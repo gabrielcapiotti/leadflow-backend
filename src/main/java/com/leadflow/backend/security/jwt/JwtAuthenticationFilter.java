@@ -112,9 +112,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             boolean baseValid =
                     jwtService.isTokenValid(token, userDetails, userId, tenant);
 
-            if (!baseValid ||
-                    !isTokenStillValidAfterPasswordChange(token, customUser)) {
+            if (!baseValid) {
+                logger.debug("Token validation failed for user: {}, tenant: {}, baseValid: false", 
+                    LogSanitizer.sanitize(email), LogSanitizer.sanitize(tenant));
+                safeFilterChain.doFilter(safeRequest, safeResponse);
+                return;
+            }
 
+            if (!isTokenStillValidAfterPasswordChange(token, customUser)) {
+                logger.debug("Token validation failed - password change check - for user: {}", 
+                    LogSanitizer.sanitize(email));
                 safeFilterChain.doFilter(safeRequest, safeResponse);
                 return;
             }
@@ -165,7 +172,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         LocalDateTime tokenIssuedAt = issuedAt.toInstant()
                 .atZone(ZoneId.systemDefault())
-                .toLocalDateTime();
+                .toLocalDateTime()
+                .truncatedTo(ChronoUnit.SECONDS);
 
         LocalDateTime credentialsUpdatedAt =
                 userDetails.getCredentialsUpdatedAt();
@@ -177,7 +185,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         LocalDateTime normalizedCredentialsUpdatedAt =
                 credentialsUpdatedAt.truncatedTo(ChronoUnit.SECONDS);
 
-        return !tokenIssuedAt.isBefore(normalizedCredentialsUpdatedAt);
+        // Allow 30 second grace period for clock skew between DB and app servers
+        // If credentialsUpdatedAt is after tokenIssuedAt but within the grace period, allow it
+        boolean withinGracePeriod = normalizedCredentialsUpdatedAt.isBefore(
+            tokenIssuedAt.plusSeconds(30)
+        );
+        
+        boolean result = !tokenIssuedAt.isBefore(normalizedCredentialsUpdatedAt) || withinGracePeriod;
+        
+        logger.debug("Password change check: tokenIssuedAt={}, credentialsUpdatedAt={}, withinGracePeriod={}, result={}", 
+            tokenIssuedAt, normalizedCredentialsUpdatedAt, withinGracePeriod, result);
+        
+        return result;
     }
 
     private String extractToken(HttpServletRequest request) {
