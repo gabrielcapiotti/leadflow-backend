@@ -38,7 +38,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -66,28 +65,28 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ContextConfiguration(classes = AdminAuditControllerSecurityTest.TestApplication.class)
 class AdminAuditControllerSecurityTest {
 
-        @SpringBootConfiguration
-        @EnableAutoConfiguration
-        @Import(AdminAuditController.class)
-        static class TestApplication {
-        }
+    @SpringBootConfiguration
+    @EnableAutoConfiguration
+    @Import(AdminAuditController.class)
+    static class TestApplication {
+    }
 
     @Autowired
     private MockMvc mockMvc;
 
-        @MockBean
+    @MockBean
     private SecurityAuditLogRepository securityAuditLogRepository;
 
     @MockBean
     private VendorAuditLogRepository vendorAuditLogRepository;
 
-        @MockBean
+    @MockBean
     private JwtService jwtService;
 
-        @MockBean
+    @MockBean
     private TenantService tenantService;
 
-        @MockBean
+    @MockBean
     private RateLimitService rateLimitService;
 
     @BeforeEach
@@ -97,7 +96,7 @@ class AdminAuditControllerSecurityTest {
                 any(Specification.class),
                 any(Pageable.class)
         )).thenReturn(
-                new PageImpl<>(Objects.requireNonNull(List.<VendorAuditLog>of()), PageRequest.of(0, 20), 1)
+                new PageImpl<>(List.of(), PageRequest.of(0, 20), 1)
         );
     }
 
@@ -145,7 +144,7 @@ class AdminAuditControllerSecurityTest {
                 any(Specification.class),
                 any(Pageable.class)
         )).thenReturn(
-                new PageImpl<>(Objects.requireNonNull(List.of(Objects.requireNonNull(log))), PageRequest.of(0, 20), 1)
+                new PageImpl<>(List.of(log), PageRequest.of(0, 20), 1)
         );
 
         mockMvc.perform(get("/admin/audit/vendor")

@@ -34,6 +34,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -109,13 +112,17 @@ class LeadControllerTest {
         when(userService.getActiveByEmail("test@example.com"))
                 .thenReturn(user);
 
-        // Mock SubscriptionGuard to return FULL access level
-        when(subscriptionGuard.resolveAccess()).thenReturn(SubscriptionAccessLevel.FULL);
+        when(subscriptionGuard.resolveAccess())
+                .thenReturn(SubscriptionAccessLevel.FULL);
     }
 
     @BeforeEach
     void setupMocks() throws Exception {
-        when(billingValidationInterceptor.preHandle(any(), any(), any())).thenReturn(true);
+        when(billingValidationInterceptor.preHandle(
+                any(HttpServletRequest.class),
+                any(HttpServletResponse.class),
+                any(Object.class)
+        )).thenReturn(true);
     }
 
     @Test
@@ -141,7 +148,7 @@ class LeadControllerTest {
         mockMvc.perform(post("/api/leads")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated()); // Expect 201 instead of 200
+                .andExpect(status().isCreated());
 
         verify(leadService).createLead(
                 eq("Test Lead"),

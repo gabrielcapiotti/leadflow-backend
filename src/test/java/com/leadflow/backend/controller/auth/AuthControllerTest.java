@@ -56,11 +56,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(AuthController.class)
 @AutoConfigureMockMvc
-@Import({GlobalExceptionHandler.class, TestBillingConfig.class, AuthControllerTest.AuthTestSecurityConfig.class})
+@Import({
+        GlobalExceptionHandler.class,
+        TestBillingConfig.class,
+        AuthControllerTest.AuthTestSecurityConfig.class
+})
 @ActiveProfiles("test")
 @TestExecutionListeners(
-    listeners = TenantContextTestCleaner.class,
-    mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS
+        listeners = TenantContextTestCleaner.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS
 )
 class AuthControllerTest {
 
@@ -121,6 +125,7 @@ class AuthControllerTest {
                 "password",
                 role
         );
+
         ReflectionTestUtils.setField(mockUser, "id", UUID.randomUUID());
 
         when(authService.registerUser(anyString(), anyString(), anyString()))
@@ -144,6 +149,7 @@ class AuthControllerTest {
 
         when(tenantService.getTenantIdBySchema(anyString()))
                 .thenReturn(UUID.randomUUID());
+
         when(userService.getActiveByEmail(anyString()))
                 .thenReturn(mockUser);
     }
@@ -219,10 +225,8 @@ class AuthControllerTest {
     @DisplayName("Should return 401 when not authenticated")
     void shouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
 
-        mockMvc.perform(
-                get("/auth/me")
-        )
-        .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/auth/me"))
+                .andExpect(status().isUnauthorized());
     }
 
     /* ======================================================
@@ -235,7 +239,7 @@ class AuthControllerTest {
         @Bean
         SecurityFilterChain authTestFilterChain(HttpSecurity http) throws Exception {
 
-            return http
+            http
                     .csrf(csrf -> csrf.disable())
                     .sessionManagement(session ->
                             session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -248,8 +252,9 @@ class AuthControllerTest {
                     .authorizeHttpRequests(auth -> auth
                             .requestMatchers("/auth/register", "/auth/login").permitAll()
                             .anyRequest().authenticated()
-                    )
-                    .build();
+                    );
+
+            return http.build();
         }
     }
 }

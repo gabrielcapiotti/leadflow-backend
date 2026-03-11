@@ -324,6 +324,8 @@ class AdminOverviewIntegrationTest extends IntegrationTestBase {
                             .getResponse()
                             .getContentAsString();
 
+            System.out.println("🔐 LOGIN RESPONSE: " + response);
+
             JsonNode json = objectMapper.readTree(response);
 
             String token = json.path("accessToken").asText();
@@ -333,6 +335,8 @@ class AdminOverviewIntegrationTest extends IntegrationTestBase {
 
             if (token.isBlank())
                 token = json.path("token").asText();
+
+            System.out.println("🔑 EXTRACTED TOKEN: " + (token.isBlank() ? "BLANK!" : token.substring(0, Math.min(50, token.length())) + "..."));
 
             assertThat(token).isNotBlank();
 
@@ -350,13 +354,18 @@ class AdminOverviewIntegrationTest extends IntegrationTestBase {
     @Test
     void shouldReturn401WhenNoToken() throws Exception {
 
-        mockMvc.perform(
-                get("/admin/overview")
-                        .header("X-Tenant-ID", tenantSchema)
-                        .header("User-Agent", USER_AGENT)
-                        .header("X-Device-Fingerprint", DEVICE_FINGERPRINT)
-        )
-        .andExpect(status().isUnauthorized());
+        TenantContext.setTenant(tenantSchema);
+        try {
+            mockMvc.perform(
+                    get("/admin/overview")
+                            .header("X-Tenant-ID", tenantSchema)
+                            .header("User-Agent", USER_AGENT)
+                            .header("X-Device-Fingerprint", DEVICE_FINGERPRINT)
+            )
+            .andExpect(status().isUnauthorized());
+        } finally {
+            TenantContext.clear();
+        }
     }
 
     @Test
@@ -364,14 +373,19 @@ class AdminOverviewIntegrationTest extends IntegrationTestBase {
 
         String userToken = loginAndGetAccessToken(userEmail, PASSWORD);
 
-        mockMvc.perform(
-                get("/admin/overview")
-                        .header("X-Tenant-ID", tenantSchema)
-                        .header("User-Agent", USER_AGENT)
-                        .header("X-Device-Fingerprint", DEVICE_FINGERPRINT)
-                        .header("Authorization", "Bearer " + userToken)
-        )
-        .andExpect(status().isForbidden());
+        TenantContext.setTenant(tenantSchema);
+        try {
+            mockMvc.perform(
+                    get("/admin/overview")
+                            .header("X-Tenant-ID", tenantSchema)
+                            .header("User-Agent", USER_AGENT)
+                            .header("X-Device-Fingerprint", DEVICE_FINGERPRINT)
+                            .header("Authorization", "Bearer " + userToken)
+            )
+            .andExpect(status().isForbidden());
+        } finally {
+            TenantContext.clear();
+        }
     }
 
     @Test
@@ -379,14 +393,19 @@ class AdminOverviewIntegrationTest extends IntegrationTestBase {
 
         String adminToken = loginAndGetAccessToken(adminEmail, PASSWORD);
 
-        mockMvc.perform(
-                get("/admin/overview")
-                        .header("X-Tenant-ID", tenantSchema)
-                        .header("User-Agent", USER_AGENT)
-                        .header("X-Device-Fingerprint", DEVICE_FINGERPRINT)
-                        .header("Authorization", "Bearer " + adminToken)
-        )
-        .andExpect(status().isOk());
+        TenantContext.setTenant(tenantSchema);
+        try {
+            mockMvc.perform(
+                    get("/admin/overview")
+                            .header("X-Tenant-ID", tenantSchema)
+                            .header("User-Agent", USER_AGENT)
+                            .header("X-Device-Fingerprint", DEVICE_FINGERPRINT)
+                            .header("Authorization", "Bearer " + adminToken)
+            )
+            .andExpect(status().isOk());
+        } finally {
+            TenantContext.clear();
+        }
     }
 
     @Test

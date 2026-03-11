@@ -191,7 +191,6 @@ class AuthControllerNegativeTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").value("Unauthorized"))
-                .andExpect(jsonPath("$.message")
-                        .value("Invalid email or password"));
+                .andExpect(jsonPath("$.message").value("Invalid email or password"));
     }
 }

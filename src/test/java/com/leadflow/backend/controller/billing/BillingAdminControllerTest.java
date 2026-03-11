@@ -60,16 +60,25 @@ class BillingAdminControllerTest {
 
     @TestConfiguration
     public static class AdminTestSecurityConfig {
+
         @Bean
         public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
-            http.csrf().disable()
+
+            http
+                .csrf(csrf -> csrf.disable())
                 .exceptionHandling(ex -> ex
-                    .authenticationEntryPoint((request, response, authException) ->
-                        response.sendError(401, "Unauthorized")))
+                        .authenticationEntryPoint((request, response, authException) ->
+                                response.sendError(401, "Unauthorized")
+                        )
+                )
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                    .anyRequest().authenticated())
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .anyRequest().authenticated()
+                )
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                );
+
             return http.build();
         }
     }
@@ -232,7 +241,6 @@ class BillingAdminControllerTest {
     void shouldHandleDifferentPaginationSizes() throws Exception {
         log.info("Testing: Different pagination sizes");
 
-        // Test with size 5
         mockMvc.perform(
                 get(ADMIN_WEBHOOK_EVENTS_PATH)
                         .param("page", "0")
@@ -240,7 +248,6 @@ class BillingAdminControllerTest {
         )
         .andExpect(status().isUnauthorized());
 
-        // Test with size 100
         mockMvc.perform(
                 get(ADMIN_WEBHOOK_EVENTS_PATH)
                         .param("page", "0")
